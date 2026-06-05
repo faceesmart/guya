@@ -5,6 +5,7 @@ pyaudio
 numpy
 pyperclip
 psutil            # device profiling (CPU/RAM) for the setup wizard
+httpx             # cloud (online) STT requests — also a faster-whisper dep
 
 # --- macOS-only (auto-skipped on Windows/Linux) ---
 pynput; sys_platform == "darwin"

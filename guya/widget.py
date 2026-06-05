@@ -58,8 +58,10 @@ faulthandler.enable()
 
 try:
     from . import config as guya_config
+    from . import cloud_engine
 except ImportError:
     import config as guya_config
+    import cloud_engine
 
 CFG = guya_config.load_config()
 
@@ -960,6 +962,51 @@ class RecordingThread(threading.Thread):
 # TRANSCRIPTION HELPERS
 # ============================================================
 
+class CloudModel:
+    """Stand-in 'model' for the online backend. Holds the provider + API key so
+    the transcription path can route to cloud_engine instead of a local Whisper
+    model. Lets the rest of the widget treat cloud and offline uniformly."""
+    is_cloud = True
+
+    def __init__(self, provider, api_key):
+        self.provider = provider
+        self.api_key = api_key
+
+
+def _postprocess_text(txt: str, language: str) -> str:
+    """Apply Persian normalization / corrections / colloquial preservation.
+
+    Shared by the offline (per-segment) and cloud (whole-text) paths.
+    FA: always. DUAL: only when the text contains Persian script.
+    """
+    if language == "fa":
+        txt = normalize_persian(txt)
+        txt = apply_word_corrections(txt)
+        txt = preserve_colloquial(txt)
+    elif language == "dual":
+        if _has_persian_chars(txt):
+            txt = normalize_persian(txt)
+            txt = apply_word_corrections(txt)
+            txt = preserve_colloquial(txt)
+    return txt
+
+
+def transcribe_cloud(cloud_model, audio_data, language) -> str:
+    """Transcribe via the online provider, then apply the same Persian
+    post-processing the offline path uses, so output quality is consistent."""
+    audio_data = normalize_audio_volume(audio_data)
+    raw = cloud_engine.transcribe(
+        audio_data, language,
+        api_key=cloud_model.api_key,
+        provider=cloud_model.provider,
+        sample_rate=SAMPLE_RATE,
+    )
+    if not raw or is_hallucination(raw):
+        return ""
+    text = _postprocess_text(raw, language)
+    return re.sub(r"  +", " ", text).strip()
+
+
 def transcribe_audio(model, audio_data, language, audio_duration=None):
     """Run transcription and return cleaned text.
 
@@ -967,7 +1014,13 @@ def transcribe_audio(model, audio_data, language, audio_duration=None):
       "fa"   — Persian only. Model forced to fa, Persian prompt & normalization.
       "en"   — English only. Model forced to en, English prompt, no Persian normalization.
       "dual" — Bilingual FA+EN. Uses multilingual=True for per-segment language detection.
+
+    If `model` is a CloudModel, transcription is delegated to the online provider.
     """
+
+    # Online backend: delegate to the cloud provider.
+    if isinstance(model, CloudModel):
+        return transcribe_cloud(model, audio_data, language)
 
     # RMS-normalize audio volume for consistent input regardless of mic/volume
     audio_data = normalize_audio_volume(audio_data)
@@ -1052,18 +1105,8 @@ def transcribe_audio(model, audio_data, language, audio_duration=None):
         if is_hallucination(txt):
             log.debug(f"Filtered hallucination: {txt[:50]}")
             continue
-        # Normalize Persian text (Arabic→Persian chars, diacritics, spacing)
-        # Applied in FA mode always, and in DUAL mode for segments detected as Persian
-        if language == "fa":
-            txt = normalize_persian(txt)
-            txt = apply_word_corrections(txt)
-            txt = preserve_colloquial(txt)
-        elif language == "dual":
-            # In dual mode, apply Persian normalization only to Persian segments
-            if _has_persian_chars(txt):
-                txt = normalize_persian(txt)
-                txt = apply_word_corrections(txt)
-                txt = preserve_colloquial(txt)
+        # Normalize Persian text (Arabic→Persian chars, diacritics, spacing).
+        txt = _postprocess_text(txt, language)
         text_parts.append(txt)
 
     result = " ".join(text_parts).strip()
@@ -1435,11 +1478,21 @@ def main():
     check_microphone()
 
     # =========================================================
-    # STEP 1: Load model BEFORE importing PyQt6
+    # STEP 1: Prepare the model BEFORE importing PyQt6
     # CTranslate2 CUDA segfaults if Qt's OpenGL DLLs are loaded first.
+    # Online backend: no local model to load — just hold the provider + key.
     # =========================================================
-    log.info("Loading model BEFORE Qt (CUDA/Qt order fix)...")
-    model = load_model_sync(progress_callback=lambda msg: None)
+    if MODEL_BACKEND == "cloud":
+        provider = CFG["cloud"]["provider"] or cloud_engine.DEFAULT_PROVIDER
+        api_key = CFG["cloud"]["api_key"]
+        log.info(f"Online backend: {provider} (no local model loaded)")
+        if not api_key:
+            log.error("Cloud backend selected but no API key in config. "
+                      "Re-run setup: python -m guya --setup")
+        model = CloudModel(provider, api_key)
+    else:
+        log.info("Loading model BEFORE Qt (CUDA/Qt order fix)...")
+        model = load_model_sync(progress_callback=lambda msg: None)
 
     # =========================================================
     # STEP 2: NOW import PyQt6 (safe because CUDA is initialized)
@@ -1735,7 +1788,10 @@ def main():
             self._recording_thread = RecordingThread()
             self._recording_thread.start()
 
-            if self._model is not None:
+            # Real-time partial transcription only for the OFFLINE backend.
+            # For cloud we don't fire an API request every 2s — we transcribe
+            # once on release (saves requests, rate limit, and latency).
+            if self._model is not None and not isinstance(self._model, CloudModel):
                 self._realtime_transcriber = RealtimeTranscriber(
                     model=self._model,
                     recording_thread=self._recording_thread,

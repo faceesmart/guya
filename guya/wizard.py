@@ -19,10 +19,12 @@ try:
     from . import config as guya_config
     from . import profiler
     from . import benchmark
+    from . import cloud_engine
 except ImportError:
     import config as guya_config
     import profiler
     import benchmark
+    import cloud_engine
 
 log = logging.getLogger("Guya")
 
@@ -74,6 +76,7 @@ def run() -> bool:
 from PyQt6.QtWidgets import (  # noqa: E402
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame,
     QStackedWidget, QButtonGroup, QRadioButton, QComboBox, QApplication,
+    QLineEdit,
 )
 from PyQt6.QtCore import Qt, pyqtSignal, QProcess  # noqa: E402
 from PyQt6.QtGui import QFont  # noqa: E402
@@ -180,12 +183,14 @@ class WizardWindow(QWidget):
         self.rtf_base = None          # measured proxy real-time factor
         self.bench_proc = None        # QProcess running the benchmark
         self.bench_done = False
+        self.cloud_tested_ok = False
         self.choices = {
             "model_opt": None,           # selected option dict
             "language": "fa",
             "hotkey_vk": 71,
             "hotkey_label": "G",
             "ui_style": "pill",
+            "cloud_api_key": "",
         }
 
         self.setWindowTitle("Guya — Setup")
@@ -401,6 +406,57 @@ class WizardWindow(QWidget):
         self.model_container = QVBoxLayout()
         self.model_container.setSpacing(10)
         lay.addLayout(self.model_container)
+
+        # ---- Cloud connect panel (shown only when "Cloud" is selected) ----
+        self.cloud_panel = QFrame()
+        self.cloud_panel.setStyleSheet(
+            f"QFrame {{ background: {BG_CARD}; border: 1px solid {BORDER_SEL};"
+            f"border-radius: 10px; }}")
+        cp = QVBoxLayout(self.cloud_panel)
+        cp.setContentsMargins(14, 12, 14, 12)
+        cp.setSpacing(8)
+
+        guide = QLabel(
+            "Connect a free online account (Groq):\n"
+            "1. Open  console.groq.com/keys  and sign in (free, no card)\n"
+            "2. Create an API key and copy it\n"
+            "3. Paste it below and press Test")
+        guide.setFont(QFont(UI_FONT, 10))
+        guide.setStyleSheet(f"color: {TEXT2}; border: none;")
+        guide.setWordWrap(True)
+        cp.addWidget(guide)
+
+        self.key_edit = QLineEdit()
+        self.key_edit.setPlaceholderText("Paste your API key (gsk_…)")
+        self.key_edit.setEchoMode(QLineEdit.EchoMode.Password)
+        self.key_edit.setMinimumHeight(36)
+        self.key_edit.setStyleSheet(
+            f"QLineEdit {{ background: {BG_PRIMARY}; color: {TEXT};"
+            f"border: 1px solid {BORDER}; border-radius: 8px; padding: 6px 10px; }}")
+        self.key_edit.textChanged.connect(self._on_key_changed)
+        cp.addWidget(self.key_edit)
+
+        row = QHBoxLayout()
+        self.test_btn = self._btn("Test", BLUE, "#0a0a0f")
+        self.test_btn.setMinimumSize(90, 36)
+        self.test_btn.clicked.connect(self._test_cloud)
+        row.addWidget(self.test_btn)
+        self.cloud_status = QLabel("")
+        self.cloud_status.setFont(QFont(UI_FONT, 10))
+        self.cloud_status.setStyleSheet(f"color: {TEXT2}; border: none;")
+        self.cloud_status.setWordWrap(True)
+        row.addWidget(self.cloud_status, 1)
+        cp.addLayout(row)
+
+        priv = QLabel("Note: with the online option your voice is sent to the "
+                      "provider's servers. Offline models keep everything on your device.")
+        priv.setFont(QFont(UI_FONT, 9))
+        priv.setStyleSheet(f"color: {DIM}; border: none;")
+        priv.setWordWrap(True)
+        cp.addWidget(priv)
+
+        self.cloud_panel.setVisible(False)
+        lay.addWidget(self.cloud_panel)
         lay.addStretch()
         return w
 
@@ -425,6 +481,36 @@ class WizardWindow(QWidget):
     def _pick_model(self, checked, opt):
         if checked:
             self.choices["model_opt"] = opt
+            is_cloud = opt["backend"] == "cloud"
+            self.cloud_panel.setVisible(is_cloud)
+            self._update_nav()
+
+    def _on_key_changed(self, text):
+        self.choices["cloud_api_key"] = text.strip()
+        self.cloud_tested_ok = False
+        self.cloud_status.setText("")
+        self._update_nav()
+
+    def _test_cloud(self):
+        key = self.key_edit.text().strip()
+        if not key:
+            self.cloud_status.setStyleSheet(f"color: {RED}; border: none;")
+            self.cloud_status.setText("Paste a key first.")
+            return
+        self.test_btn.setText("Testing…")
+        self.test_btn.setEnabled(False)
+        self.cloud_status.setStyleSheet(f"color: {BLUE}; border: none;")
+        self.cloud_status.setText("Checking your key…")
+        QApplication.processEvents()
+
+        ok, msg = cloud_engine.test_connection(key, provider="groq")
+        self.cloud_tested_ok = ok
+        self.cloud_status.setStyleSheet(
+            f"color: {GREEN if ok else RED}; border: none;")
+        self.cloud_status.setText(("✓ " if ok else "✗ ") + msg)
+        self.test_btn.setText("Test")
+        self.test_btn.setEnabled(True)
+        self._update_nav()
 
     # ---- Page 3: Configure ----
 
@@ -559,8 +645,14 @@ class WizardWindow(QWidget):
         can_next = True
         if idx == 1 and self.profile is None:
             can_next = False
-        if idx == 2 and not self.choices["model_opt"]:
-            can_next = False
+        if idx == 2:
+            opt = self.choices["model_opt"]
+            if not opt:
+                can_next = False
+            elif opt["backend"] == "cloud":
+                # Cloud needs a key (and ideally a successful test).
+                if not self.choices.get("cloud_api_key"):
+                    can_next = False
         self.next_btn.setEnabled(can_next)
         self.next_btn.setText("Finish" if idx == self.stack.count() - 1 else "Next")
 
@@ -573,11 +665,17 @@ class WizardWindow(QWidget):
         cfg["model"]["size"] = opt["model_size"]
         cfg["model"]["device"] = opt["device"]
         cfg["model"]["compute_type"] = "auto"
+        if opt["backend"] == "cloud":
+            cfg["cloud"]["provider"] = "groq"
+            cfg["cloud"]["api_key"] = self.choices.get("cloud_api_key", "")
         cfg["language"] = self.choices["language"]
         cfg["hotkey"]["vk"] = self.choices["hotkey_vk"]
         cfg["hotkey"]["label"] = self.choices["hotkey_label"]
         cfg["hotkey"]["name"] = self.choices["hotkey_label"]
         cfg["ui"]["style"] = self.choices["ui_style"]
+        # Stop the benchmark subprocess if it's still running.
+        if self.bench_proc and self.bench_proc.state() != QProcess.ProcessState.NotRunning:
+            self.bench_proc.kill()
         if guya_config.save_config(cfg):
             self.completed = True
             log.info("Setup complete; config saved.")

@@ -22,9 +22,9 @@ double-click to start.
 Early development. Milestones:
 
 - [x] **M1** — Config-driven widget (reads `~/.guya/config.json`)
-- [ ] **M2** — Setup wizard (analyze device → choose model → configure)
-- [ ] **M3** — Benchmark-based model recommendation
-- [ ] **M4** — Cloud fallback engine
+- [x] **M2** — Setup wizard (analyze device → choose model → configure)
+- [x] **M3** — Benchmark-based model recommendation
+- [x] **M4** — Cloud fallback engine (free online option via Groq)
 
 ## Install
 
