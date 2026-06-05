@@ -164,6 +164,8 @@ def recommend_models(profile: dict) -> list:
         "recommended": accurate_rec,
         "enabled": accurate_enabled,
         "note": accurate_note,
+        "pros": ["pro_best_persian", "pro_accents"],
+        "cons": ["con_slower_cpu"],
     })
 
     # ---- Offline: Balanced (medium) ----
@@ -178,6 +180,8 @@ def recommend_models(profile: dict) -> list:
         "recommended": (not has_cuda) and ram >= 8 and not apple,
         "enabled": ram >= 6,
         "note": "Uses your GPU" if has_cuda else "Runs on CPU",
+        "pros": ["pro_good_balance"],
+        "cons": ["con_weaker_persian"],
     })
 
     # ---- Offline: Fast (small) ----
@@ -192,6 +196,8 @@ def recommend_models(profile: dict) -> list:
         "recommended": (not has_cuda) and ram < 8,
         "enabled": True,
         "note": "Good for weaker machines",
+        "pros": ["pro_very_fast", "pro_light"],
+        "cons": ["con_low_persian"],
     })
 
     # ---- Online: Cloud ----
@@ -205,6 +211,8 @@ def recommend_models(profile: dict) -> list:
         "recommended": False,
         "enabled": True,
         "note": "Best when your computer is too weak for offline models",
+        "pros": ["pro_full_accuracy", "pro_no_download"],
+        "cons": ["con_needs_internet", "con_privacy"],
     })
 
     # Guarantee exactly one recommended option.

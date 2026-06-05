@@ -67,6 +67,16 @@ PROXY_AUDIO_SEC = 6.0         # length of the synthetic benchmark clip
 COMFORTABLE_RTF = 1.0
 ACCEPTABLE_RTF = 2.0
 
+# Per-language quality floor: the minimum model (by ACCURACY_RANK) that gives
+# acceptable accuracy for that language. English is good even on `small`;
+# Persian degrades badly below `large-v3-turbo`, so Persian/bilingual users
+# must not be recommended anything weaker than turbo.
+LANGUAGE_FLOOR_RANK = {
+    "en": ACCURACY_RANK["small"],            # 3
+    "fa": ACCURACY_RANK["large-v3-turbo"],   # 5
+    "dual": ACCURACY_RANK["large-v3-turbo"], # 5 (Persian is the binding constraint)
+}
+
 
 # ============================================================
 # THE BENCHMARK (runs in a subprocess)
@@ -120,14 +130,16 @@ def predict_rtf(rtf_base: float, model_size: str) -> float:
 
 
 def annotate_and_recommend(options: list, rtf_base: float,
+                           language: str = "fa",
                            utterance_sec: float = 10.0) -> list:
-    """Given the wizard's model options and the measured proxy RTF:
+    """Given the wizard's model options, the measured proxy RTF, and the user's
+    language preference:
 
-      * add predicted_rtf and predicted_latency_sec (for a typical utterance)
-        to every offline option, and
-      * re-mark `recommended` as the largest offline model whose predicted RTF
-        is within the comfortable budget (falling back to acceptable, then the
-        smallest, then cloud).
+      * add predicted_rtf and predicted_latency_sec to every offline option, and
+      * mark `recommended` = the most accurate OFFLINE model that (a) meets the
+        language's quality floor, (b) fits the latency budget, and (c) is
+        enabled for this hardware. If none qualifies, recommend CLOUD — full
+        accuracy with no local compute (exactly the weak-device + Persian case).
 
     Returns the same list, mutated.
     """
@@ -140,28 +152,34 @@ def annotate_and_recommend(options: list, rtf_base: float,
             o["predicted_rtf"] = round(rtf, 2)
             o["predicted_latency_sec"] = round(rtf * utterance_sec, 1)
 
-    offline = [o for o in options if o["backend"] != "cloud" and o["enabled"]]
+    floor = LANGUAGE_FLOOR_RANK.get(language, LANGUAGE_FLOOR_RANK["fa"])
+
+    # Offline candidates that are enabled AND meet the language quality floor.
+    candidates = [
+        o for o in options
+        if o["backend"] != "cloud" and o["enabled"]
+        and ACCURACY_RANK.get(o["model_size"], 0) >= floor
+    ]
     for o in options:
         o["recommended"] = False
 
-    # Most accurate first — rank by QUALITY, not cost (turbo > medium).
-    by_accuracy = sorted(offline, key=lambda o: ACCURACY_RANK.get(o["model_size"], 0),
+    # Most accurate first.
+    by_accuracy = sorted(candidates,
+                         key=lambda o: ACCURACY_RANK.get(o["model_size"], 0),
                          reverse=True)
 
     chosen = None
-    for o in by_accuracy:
+    for o in by_accuracy:                       # comfortable first
         if o["predicted_rtf"] is not None and o["predicted_rtf"] <= COMFORTABLE_RTF:
             chosen = o
             break
     if chosen is None:
-        for o in by_accuracy:
+        for o in by_accuracy:                   # then acceptable
             if o["predicted_rtf"] is not None and o["predicted_rtf"] <= ACCEPTABLE_RTF:
                 chosen = o
                 break
-    if chosen is None and offline:
-        # Nothing is comfortable; pick the fastest offline option.
-        chosen = min(offline, key=lambda o: RELATIVE_COST.get(o["model_size"], 0))
 
+    # Nothing offline is both accurate-enough AND fast-enough → go online.
     if chosen is not None:
         chosen["recommended"] = True
     else:

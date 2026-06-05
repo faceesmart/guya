@@ -1,14 +1,14 @@
 """
-Guya setup wizard.
+Guya setup wizard — bilingual (English / فارسی), device-aware.
 
-Modern multi-page first-run flow:
-
-    Welcome → Device (analyze + benchmark) → Model → Settings → Review
+Flow:
+    Welcome → Language (which you speak) → Device (analyze + editable specs)
+            → Model (cards + pros/cons, or cloud guide) → Key → Review
             → Download (progress) → launch
 
-On finish it writes ~/.guya/config.json, downloads the chosen offline model
-(with a progress bar), creates a double-click launcher, and the entry point
-then relaunches into the widget.
+The wizard UI itself can be shown in English or Persian (toggle top-right),
+with right-to-left layout for Persian. The "which languages will you speak"
+step feeds the language-aware model recommendation.
 """
 
 import os
@@ -41,7 +41,7 @@ elif IS_MAC:
 else:
     UI_FONT = "DejaVu Sans"
 
-# ---- modern dark palette with a violet accent ----
+# ---- palette ----
 BG = "#0b0b12"
 CARD = "#16161f"
 CARD_SEL = "#1d1b33"
@@ -50,19 +50,222 @@ ACCENT = "#7c6cff"
 ACCENT_TEXT = "#0b0b12"
 GREEN = "#34d399"
 RED = "#f87171"
-BLUE = "#7c6cff"
 TEXT = "#ECECF1"
 TEXT2 = "#9a9ab0"
 DIM = "#5a5a72"
 
-STEPS = ["Welcome", "Device", "Model", "Settings", "Finish"]
-PAGE_TO_STEP = [0, 1, 2, 3, 4, 4]   # page index -> step index (download = Finish)
-
-# Approximate on-disk size per model (MB) — for the download progress bar.
 MODEL_SIZE_MB = {
     "tiny": 75, "base": 145, "small": 484, "medium": 1530,
     "large-v3": 3090, "large-v3-turbo": 1620,
 }
+
+
+# ============================================================
+# TRANSLATIONS
+# ============================================================
+
+LANG = {
+    "en": {
+        "win_title": "Guya — Setup",
+        "step_welcome": "Welcome", "step_language": "Language", "step_device": "Device",
+        "step_model": "Model", "step_key": "Key", "step_finish": "Finish",
+        "back": "Back", "next": "Next", "finish": "Finish",
+
+        "w_tagline": "Speech-to-Text for Persian and English",
+        "w_sub": "Hold a key, speak, and your words are typed for you.",
+        "w_note": "This quick setup checks your computer and helps you\nchoose the best option. It takes about a minute.",
+
+        "lang_title": "Which languages will you speak?",
+        "lang_sub": "Persian needs a stronger model than English, so this changes "
+                    "which model Guya recommends.",
+        "lang_fa": "Persian only",
+        "lang_fa_desc": "Best Persian accuracy. Needs a stronger model.",
+        "lang_en": "English only",
+        "lang_en_desc": "English works well even on fast, light models.",
+        "lang_both": "Both — Persian and English",
+        "lang_both_desc": "Bilingual. Treated like Persian when choosing a model.",
+
+        "dev_title": "Your computer",
+        "dev_sub": "Guya checks your hardware and measures its real speed to "
+                   "recommend the best model.",
+        "dev_analyze": "Analyze my PC",
+        "dev_analyzing": "Analyzing…",
+        "dev_reanalyze": "Re-analyze",
+        "dev_edit_hint": "Detected automatically. Click any value to correct it.",
+        "spec_os": "Operating system", "spec_cpu": "Processor",
+        "spec_ram": "Memory (GB)", "spec_gpu": "Graphics (GPU)",
+        "gpu_none": "None / not usable",
+        "bench_measuring": "⏱  Measuring your computer's speed… (downloads a small "
+                           "test model the first time — about 20–40s)",
+        "bench_done": "✓  Speed measured. The recommendation is tuned to your machine.",
+        "bench_failed": "Could not run the speed test; using a specs-based recommendation.",
+
+        "model_title": "Choose a model",
+        "model_sub": "How should Guya recognize your speech?",
+        "recommended": "Recommended",
+        "offline": "OFFLINE", "online": "ONLINE",
+        "not_suitable": "not suitable for this PC",
+        "title_accurate": "Accurate", "title_balanced": "Balanced",
+        "title_fast": "Fast", "title_cloud": "Cloud (Online)",
+        "lat_est": "≈ {n}s for 10 seconds of speech (estimated on your machine)",
+        "pros": "Pros", "cons": "Cons",
+        "pro_best_persian": "Best Persian accuracy",
+        "pro_accents": "Handles accents and colloquial speech",
+        "con_slower_cpu": "Slower on a CPU-only machine",
+        "pro_good_balance": "Good balance of speed and quality",
+        "con_weaker_persian": "Weaker Persian than the Accurate model",
+        "pro_very_fast": "Very fast", "pro_light": "Light on memory",
+        "con_low_persian": "Lower accuracy, weak for Persian",
+        "pro_full_accuracy": "Full accuracy on any computer",
+        "pro_no_download": "No model download",
+        "con_needs_internet": "Needs an internet connection",
+        "con_privacy": "Sends your voice to the provider's servers",
+
+        "cloud_guide_title": "Connect a free online account (Groq)",
+        "cloud_step1": "1.  Open  console.groq.com/keys  and sign in (free, no card)",
+        "cloud_step2": "2.  Create an API key and copy it",
+        "cloud_step3": "3.  Paste it below and press Test",
+        "cloud_key_ph": "Paste your API key (gsk_…)",
+        "cloud_test": "Test",
+        "cloud_testing": "Checking your key…",
+        "cloud_paste_first": "Paste a key first.",
+        "cloud_privacy": "Note: the online option sends your voice to the provider's "
+                         "servers. Offline models keep everything on your device.",
+
+        "key_title": "Push-to-talk key",
+        "key_sub": "Choose the key you hold down to speak.",
+        "key_mac": "On macOS the push-to-talk key is Right Option (⌥).",
+        "key_capture": "Click here, then press a key",
+        "key_capturing": "Press any key now…",
+        "key_chosen": "Key:  {k}",
+        "key_hint": "Tip: pick a letter you rarely press mid-sentence (default: G).",
+
+        "review_title": "Review", "review_sub": "Check your choices, then finish.",
+        "sum_model": "Model", "sum_runs": "Runs", "sum_language": "Language",
+        "sum_key": "Hotkey", "sum_offline": "Offline (on your PC)",
+        "sum_online": "Online (cloud)",
+        "tip_cloud": "Cloud chosen — no model download needed. Guya will create a "
+                     "launcher and start.",
+        "tip_offline": "Guya will download the model if needed (with a progress bar), "
+                       "create a double-click launcher, and start.",
+        "dl_title": "Downloading the “{m}” model…",
+        "dl_wait": "This happens once. Please keep this window open.",
+        "dl_of": "{a} MB of ~{b} MB", "dl_done": "Done.",
+        "lbl_fa": "Persian", "lbl_en": "English", "lbl_dual": "Bilingual",
+    },
+    "fa": {
+        "win_title": "گویا — راه‌اندازی",
+        "step_welcome": "خوش‌آمد", "step_language": "زبان", "step_device": "دستگاه",
+        "step_model": "مدل", "step_key": "کلید", "step_finish": "پایان",
+        "back": "بازگشت", "next": "بعدی", "finish": "پایان",
+
+        "w_tagline": "تبدیل گفتار به متن برای فارسی و انگلیسی",
+        "w_sub": "یک کلید را نگه دارید، صحبت کنید، و کلماتتان تایپ می‌شود.",
+        "w_note": "این راه‌اندازی سریع کامپیوتر شما را بررسی می‌کند و به انتخاب\nبهترین گزینه کمک می‌کند. حدود یک دقیقه طول می‌کشد.",
+
+        "lang_title": "به چه زبان‌هایی صحبت می‌کنید؟",
+        "lang_sub": "فارسی به مدلی قوی‌تر از انگلیسی نیاز دارد، پس این انتخاب روی "
+                    "مدلی که گویا پیشنهاد می‌دهد اثر می‌گذارد.",
+        "lang_fa": "فقط فارسی",
+        "lang_fa_desc": "بهترین دقت فارسی. به مدل قوی‌تری نیاز دارد.",
+        "lang_en": "فقط انگلیسی",
+        "lang_en_desc": "انگلیسی حتی روی مدل‌های سبک و سریع هم خوب کار می‌کند.",
+        "lang_both": "هر دو — فارسی و انگلیسی",
+        "lang_both_desc": "دوزبانه. هنگام انتخاب مدل مانند فارسی در نظر گرفته می‌شود.",
+
+        "dev_title": "کامپیوتر شما",
+        "dev_sub": "گویا سخت‌افزار شما را بررسی و سرعت واقعی آن را اندازه‌گیری می‌کند "
+                   "تا بهترین مدل را پیشنهاد دهد.",
+        "dev_analyze": "بررسی کامپیوتر",
+        "dev_analyzing": "در حال بررسی…",
+        "dev_reanalyze": "بررسی دوباره",
+        "dev_edit_hint": "به‌صورت خودکار شناسایی شد. برای اصلاح روی هر مقدار کلیک کنید.",
+        "spec_os": "سیستم‌عامل", "spec_cpu": "پردازنده",
+        "spec_ram": "حافظه (گیگابایت)", "spec_gpu": "کارت گرافیک",
+        "gpu_none": "ندارد / غیرقابل‌استفاده",
+        "bench_measuring": "⏱  در حال اندازه‌گیری سرعت کامپیوتر… (بار اول یک مدل آزمایشی "
+                           "کوچک دانلود می‌شود — حدود ۲۰ تا ۴۰ ثانیه)",
+        "bench_done": "✓  سرعت اندازه‌گیری شد. پیشنهاد متناسب با دستگاه شما تنظیم شد.",
+        "bench_failed": "آزمایش سرعت انجام نشد؛ از پیشنهاد مبتنی بر مشخصات استفاده می‌شود.",
+
+        "model_title": "انتخاب مدل",
+        "model_sub": "گویا چگونه گفتار شما را تشخیص دهد؟",
+        "recommended": "پیشنهادی",
+        "offline": "آفلاین", "online": "آنلاین",
+        "not_suitable": "برای این کامپیوتر مناسب نیست",
+        "title_accurate": "دقیق", "title_balanced": "متعادل",
+        "title_fast": "سریع", "title_cloud": "ابری (آنلاین)",
+        "lat_est": "حدود {n} ثانیه برای ۱۰ ثانیه گفتار (تخمینی روی دستگاه شما)",
+        "pros": "مزایا", "cons": "معایب",
+        "pro_best_persian": "بهترین دقت فارسی",
+        "pro_accents": "پشتیبانی از لهجه و گفتار محاوره‌ای",
+        "con_slower_cpu": "روی دستگاه بدون کارت گرافیک کندتر است",
+        "pro_good_balance": "تعادل خوب بین سرعت و کیفیت",
+        "con_weaker_persian": "فارسی ضعیف‌تر از مدل دقیق",
+        "pro_very_fast": "بسیار سریع", "pro_light": "مصرف حافظه کم",
+        "con_low_persian": "دقت پایین‌تر، ضعیف برای فارسی",
+        "pro_full_accuracy": "دقت کامل روی هر کامپیوتری",
+        "pro_no_download": "بدون دانلود مدل",
+        "con_needs_internet": "به اینترنت نیاز دارد",
+        "con_privacy": "صدای شما به سرور سرویس‌دهنده ارسال می‌شود",
+
+        "cloud_guide_title": "اتصال به یک حساب آنلاین رایگان (Groq)",
+        "cloud_step1": "۱.  به  console.groq.com/keys  بروید و وارد شوید (رایگان، بدون کارت)",
+        "cloud_step2": "۲.  یک کلید API بسازید و کپی کنید",
+        "cloud_step3": "۳.  آن را پایین بچسبانید و «آزمایش» را بزنید",
+        "cloud_key_ph": "کلید API خود را بچسبانید (gsk_…)",
+        "cloud_test": "آزمایش",
+        "cloud_testing": "در حال بررسی کلید…",
+        "cloud_paste_first": "ابتدا یک کلید بچسبانید.",
+        "cloud_privacy": "توجه: گزینهٔ آنلاین صدای شما را به سرور سرویس‌دهنده می‌فرستد. "
+                         "مدل‌های آفلاین همه‌چیز را روی دستگاه شما نگه می‌دارند.",
+
+        "key_title": "کلید فشار-برای-صحبت",
+        "key_sub": "کلیدی را که برای صحبت نگه می‌دارید انتخاب کنید.",
+        "key_mac": "در مک‌اواس کلید فشار-برای-صحبت، Right Option (⌥) است.",
+        "key_capture": "اینجا کلیک کنید، سپس یک کلید را فشار دهید",
+        "key_capturing": "حالا یک کلید را فشار دهید…",
+        "key_chosen": "کلید:  {k}",
+        "key_hint": "نکته: حرفی را انتخاب کنید که وسط جمله کم فشار می‌دهید (پیش‌فرض: G).",
+
+        "review_title": "مرور", "review_sub": "انتخاب‌هایتان را بررسی و سپس تمام کنید.",
+        "sum_model": "مدل", "sum_runs": "اجرا", "sum_language": "زبان",
+        "sum_key": "کلید", "sum_offline": "آفلاین (روی کامپیوتر شما)",
+        "sum_online": "آنلاین (ابری)",
+        "tip_cloud": "ابری انتخاب شد — نیازی به دانلود مدل نیست. گویا یک فایل اجرا "
+                     "می‌سازد و شروع می‌کند.",
+        "tip_offline": "گویا در صورت نیاز مدل را دانلود می‌کند (با نوار پیشرفت)، یک فایل "
+                       "اجرای دوبار-کلیکی می‌سازد و شروع می‌کند.",
+        "dl_title": "در حال دانلود مدل «{m}»…",
+        "dl_wait": "این فقط یک‌بار اتفاق می‌افتد. لطفاً این پنجره را باز نگه دارید.",
+        "dl_of": "{a} مگابایت از ~{b} مگابایت", "dl_done": "انجام شد.",
+        "lbl_fa": "فارسی", "lbl_en": "انگلیسی", "lbl_dual": "دوزبانه",
+    },
+}
+
+
+def run() -> bool:
+    from PyQt6.QtWidgets import QApplication
+    from PyQt6.QtGui import QFont as _QFont
+    app = QApplication.instance() or QApplication(sys.argv)
+    app.setStyle("Fusion")
+    app.setFont(_QFont(UI_FONT, 11))
+    win = WizardWindow()
+    win.show()
+    win.raise_()
+    win.activateWindow()
+    app.exec()
+    return win.completed
+
+
+from PyQt6.QtWidgets import (  # noqa: E402
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame,
+    QStackedWidget, QApplication, QLineEdit, QProgressBar, QCheckBox,
+)
+from PyQt6.QtCore import (  # noqa: E402
+    Qt, QProcess, QProcessEnvironment, QTimer, pyqtSignal,
+)
+from PyQt6.QtGui import QFont  # noqa: E402
 
 
 def _hub_root():
@@ -91,129 +294,33 @@ def model_downloaded_mb(size: str) -> float:
     return total / (1024 * 1024)
 
 
-def run() -> bool:
-    """Show the wizard. Returns True if setup completed (config saved)."""
-    from PyQt6.QtWidgets import QApplication
-    from PyQt6.QtGui import QFont as _QFont
-    app = QApplication.instance() or QApplication(sys.argv)
-    app.setStyle("Fusion")
-    app.setFont(_QFont(UI_FONT, 11))
-    win = WizardWindow()
-    win.show()
-    win.raise_()
-    win.activateWindow()
-    app.exec()
-    return win.completed
-
-
-from PyQt6.QtWidgets import (  # noqa: E402
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame,
-    QStackedWidget, QComboBox, QApplication, QLineEdit, QProgressBar,
-)
-from PyQt6.QtCore import Qt, QProcess, QProcessEnvironment, QTimer, pyqtSignal  # noqa: E402
-from PyQt6.QtGui import QFont  # noqa: E402
+STEPS_KEYS = ["step_welcome", "step_language", "step_device",
+              "step_model", "step_key", "step_finish"]
+PAGE_TO_STEP = [0, 1, 2, 3, 4, 5, 5]
 
 
 # ============================================================
-# STEP INDICATOR
+# SELECTABLE CARD (generic, for language + model)
 # ============================================================
 
-class StepIndicator(QWidget):
-    """A slim row of numbered steps at the top of the wizard."""
+class Card(QFrame):
+    """A clickable card with a title + description, used for choices."""
 
-    def __init__(self):
+    def __init__(self, on_click, payload, enabled=True):
         super().__init__()
-        self._current = 0
-        self._labels = []
-        lay = QHBoxLayout(self)
-        lay.setContentsMargins(0, 0, 0, 0)
-        lay.setSpacing(8)
-        lay.addStretch()
-        for i, name in enumerate(STEPS):
-            lbl = QLabel(f"{i+1}. {name}")
-            lbl.setFont(QFont(UI_FONT, 10, QFont.Weight.DemiBold))
-            self._labels.append(lbl)
-            lay.addWidget(lbl)
-            if i < len(STEPS) - 1:
-                sep = QLabel("—")
-                sep.setStyleSheet(f"color: {DIM};")
-                lay.addWidget(sep)
-        lay.addStretch()
-        self.set_step(0)
-
-    def set_step(self, idx):
-        self._current = idx
-        for i, lbl in enumerate(self._labels):
-            if i == idx:
-                lbl.setStyleSheet(f"color: {ACCENT};")
-            elif i < idx:
-                lbl.setStyleSheet(f"color: {TEXT2};")
-            else:
-                lbl.setStyleSheet(f"color: {DIM};")
-
-
-# ============================================================
-# CUSTOM MODEL CARD (clickable, modern)
-# ============================================================
-
-class ModelCard(QFrame):
-    def __init__(self, opt: dict, on_click):
-        super().__init__()
-        self.opt = opt
+        self.payload = payload
         self.on_click = on_click
+        self.enabled_ = enabled
         self.selected = False
         self.setObjectName("card")
-        if opt["enabled"]:
+        self._body = QVBoxLayout(self)
+        self._body.setContentsMargins(16, 13, 16, 13)
+        self._body.setSpacing(4)
+        if enabled:
             self.setCursor(Qt.CursorShape.PointingHandCursor)
 
-        lay = QVBoxLayout(self)
-        lay.setContentsMargins(16, 13, 16, 13)
-        lay.setSpacing(3)
-
-        top = QHBoxLayout()
-        top.setSpacing(8)
-        title = QLabel(opt["title"])
-        title.setFont(QFont(UI_FONT, 13, QFont.Weight.Bold))
-        title.setStyleSheet(f"color: {TEXT}; background: transparent;")
-        top.addWidget(title)
-        top.addStretch()
-        if opt["recommended"]:
-            badge = QLabel("★ Recommended")
-            badge.setFont(QFont(UI_FONT, 9, QFont.Weight.DemiBold))
-            badge.setStyleSheet(
-                f"color: {ACCENT}; background: rgba(124,108,255,0.12);"
-                f"border-radius: 8px; padding: 2px 8px;")
-            top.addWidget(badge)
-        kind = QLabel("ONLINE" if opt["backend"] == "cloud" else "OFFLINE")
-        kind.setFont(QFont(UI_FONT, 8, QFont.Weight.DemiBold))
-        kind.setStyleSheet(f"color: {TEXT2}; background: transparent;")
-        top.addWidget(kind)
-        lay.addLayout(top)
-
-        sub = QLabel(opt["subtitle"])
-        sub.setFont(QFont(UI_FONT, 10))
-        sub.setStyleSheet(f"color: {TEXT2}; background: transparent;")
-        lay.addWidget(sub)
-
-        note = opt["note"]
-        if not opt["enabled"]:
-            note += "   ·   not suitable for this PC"
-        nlbl = QLabel(note)
-        nlbl.setFont(QFont(UI_FONT, 9))
-        nlbl.setStyleSheet(f"color: {DIM}; background: transparent;")
-        lay.addWidget(nlbl)
-
-        lat = opt.get("predicted_latency_sec")
-        if lat is not None:
-            lt = QLabel(f"⏱ ~{lat:g}s (estimated) for 10s of speech on your machine")
-            lt.setFont(QFont(UI_FONT, 9, QFont.Weight.DemiBold))
-            lt.setStyleSheet(f"color: {ACCENT}; background: transparent;")
-            lay.addWidget(lt)
-
-        self._apply_style()
-
-    def _apply_style(self):
-        if not self.opt["enabled"]:
+    def style_self(self):
+        if not self.enabled_:
             border, bg = BORDER, "#101018"
         elif self.selected:
             border, bg = ACCENT, CARD_SEL
@@ -221,90 +328,172 @@ class ModelCard(QFrame):
             border, bg = BORDER, CARD
         self.setStyleSheet(
             f"QFrame#card {{ background: {bg}; border: 1.5px solid {border};"
-            f"border-radius: 12px; }}")
+            f"border-radius: 12px; }} "
+            f"QLabel {{ background: transparent; border: none; }}")
 
-    def set_selected(self, sel):
-        self.selected = sel
-        self._apply_style()
+    def set_selected(self, s):
+        self.selected = s
+        self.style_self()
 
     def mousePressEvent(self, e):
-        if self.opt["enabled"]:
+        if self.enabled_:
             self.on_click(self)
 
 
 # ============================================================
-# WIZARD WINDOW
+# WIZARD
 # ============================================================
 
 class WizardWindow(QWidget):
     def __init__(self):
         super().__init__()
+        self.ui_lang = "en"
         self.completed = False
         self.profile = None
         self.model_options = []
         self.rtf_base = None
         self.bench_proc = None
-        self.bench_done = False
         self.dl_proc = None
         self.dl_timer = None
         self.cards = []
-        self.selected_card = None
+        self.lang_cards = []
+        self.selected_model_id = None
         self.cloud_tested_ok = False
         self.choices = {
-            "model_opt": None,
-            "language": "fa",
-            "hotkey_vk": 71,
-            "hotkey_label": "G",
-            "ui_style": "pill",
-            "cloud_api_key": "",
+            "model_opt": None, "language": "fa",
+            "hotkey_vk": 71, "hotkey_label": "G",
+            "ui_style": "pill", "cloud_api_key": "",
         }
+        self.spec_edits = {}
 
-        self.setWindowTitle("Guya — Setup")
-        self.setFixedSize(600, 660)
+        self.setFixedSize(640, 720)
         self.setStyleSheet(f"background: {BG}; color: {TEXT};")
 
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
 
-        # Step indicator header
+        # Header: step indicator + language toggle
         header = QWidget()
-        header.setStyleSheet(f"background: {BG};")
-        hlay = QVBoxLayout(header)
-        hlay.setContentsMargins(20, 16, 20, 12)
-        self.steps = StepIndicator()
-        hlay.addWidget(self.steps)
+        hlay = QHBoxLayout(header)
+        hlay.setContentsMargins(20, 14, 20, 10)
+        self.step_labels = []
+        steprow = QHBoxLayout()
+        steprow.setSpacing(7)
+        for i, k in enumerate(STEPS_KEYS):
+            lbl = QLabel(f"{i+1}")
+            lbl.setFont(QFont(UI_FONT, 10, QFont.Weight.DemiBold))
+            self.step_labels.append(lbl)
+            steprow.addWidget(lbl)
+            if i < len(STEPS_KEYS) - 1:
+                s = QLabel("—"); s.setStyleSheet(f"color: {DIM};")
+                steprow.addWidget(s)
+        hlay.addLayout(steprow)
+        hlay.addStretch()
+        hlay.addWidget(self._lang_toggle())
         root.addWidget(header)
 
         self.stack = QStackedWidget()
         root.addWidget(self.stack, 1)
+        self.stack.addWidget(self._page_welcome())      # 0
+        self.stack.addWidget(self._page_language())      # 1
+        self.stack.addWidget(self._page_device())        # 2
+        self.stack.addWidget(self._page_model())         # 3
+        self.stack.addWidget(self._page_key())           # 4
+        self.stack.addWidget(self._page_review())        # 5
+        self.stack.addWidget(self._page_download())      # 6
 
-        self.stack.addWidget(self._page_welcome())     # 0
-        self.stack.addWidget(self._page_analyze())      # 1
-        self.stack.addWidget(self._page_model())        # 2
-        self.stack.addWidget(self._page_configure())    # 3
-        self.stack.addWidget(self._page_finish())       # 4
-        self.stack.addWidget(self._page_download())      # 5
-
-        # Nav bar
         navw = QWidget()
         nav = QHBoxLayout(navw)
-        nav.setContentsMargins(24, 10, 24, 20)
-        self.back_btn = self._btn("Back", "ghost")
-        self.back_btn.clicked.connect(self._go_back)
-        self.next_btn = self._btn("Next", "primary")
-        self.next_btn.clicked.connect(self._go_next)
+        nav.setContentsMargins(24, 8, 24, 18)
+        self.back_btn = self._btn("back", "ghost"); self.back_btn.clicked.connect(self._go_back)
+        self.next_btn = self._btn("next", "primary"); self.next_btn.clicked.connect(self._go_next)
         nav.addWidget(self.back_btn)
         nav.addStretch()
         nav.addWidget(self.next_btn)
         root.addWidget(navw)
 
+        self.retranslate()
         self._update_nav()
+
+    # ---- i18n ----
+
+    def tr(self, key, **fmt):
+        s = LANG.get(self.ui_lang, LANG["en"]).get(key, LANG["en"].get(key, key))
+        return s.format(**fmt) if fmt else s
+
+    def _t(self, widget, key, placeholder=False):
+        widget.setProperty("i18nPh" if placeholder else "i18nKey", key)
+        if placeholder:
+            widget.setPlaceholderText(self.tr(key))
+        else:
+            widget.setText(self.tr(key))
+        return widget
+
+    def _lang_toggle(self):
+        box = QWidget()
+        lay = QHBoxLayout(box)
+        lay.setContentsMargins(0, 0, 0, 0)
+        lay.setSpacing(0)
+        self.btn_en = QPushButton("EN")
+        self.btn_fa = QPushButton("فا")
+        for b in (self.btn_en, self.btn_fa):
+            b.setCursor(Qt.CursorShape.PointingHandCursor)
+            b.setFixedSize(42, 28)
+            b.setFont(QFont(UI_FONT, 10, QFont.Weight.DemiBold))
+        self.btn_en.clicked.connect(lambda: self._set_ui_lang("en"))
+        self.btn_fa.clicked.connect(lambda: self._set_ui_lang("fa"))
+        lay.addWidget(self.btn_en)
+        lay.addWidget(self.btn_fa)
+        self._style_lang_toggle()
+        return box
+
+    def _style_lang_toggle(self):
+        on = f"background: {ACCENT}; color: {ACCENT_TEXT}; border: none;"
+        off = f"background: {CARD}; color: {TEXT2}; border: 1px solid {BORDER};"
+        self.btn_en.setStyleSheet(
+            f"QPushButton {{ {on if self.ui_lang=='en' else off} border-top-left-radius: 9px;"
+            f"border-bottom-left-radius: 9px; }}")
+        self.btn_fa.setStyleSheet(
+            f"QPushButton {{ {on if self.ui_lang=='fa' else off} border-top-right-radius: 9px;"
+            f"border-bottom-right-radius: 9px; }}")
+
+    def _set_ui_lang(self, lang):
+        self.ui_lang = lang
+        self._style_lang_toggle()
+        self.setLayoutDirection(
+            Qt.LayoutDirection.RightToLeft if lang == "fa" else Qt.LayoutDirection.LeftToRight)
+        self.retranslate()
+
+    def retranslate(self):
+        self.setWindowTitle(self.tr("win_title"))
+        for w in self.findChildren(QWidget):
+            k = w.property("i18nKey")
+            if k:
+                try:
+                    w.setText(self.tr(k))
+                except Exception:
+                    pass
+            ph = w.property("i18nPh")
+            if ph:
+                try:
+                    w.setPlaceholderText(self.tr(ph))
+                except Exception:
+                    pass
+        self._sync_step()
+        if self.profile is not None:
+            self._render_specs()
+        if self.model_options:
+            self._populate_models()
+        if self.choices["model_opt"]:
+            self._refresh_summary()
 
     # ---- styled widgets ----
 
-    def _btn(self, text, kind="primary"):
-        b = QPushButton(text)
+    def _btn(self, key, kind="primary"):
+        b = QPushButton()
+        b.setProperty("i18nKey", key)
+        b.setText(self.tr(key))
         b.setCursor(Qt.CursorShape.PointingHandCursor)
         b.setMinimumSize(120, 42)
         b.setFont(QFont(UI_FONT, 11, QFont.Weight.DemiBold))
@@ -313,54 +502,35 @@ class WizardWindow(QWidget):
                 QPushButton {{ background: {ACCENT}; color: {ACCENT_TEXT}; border: none;
                     border-radius: 11px; padding: 0 24px; }}
                 QPushButton:hover {{ background: #8d7dff; }}
-                QPushButton:disabled {{ background: #23233140; color: {DIM}; }}
-            """)
+                QPushButton:disabled {{ background: #23233140; color: {DIM}; }}""")
         elif kind == "green":
             b.setStyleSheet(f"""
                 QPushButton {{ background: {GREEN}; color: {ACCENT_TEXT}; border: none;
                     border-radius: 11px; padding: 0 24px; }}
                 QPushButton:hover {{ background: #4ade80; }}
-                QPushButton:disabled {{ background: #23233140; color: {DIM}; }}
-            """)
-        else:  # ghost
+                QPushButton:disabled {{ background: #23233140; color: {DIM}; }}""")
+        else:
             b.setStyleSheet(f"""
                 QPushButton {{ background: transparent; color: {TEXT2};
                     border: 1px solid {BORDER}; border-radius: 11px; padding: 0 24px; }}
                 QPushButton:hover {{ border-color: {TEXT2}; color: {TEXT}; }}
-                QPushButton:disabled {{ color: {DIM}; border-color: {BORDER}; }}
-            """)
+                QPushButton:disabled {{ color: {DIM}; }}""")
         return b
 
-    def _title(self, text, sub=""):
-        box = QVBoxLayout()
-        box.setSpacing(4)
-        t = QLabel(text)
-        t.setFont(QFont(UI_FONT, 22, QFont.Weight.Bold))
-        t.setStyleSheet(f"color: {TEXT};")
-        box.addWidget(t)
-        if sub:
-            s = QLabel(sub)
-            s.setFont(QFont(UI_FONT, 11))
-            s.setStyleSheet(f"color: {TEXT2};")
-            s.setWordWrap(True)
-            box.addWidget(s)
-        return box
+    def _heading(self, lay, title_key, sub_key):
+        t = QLabel(); t.setFont(QFont(UI_FONT, 22, QFont.Weight.Bold))
+        t.setStyleSheet(f"color: {TEXT};"); self._t(t, title_key)
+        lay.addWidget(t)
+        s = QLabel(); s.setFont(QFont(UI_FONT, 11)); s.setWordWrap(True)
+        s.setStyleSheet(f"color: {TEXT2};"); self._t(s, sub_key)
+        lay.addWidget(s)
 
     def _page(self):
         w = QWidget()
         lay = QVBoxLayout(w)
-        lay.setContentsMargins(34, 22, 34, 10)
-        lay.setSpacing(14)
+        lay.setContentsMargins(34, 18, 34, 8)
+        lay.setSpacing(12)
         return w, lay
-
-    def _info_card(self):
-        lbl = QLabel("")
-        lbl.setFont(QFont(UI_FONT, 11))
-        lbl.setStyleSheet(
-            f"color: {TEXT}; background: {CARD}; border: 1px solid {BORDER};"
-            f"border-radius: 12px; padding: 16px;")
-        lbl.setWordWrap(True)
-        return lbl
 
     # ---- Page 0: Welcome ----
 
@@ -368,85 +538,193 @@ class WizardWindow(QWidget):
         w, lay = self._page()
         lay.addStretch()
         logo = QLabel("گویا")
-        logo.setFont(QFont(UI_FONT, 46, QFont.Weight.Bold))
+        logo.setFont(QFont(UI_FONT, 48, QFont.Weight.Bold))
         logo.setStyleSheet(f"color: {TEXT};")
         logo.setAlignment(Qt.AlignmentFlag.AlignCenter)
         lay.addWidget(logo)
-        name = QLabel("Guya")
-        name.setFont(QFont(UI_FONT, 16, QFont.Weight.DemiBold))
-        name.setStyleSheet(f"color: {ACCENT};")
-        name.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        lay.addWidget(name)
-        sub = QLabel("Speech-to-Text for Persian and English.\n"
-                     "Hold a key, speak, and your words are typed for you.")
-        sub.setFont(QFont(UI_FONT, 12))
-        sub.setStyleSheet(f"color: {TEXT2};")
-        sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        nm = QLabel("Guya")
+        nm.setFont(QFont(UI_FONT, 16, QFont.Weight.DemiBold))
+        nm.setStyleSheet(f"color: {ACCENT};")
+        nm.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        lay.addWidget(nm)
+        tag = QLabel(); tag.setFont(QFont(UI_FONT, 13)); tag.setStyleSheet(f"color: {TEXT2};")
+        tag.setAlignment(Qt.AlignmentFlag.AlignCenter); self._t(tag, "w_tagline")
+        lay.addWidget(tag)
+        sub = QLabel(); sub.setFont(QFont(UI_FONT, 11)); sub.setStyleSheet(f"color: {TEXT2};")
+        sub.setAlignment(Qt.AlignmentFlag.AlignCenter); self._t(sub, "w_sub")
         lay.addWidget(sub)
-        note = QLabel("This quick setup checks your computer and helps you choose\n"
-                      "the best option. It takes about a minute.")
-        note.setFont(QFont(UI_FONT, 10))
-        note.setStyleSheet(f"color: {DIM};")
-        note.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        note = QLabel(); note.setFont(QFont(UI_FONT, 10)); note.setStyleSheet(f"color: {DIM};")
+        note.setAlignment(Qt.AlignmentFlag.AlignCenter); self._t(note, "w_note")
         lay.addWidget(note)
         lay.addStretch()
         return w
 
-    # ---- Page 1: Analyze ----
+    # ---- Page 1: Language preference ----
 
-    def _page_analyze(self):
+    def _page_language(self):
         w, lay = self._page()
-        lay.addLayout(self._title("Your computer",
-                                  "Guya checks your hardware AND measures its real speed, "
-                                  "then recommends the best model for your machine."))
-        self.analyze_btn = self._btn("Analyze my PC", "green")
+        self._heading(lay, "lang_title", "lang_sub")
+        self.lang_container = QVBoxLayout()
+        self.lang_container.setSpacing(10)
+        lay.addLayout(self.lang_container)
+        lay.addStretch()
+        self._build_lang_cards()
+        return w
+
+    def _build_lang_cards(self):
+        while self.lang_container.count():
+            it = self.lang_container.takeAt(0)
+            if it.widget():
+                it.widget().deleteLater()
+        self.lang_cards = []
+        for code, tkey, dkey in [("fa", "lang_fa", "lang_fa_desc"),
+                                 ("en", "lang_en", "lang_en_desc"),
+                                 ("dual", "lang_both", "lang_both_desc")]:
+            c = Card(self._select_lang, code)
+            title = QLabel(); title.setFont(QFont(UI_FONT, 14, QFont.Weight.Bold))
+            title.setStyleSheet(f"color: {TEXT};"); self._t(title, tkey)
+            desc = QLabel(); desc.setFont(QFont(UI_FONT, 10)); desc.setWordWrap(True)
+            desc.setStyleSheet(f"color: {TEXT2};"); self._t(desc, dkey)
+            c._body.addWidget(title)
+            c._body.addWidget(desc)
+            c.set_selected(self.choices["language"] == code)
+            self.lang_cards.append(c)
+            self.lang_container.addWidget(c)
+
+    def _select_lang(self, card):
+        self.choices["language"] = card.payload
+        for c in self.lang_cards:
+            c.set_selected(c is card)
+        # If we already benchmarked, re-recommend for the new language.
+        if self.rtf_base is not None and self.model_options:
+            benchmark.annotate_and_recommend(self.model_options, self.rtf_base,
+                                             language=self.choices["language"])
+            self.selected_model_id = None
+        self._update_nav()
+
+    # ---- Page 2: Device ----
+
+    def _page_device(self):
+        w, lay = self._page()
+        self._heading(lay, "dev_title", "dev_sub")
+        self.analyze_btn = self._btn("dev_analyze", "green")
         self.analyze_btn.clicked.connect(self._do_analyze)
         lay.addWidget(self.analyze_btn)
-        self.profile_box = self._info_card()
-        self.profile_box.setVisible(False)
-        lay.addWidget(self.profile_box)
-        self.bench_status = QLabel("")
-        self.bench_status.setFont(QFont(UI_FONT, 11))
-        self.bench_status.setStyleSheet(f"color: {ACCENT};")
-        self.bench_status.setWordWrap(True)
+
+        self.specs_box = QFrame()
+        self.specs_box.setStyleSheet(
+            f"QFrame {{ background: {CARD}; border: 1px solid {BORDER}; border-radius: 12px; }}"
+            f"QLabel {{ border: none; background: transparent; }}")
+        self.specs_layout = QVBoxLayout(self.specs_box)
+        self.specs_layout.setContentsMargins(16, 12, 16, 12)
+        self.specs_layout.setSpacing(8)
+        self.specs_box.setVisible(False)
+        lay.addWidget(self.specs_box)
+
+        self.bench_status = QLabel(); self.bench_status.setFont(QFont(UI_FONT, 10))
+        self.bench_status.setStyleSheet(f"color: {ACCENT};"); self.bench_status.setWordWrap(True)
         self.bench_status.setVisible(False)
         lay.addWidget(self.bench_status)
         lay.addStretch()
         return w
 
     def _do_analyze(self):
-        self.analyze_btn.setText("Analyzing…")
+        self._t(self.analyze_btn, "dev_analyzing")
         self.analyze_btn.setEnabled(False)
         QApplication.processEvents()
-
         self.profile = profiler.get_device_profile()
-        p = self.profile
-        gpu_line = (f"GPU      {p['gpu_name']}  ({p['vram_gb']:.1f} GB)"
-                    if p["has_cuda"] else
-                    ("GPU      Apple Silicon (CPU mode for speech)" if p["apple_silicon"]
-                     else "GPU      none detected (CPU mode)"))
-        ram = f"{p['ram_gb']:.0f} GB" if p["ram_gb"] else "unknown"
-        cores = p["cpu_cores"] or "?"
-        self.profile_box.setText(
-            f"OS       {p['os']} ({p['machine']})\n"
-            f"CPU      {p['cpu_name']}  ·  {cores} cores\n"
-            f"RAM      {ram}\n"
-            f"{gpu_line}")
-        self.profile_box.setVisible(True)
-
+        self._render_specs()
         self.model_options = profiler.recommend_models(self.profile)
-        self._populate_models()
         self._start_benchmark()
 
-    # ---- benchmark (async) ----
+    def _render_specs(self):
+        while self.specs_layout.count():
+            it = self.specs_layout.takeAt(0)
+            if it.widget():
+                it.widget().deleteLater()
+        self.spec_edits = {}
+        p = self.profile
+
+        def row(icon, label_key, value, key, editable=True):
+            r = QHBoxLayout(); r.setSpacing(10)
+            ic = QLabel(icon); ic.setFont(QFont(UI_FONT, 14))
+            ic.setFixedWidth(26)
+            lb = QLabel(); lb.setFont(QFont(UI_FONT, 11)); lb.setStyleSheet(f"color: {TEXT2};")
+            self._t(lb, label_key); lb.setFixedWidth(150)
+            r.addWidget(ic); r.addWidget(lb)
+            if editable:
+                ed = QLineEdit(str(value)); ed.setFont(QFont(UI_FONT, 11, QFont.Weight.DemiBold))
+                ed.setStyleSheet(
+                    f"QLineEdit {{ background: transparent; color: {TEXT}; border: none;"
+                    f"border-bottom: 1px solid {BORDER}; padding: 2px 4px; }}"
+                    f"QLineEdit:focus {{ border-bottom: 1px solid {ACCENT}; }}")
+                ed.editingFinished.connect(self._on_spec_edited)
+                self.spec_edits[key] = ed
+                r.addWidget(ed, 1)
+            else:
+                vl = QLabel(str(value)); vl.setFont(QFont(UI_FONT, 11, QFont.Weight.DemiBold))
+                vl.setStyleSheet(f"color: {TEXT};")
+                r.addWidget(vl, 1)
+            cont = QWidget(); cont.setLayout(r)
+            self.specs_layout.addWidget(cont)
+
+        row("🖥", "spec_os", f"{p['os']} ({p['machine']})", "os", editable=False)
+        row("⚙️", "spec_cpu", p["cpu_name"], "cpu")
+        row("🧠", "spec_ram", f"{p['ram_gb']:.0f}" if p["ram_gb"] else "8", "ram")
+
+        # GPU row with a usable toggle + name
+        gr = QHBoxLayout(); gr.setSpacing(10)
+        ic = QLabel("🎮"); ic.setFont(QFont(UI_FONT, 14)); ic.setFixedWidth(26)
+        lb = QLabel(); lb.setFont(QFont(UI_FONT, 11)); lb.setStyleSheet(f"color: {TEXT2};")
+        self._t(lb, "spec_gpu"); lb.setFixedWidth(150)
+        gr.addWidget(ic); gr.addWidget(lb)
+        self.gpu_check = QCheckBox()
+        self.gpu_check.setChecked(bool(p["has_cuda"]))
+        self.gpu_check.stateChanged.connect(self._on_spec_edited)
+        gr.addWidget(self.gpu_check)
+        gpu_val = p["gpu_name"] or ("Apple Silicon" if p["apple_silicon"] else self.tr("gpu_none"))
+        self.gpu_name_edit = QLineEdit(str(gpu_val))
+        self.gpu_name_edit.setFont(QFont(UI_FONT, 11, QFont.Weight.DemiBold))
+        self.gpu_name_edit.setStyleSheet(
+            f"QLineEdit {{ background: transparent; color: {TEXT}; border: none;"
+            f"border-bottom: 1px solid {BORDER}; padding: 2px 4px; }}"
+            f"QLineEdit:focus {{ border-bottom: 1px solid {ACCENT}; }}")
+        self.gpu_name_edit.editingFinished.connect(self._on_spec_edited)
+        gr.addWidget(self.gpu_name_edit, 1)
+        gcont = QWidget(); gcont.setLayout(gr)
+        self.specs_layout.addWidget(gcont)
+
+        hint = QLabel(); hint.setFont(QFont(UI_FONT, 9)); hint.setStyleSheet(f"color: {DIM};")
+        self._t(hint, "dev_edit_hint")
+        self.specs_layout.addWidget(hint)
+        self.specs_box.setVisible(True)
+
+    def _on_spec_edited(self):
+        if not self.profile:
+            return
+        try:
+            if "ram" in self.spec_edits:
+                self.profile["ram_gb"] = float(self.spec_edits["ram"].text() or 0)
+        except ValueError:
+            pass
+        if "cpu" in self.spec_edits:
+            self.profile["cpu_name"] = self.spec_edits["cpu"].text()
+        if hasattr(self, "gpu_check"):
+            self.profile["has_cuda"] = self.gpu_check.isChecked()
+            self.profile["gpu_name"] = self.gpu_name_edit.text()
+        # Rebuild options + recommendation from the corrected profile.
+        self.model_options = profiler.recommend_models(self.profile)
+        if self.rtf_base is not None:
+            benchmark.annotate_and_recommend(self.model_options, self.rtf_base,
+                                             language=self.choices["language"])
+        self.selected_model_id = None
 
     def _start_benchmark(self):
         device = "cuda" if self.profile["has_cuda"] else "cpu"
         compute = "float16" if self.profile["has_cuda"] else "int8"
         self.bench_status.setVisible(True)
         self.bench_status.setStyleSheet(f"color: {ACCENT};")
-        self.bench_status.setText("⏱  Measuring your computer's speed… (downloads a small "
-                                  "test model the first time — about 20–40s)")
+        self._t(self.bench_status, "bench_measuring")
         QApplication.processEvents()
         self.bench_proc = QProcess(self)
         self.bench_proc.finished.connect(self._on_benchmark_done)
@@ -456,11 +734,10 @@ class WizardWindow(QWidget):
         self.bench_proc.start()
         self._update_nav()
 
-    def _on_benchmark_done(self, exit_code, _status):
+    def _on_benchmark_done(self, code, _s):
         out = ""
         try:
             out = bytes(self.bench_proc.readAllStandardOutput()).decode("utf-8", "replace")
-            out += bytes(self.bench_proc.readAllStandardError()).decode("utf-8", "replace")
         except Exception:
             pass
         rtf = None
@@ -472,48 +749,48 @@ class WizardWindow(QWidget):
                     pass
         if rtf is not None:
             self.rtf_base = rtf
-            benchmark.annotate_and_recommend(self.model_options, rtf)
-            self._populate_models()
+            benchmark.annotate_and_recommend(self.model_options, rtf,
+                                             language=self.choices["language"])
             self.bench_status.setStyleSheet(f"color: {GREEN};")
-            self.bench_status.setText("✓  Speed measured. The recommendation is tuned to "
-                                      "YOUR machine (each model shows its expected wait time).")
+            self.bench_status.setProperty("i18nKey", "bench_done")
+            self.bench_status.setText(self.tr("bench_done"))
         else:
             self.bench_status.setStyleSheet(f"color: {DIM};")
-            self.bench_status.setText("Could not run the speed test; using a specs-based "
-                                      "recommendation instead.")
-        self.bench_done = True
-        self.analyze_btn.setText("Re-analyze")
+            self.bench_status.setProperty("i18nKey", "bench_failed")
+            self.bench_status.setText(self.tr("bench_failed"))
+        self.selected_model_id = None
+        self._t(self.analyze_btn, "dev_reanalyze")
         self.analyze_btn.setEnabled(True)
         self._update_nav()
 
-    # ---- Page 2: Model ----
+    # ---- Page 3: Model ----
 
     def _page_model(self):
         w, lay = self._page()
-        lay.addLayout(self._title("Choose a model", "How should Guya recognize your speech?"))
+        self._heading(lay, "model_title", "model_sub")
         self.model_container = QVBoxLayout()
         self.model_container.setSpacing(10)
         lay.addLayout(self.model_container)
+        self.cloud_panel = self._build_cloud_panel()
+        self.cloud_panel.setVisible(False)
+        lay.addWidget(self.cloud_panel)
+        lay.addStretch()
+        return w
 
-        # Cloud connect panel (hidden unless Cloud is selected)
-        self.cloud_panel = QFrame()
-        self.cloud_panel.setObjectName("cloudpanel")
-        self.cloud_panel.setStyleSheet(
-            f"QFrame#cloudpanel {{ background: {CARD}; border: 1.5px solid {ACCENT};"
+    def _build_cloud_panel(self):
+        f = QFrame(); f.setObjectName("cp")
+        f.setStyleSheet(
+            f"QFrame#cp {{ background: {CARD}; border: 1.5px solid {ACCENT};"
             f"border-radius: 12px; }} QLabel {{ background: transparent; border: none; }}")
-        cp = QVBoxLayout(self.cloud_panel)
-        cp.setContentsMargins(16, 13, 16, 13)
-        cp.setSpacing(8)
-        guide = QLabel("Connect a free online account (Groq):\n"
-                       "1. Open  console.groq.com/keys  and sign in (free, no card)\n"
-                       "2. Create an API key and copy it\n"
-                       "3. Paste it below and press Test")
-        guide.setFont(QFont(UI_FONT, 10))
-        guide.setStyleSheet(f"color: {TEXT2};")
-        guide.setWordWrap(True)
-        cp.addWidget(guide)
+        v = QVBoxLayout(f); v.setContentsMargins(16, 13, 16, 13); v.setSpacing(7)
+        title = QLabel(); title.setFont(QFont(UI_FONT, 12, QFont.Weight.Bold))
+        title.setStyleSheet(f"color: {TEXT};"); self._t(title, "cloud_guide_title")
+        v.addWidget(title)
+        for sk in ("cloud_step1", "cloud_step2", "cloud_step3"):
+            s = QLabel(); s.setFont(QFont(UI_FONT, 10)); s.setStyleSheet(f"color: {TEXT2};")
+            s.setWordWrap(True); self._t(s, sk); v.addWidget(s)
         self.key_edit = QLineEdit()
-        self.key_edit.setPlaceholderText("Paste your API key (gsk_…)")
+        self._t(self.key_edit, "cloud_key_ph", placeholder=True)
         self.key_edit.setEchoMode(QLineEdit.EchoMode.Password)
         self.key_edit.setMinimumHeight(38)
         self.key_edit.setStyleSheet(
@@ -521,50 +798,104 @@ class WizardWindow(QWidget):
             f"border-radius: 9px; padding: 6px 12px; }}"
             f"QLineEdit:focus {{ border: 1px solid {ACCENT}; }}")
         self.key_edit.textChanged.connect(self._on_key_changed)
-        cp.addWidget(self.key_edit)
+        v.addWidget(self.key_edit)
         row = QHBoxLayout()
-        self.test_btn = self._btn("Test", "primary")
+        self.test_btn = self._btn("cloud_test", "primary")
         self.test_btn.setMinimumSize(96, 38)
         self.test_btn.clicked.connect(self._test_cloud)
         row.addWidget(self.test_btn)
-        self.cloud_status = QLabel("")
-        self.cloud_status.setFont(QFont(UI_FONT, 10))
-        self.cloud_status.setStyleSheet(f"color: {TEXT2};")
-        self.cloud_status.setWordWrap(True)
+        self.cloud_status = QLabel(); self.cloud_status.setFont(QFont(UI_FONT, 10))
+        self.cloud_status.setStyleSheet(f"color: {TEXT2};"); self.cloud_status.setWordWrap(True)
         row.addWidget(self.cloud_status, 1)
-        cp.addLayout(row)
-        priv = QLabel("Note: the online option sends your voice to the provider's servers. "
-                      "Offline models keep everything on your device.")
-        priv.setFont(QFont(UI_FONT, 9))
-        priv.setStyleSheet(f"color: {DIM};")
-        priv.setWordWrap(True)
-        cp.addWidget(priv)
-        self.cloud_panel.setVisible(False)
-        lay.addWidget(self.cloud_panel)
-        lay.addStretch()
-        return w
+        v.addLayout(row)
+        priv = QLabel(); priv.setFont(QFont(UI_FONT, 9)); priv.setStyleSheet(f"color: {DIM};")
+        priv.setWordWrap(True); self._t(priv, "cloud_privacy")
+        v.addWidget(priv)
+        return f
 
     def _populate_models(self):
         while self.model_container.count():
-            item = self.model_container.takeAt(0)
-            if item.widget():
-                item.widget().deleteLater()
+            it = self.model_container.takeAt(0)
+            if it.widget():
+                it.widget().deleteLater()
         self.cards = []
-        self.selected_card = None
+        prev = self.selected_model_id
+        to_select = None
         for opt in self.model_options:
-            card = ModelCard(opt, self._select_card)
+            card = Card(self._select_model, opt, enabled=opt["enabled"])
+            self._fill_model_card(card, opt)
             self.cards.append(card)
             self.model_container.addWidget(card)
-            if opt["recommended"] and opt["enabled"]:
-                self._select_card(card)
+            if (prev and opt["id"] == prev) or (not prev and opt["recommended"] and opt["enabled"]):
+                to_select = card
+        if to_select:
+            self._select_model(to_select)
 
-    def _select_card(self, card):
+    def _fill_model_card(self, card, opt):
+        title_key = {"accurate": "title_accurate", "balanced": "title_balanced",
+                     "fast": "title_fast", "cloud": "title_cloud"}.get(opt["id"], "title_fast")
+        top = QHBoxLayout(); top.setSpacing(8)
+        t = QLabel(); t.setFont(QFont(UI_FONT, 15, QFont.Weight.Bold))
+        t.setStyleSheet(f"color: {TEXT};"); self._t(t, title_key)
+        top.addWidget(t); top.addStretch()
+        if opt["recommended"]:
+            badge = QLabel(); badge.setFont(QFont(UI_FONT, 9, QFont.Weight.DemiBold))
+            badge.setStyleSheet(f"color: {ACCENT}; background: rgba(124,108,255,0.12);"
+                                f"border-radius: 8px; padding: 2px 9px;")
+            self._t(badge, "recommended"); badge.setText("★ " + self.tr("recommended"))
+            top.addWidget(badge)
+        kind = QLabel(); kind.setFont(QFont(UI_FONT, 8, QFont.Weight.DemiBold))
+        kind.setStyleSheet(f"color: {TEXT2};")
+        self._t(kind, "online" if opt["backend"] == "cloud" else "offline")
+        top.addWidget(kind)
+        card._body.addLayout(top)
+
+        sub = QLabel(opt["subtitle"]); sub.setFont(QFont(UI_FONT, 10))
+        sub.setStyleSheet(f"color: {TEXT2};")
+        card._body.addWidget(sub)
+
+        lat = opt.get("predicted_latency_sec")
+        if lat is not None:
+            lt = QLabel(self.tr("lat_est", n=f"{lat:g}"))
+            lt.setProperty("i18nKey", "")  # dynamic; not auto-retranslated
+            lt.setFont(QFont(UI_FONT, 9, QFont.Weight.DemiBold))
+            lt.setStyleSheet(f"color: {ACCENT};")
+            card._body.addWidget(lt)
+
+        # Pros / cons
+        pc = QHBoxLayout(); pc.setSpacing(16)
+        pros_box = QVBoxLayout(); pros_box.setSpacing(2)
+        ph = QLabel(); ph.setFont(QFont(UI_FONT, 9, QFont.Weight.DemiBold))
+        ph.setStyleSheet(f"color: {GREEN};"); self._t(ph, "pros")
+        pros_box.addWidget(ph)
+        for pk in opt.get("pros", []):
+            l = QLabel("+ " + self.tr(pk)); l.setFont(QFont(UI_FONT, 9))
+            l.setStyleSheet(f"color: {TEXT2};"); l.setWordWrap(True)
+            pros_box.addWidget(l)
+        cons_box = QVBoxLayout(); cons_box.setSpacing(2)
+        ch = QLabel(); ch.setFont(QFont(UI_FONT, 9, QFont.Weight.DemiBold))
+        ch.setStyleSheet(f"color: {RED};"); self._t(ch, "cons")
+        cons_box.addWidget(ch)
+        for ck in opt.get("cons", []):
+            l = QLabel("− " + self.tr(ck)); l.setFont(QFont(UI_FONT, 9))
+            l.setStyleSheet(f"color: {TEXT2};"); l.setWordWrap(True)
+            cons_box.addWidget(l)
+        pc.addLayout(pros_box, 1); pc.addLayout(cons_box, 1)
+        wrap = QWidget(); wrap.setLayout(pc)
+        card._body.addWidget(wrap)
+
+        if not opt["enabled"]:
+            ns = QLabel("· " + self.tr("not_suitable")); ns.setFont(QFont(UI_FONT, 9))
+            ns.setStyleSheet(f"color: {DIM};")
+            card._body.addWidget(ns)
+        card.style_self()
+
+    def _select_model(self, card):
         for c in self.cards:
             c.set_selected(c is card)
-        self.selected_card = card
-        self.choices["model_opt"] = card.opt
-        is_cloud = card.opt["backend"] == "cloud"
-        self.cloud_panel.setVisible(is_cloud)
+        self.selected_model_id = card.payload["id"]
+        self.choices["model_opt"] = card.payload
+        self.cloud_panel.setVisible(card.payload["backend"] == "cloud")
         self._update_nav()
 
     def _on_key_changed(self, text):
@@ -577,133 +908,98 @@ class WizardWindow(QWidget):
         key = self.key_edit.text().strip()
         if not key:
             self.cloud_status.setStyleSheet(f"color: {RED};")
-            self.cloud_status.setText("Paste a key first.")
+            self.cloud_status.setText(self.tr("cloud_paste_first"))
             return
-        self.test_btn.setText("Testing…")
         self.test_btn.setEnabled(False)
         self.cloud_status.setStyleSheet(f"color: {ACCENT};")
-        self.cloud_status.setText("Checking your key…")
+        self.cloud_status.setText(self.tr("cloud_testing"))
         QApplication.processEvents()
         ok, msg = cloud_engine.test_connection(key, provider="groq")
         self.cloud_tested_ok = ok
         self.cloud_status.setStyleSheet(f"color: {GREEN if ok else RED};")
         self.cloud_status.setText(("✓ " if ok else "✗ ") + msg)
-        self.test_btn.setText("Test")
         self.test_btn.setEnabled(True)
         self._update_nav()
 
-    # ---- Page 3: Configure ----
+    # ---- Page 4: Key ----
 
-    def _page_configure(self):
+    def _page_key(self):
         w, lay = self._page()
-        lay.addLayout(self._title("Settings", "Set your push-to-talk key and language."))
-
-        lang_lbl = QLabel("Default language")
-        lang_lbl.setFont(QFont(UI_FONT, 11, QFont.Weight.DemiBold))
-        lang_lbl.setStyleSheet(f"color: {TEXT2};")
-        lay.addWidget(lang_lbl)
-        self.lang_combo = QComboBox()
-        self.lang_combo.addItem("Persian (فارسی)", "fa")
-        self.lang_combo.addItem("English", "en")
-        self.lang_combo.addItem("Both / bilingual", "dual")
-        self.lang_combo.setMinimumHeight(40)
-        self.lang_combo.setStyleSheet(
-            f"QComboBox {{ background: {CARD}; color: {TEXT}; border: 1px solid {BORDER};"
-            f"border-radius: 9px; padding: 6px 12px; }}"
-            f"QComboBox QAbstractItemView {{ background: {CARD}; color: {TEXT};"
-            f"selection-background-color: {CARD_SEL}; }}")
-        self.lang_combo.currentIndexChanged.connect(
-            lambda _: self.choices.update(language=self.lang_combo.currentData()))
-        lay.addWidget(self.lang_combo)
-
-        key_lbl = QLabel("Push-to-talk key (hold to speak)")
-        key_lbl.setFont(QFont(UI_FONT, 11, QFont.Weight.DemiBold))
-        key_lbl.setStyleSheet(f"color: {TEXT2};")
-        lay.addWidget(key_lbl)
+        self._heading(lay, "key_title", "key_sub")
         if IS_MAC:
-            mac_lbl = QLabel("On macOS the push-to-talk key is Right Option (⌥).")
-            mac_lbl.setFont(QFont(UI_FONT, 11))
-            mac_lbl.setStyleSheet(
-                f"color: {TEXT}; background: {CARD}; border: 1px solid {BORDER};"
-                f"border-radius: 9px; padding: 12px;")
-            mac_lbl.setWordWrap(True)
-            lay.addWidget(mac_lbl)
+            m = QLabel(); m.setFont(QFont(UI_FONT, 11)); m.setWordWrap(True)
+            m.setStyleSheet(f"color: {TEXT}; background: {CARD}; border: 1px solid {BORDER};"
+                            f"border-radius: 9px; padding: 12px;")
+            self._t(m, "key_mac"); lay.addWidget(m)
             self.choices["hotkey_vk"] = 0xA4
             self.choices["hotkey_label"] = "⌥"
         else:
-            self.key_capture = HotkeyCapture()
+            self.key_capture = HotkeyCapture(self.tr("key_capture"))
             self.key_capture.setStyleSheet(
                 f"QPushButton {{ background: {CARD}; color: {TEXT};"
                 f"border: 1px solid {BORDER}; border-radius: 9px; padding: 10px; }}")
             self.key_capture.captured.connect(self._on_key)
             lay.addWidget(self.key_capture)
-            hint = QLabel("Tip: pick a letter you rarely press mid-sentence (default: G).")
-            hint.setFont(QFont(UI_FONT, 9))
-            hint.setStyleSheet(f"color: {DIM};")
-            lay.addWidget(hint)
+            h = QLabel(); h.setFont(QFont(UI_FONT, 9)); h.setStyleSheet(f"color: {DIM};")
+            self._t(h, "key_hint"); lay.addWidget(h)
         lay.addStretch()
         return w
 
     def _on_key(self, vk, label):
         self.choices["hotkey_vk"] = vk
         self.choices["hotkey_label"] = label
+        self.key_capture.setText(self.tr("key_chosen", k=label))
 
-    # ---- Page 4: Review ----
+    # ---- Page 5: Review ----
 
-    def _page_finish(self):
+    def _page_review(self):
         w, lay = self._page()
-        lay.addLayout(self._title("Review", "Check your choices, then finish setup."))
-        self.summary = self._info_card()
-        self.summary.setFont(QFont(UI_FONT, 12))
+        self._heading(lay, "review_title", "review_sub")
+        self.summary = QLabel(); self.summary.setFont(QFont(UI_FONT, 12))
+        self.summary.setStyleSheet(
+            f"color: {TEXT}; background: {CARD}; border: 1px solid {BORDER};"
+            f"border-radius: 12px; padding: 18px;")
+        self.summary.setWordWrap(True)
         lay.addWidget(self.summary)
-        self.finish_tip = QLabel("")
-        self.finish_tip.setFont(QFont(UI_FONT, 10))
-        self.finish_tip.setStyleSheet(f"color: {TEXT2};")
-        self.finish_tip.setWordWrap(True)
+        self.finish_tip = QLabel(); self.finish_tip.setFont(QFont(UI_FONT, 10))
+        self.finish_tip.setStyleSheet(f"color: {TEXT2};"); self.finish_tip.setWordWrap(True)
         lay.addWidget(self.finish_tip)
         lay.addStretch()
         return w
 
     def _refresh_summary(self):
         opt = self.choices["model_opt"] or {}
-        lang = {"fa": "Persian", "en": "English", "dual": "Bilingual"}.get(
-            self.choices["language"], self.choices["language"])
-        backend = "Online (cloud)" if opt.get("backend") == "cloud" else "Offline (on your PC)"
+        lang = self.tr({"fa": "lbl_fa", "en": "lbl_en", "dual": "lbl_dual"}.get(
+            self.choices["language"], "lbl_fa"))
+        backend = self.tr("sum_online") if opt.get("backend") == "cloud" else self.tr("sum_offline")
+        tk = {"accurate": "title_accurate", "balanced": "title_balanced",
+              "fast": "title_fast", "cloud": "title_cloud"}.get(opt.get("id"), "title_fast")
+        title = self.tr(tk)
         self.summary.setText(
-            f"Model       {opt.get('title','?')}  ({opt.get('model_size','?')})\n"
-            f"Runs        {backend}\n"
-            f"Language    {lang}\n"
-            f"Hotkey      {self.choices['hotkey_label']}")
-        if opt.get("backend") == "cloud":
-            self.finish_tip.setText("Cloud chosen — no model download needed. After finishing, "
-                                    "Guya creates a launcher and starts.")
-        else:
-            self.finish_tip.setText("After finishing, Guya downloads the model if needed (shown "
-                                    "with a progress bar), creates a double-click launcher, "
-                                    "and starts the widget.")
+            f"{self.tr('sum_model')}:  {title}  ({opt.get('model_size','?')})\n"
+            f"{self.tr('sum_runs')}:  {backend}\n"
+            f"{self.tr('sum_language')}:  {lang}\n"
+            f"{self.tr('sum_key')}:  {self.choices['hotkey_label']}")
+        self.finish_tip.setText(
+            self.tr("tip_cloud") if opt.get("backend") == "cloud" else self.tr("tip_offline"))
 
-    # ---- Page 5: Download ----
+    # ---- Page 6: Download ----
 
     def _page_download(self):
         w, lay = self._page()
         lay.addStretch()
-        self.dl_title = QLabel("Downloading model…")
-        self.dl_title.setFont(QFont(UI_FONT, 18, QFont.Weight.Bold))
+        self.dl_title = QLabel(); self.dl_title.setFont(QFont(UI_FONT, 18, QFont.Weight.Bold))
         self.dl_title.setStyleSheet(f"color: {TEXT};")
         self.dl_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         lay.addWidget(self.dl_title)
-        self.dl_bar = QProgressBar()
-        self.dl_bar.setRange(0, 100)
-        self.dl_bar.setValue(0)
-        self.dl_bar.setTextVisible(True)
+        self.dl_bar = QProgressBar(); self.dl_bar.setRange(0, 100); self.dl_bar.setValue(0)
         self.dl_bar.setMinimumHeight(22)
         self.dl_bar.setStyleSheet(
             f"QProgressBar {{ background: {CARD}; border: 1px solid {BORDER};"
             f"border-radius: 11px; text-align: center; color: {TEXT}; }}"
             f"QProgressBar::chunk {{ background: {ACCENT}; border-radius: 10px; }}")
         lay.addWidget(self.dl_bar)
-        self.dl_status = QLabel("")
-        self.dl_status.setFont(QFont(UI_FONT, 10))
+        self.dl_status = QLabel(); self.dl_status.setFont(QFont(UI_FONT, 10))
         self.dl_status.setStyleSheet(f"color: {TEXT2};")
         self.dl_status.setAlignment(Qt.AlignmentFlag.AlignCenter)
         lay.addWidget(self.dl_status)
@@ -714,50 +1010,58 @@ class WizardWindow(QWidget):
 
     def _go_next(self):
         idx = self.stack.currentIndex()
-        if idx == 4:                       # Review → Finish
+        if idx == 5:
             self._finish()
             return
-        if idx == 3:                       # leaving Settings → refresh review
+        if idx == 4:
             self._refresh_summary()
         self.stack.setCurrentIndex(idx + 1)
-        if self.stack.currentIndex() == 4:
+        if self.stack.currentIndex() == 5:
             self._refresh_summary()
         self._sync_step()
         self._update_nav()
 
     def _go_back(self):
         idx = self.stack.currentIndex()
-        if 0 < idx <= 4:
+        if 0 < idx <= 5:
             self.stack.setCurrentIndex(idx - 1)
         self._sync_step()
         self._update_nav()
 
     def _sync_step(self):
-        self.steps.set_step(PAGE_TO_STEP[self.stack.currentIndex()])
+        cur = PAGE_TO_STEP[self.stack.currentIndex()]
+        for i, lbl in enumerate(self.step_labels):
+            name = self.tr(STEPS_KEYS[i])
+            lbl.setText(f"{i+1}  {name}" if i == cur else f"{i+1}")
+            if i == cur:
+                lbl.setStyleSheet(f"color: {ACCENT};")
+            elif i < cur:
+                lbl.setStyleSheet(f"color: {TEXT2};")
+            else:
+                lbl.setStyleSheet(f"color: {DIM};")
 
     def _update_nav(self):
         idx = self.stack.currentIndex()
-        # Download page: no nav.
-        if idx == 5:
+        if idx == 6:
             self.back_btn.setVisible(False)
             self.next_btn.setVisible(False)
             return
         self.back_btn.setVisible(True)
         self.next_btn.setVisible(True)
         self.back_btn.setEnabled(idx > 0)
-        can_next = True
-        if idx == 1 and self.profile is None:
-            can_next = False
-        if idx == 2:
+        can = True
+        if idx == 2 and self.profile is None:
+            can = False
+        if idx == 3:
             opt = self.choices["model_opt"]
             if not opt:
-                can_next = False
+                can = False
             elif opt["backend"] == "cloud" and not self.choices.get("cloud_api_key"):
-                can_next = False
-        self.next_btn.setEnabled(can_next)
-        self.next_btn.setText("Finish" if idx == 4 else "Next")
+                can = False
+        self.next_btn.setEnabled(can)
+        self._t(self.next_btn, "finish" if idx == 5 else "next")
 
-    # ---- Finish → save config, create launcher, download, complete ----
+    # ---- Finish ----
 
     def _finish(self):
         opt = self.choices["model_opt"]
@@ -777,46 +1081,34 @@ class WizardWindow(QWidget):
 
         if self.bench_proc and self.bench_proc.state() != QProcess.ProcessState.NotRunning:
             self.bench_proc.kill()
-
         if not guya_config.save_config(cfg):
             return
-        launcher_gen.create_launcher()   # double-click launcher
+        launcher_gen.create_launcher()
 
-        # Cloud or already-cached → done immediately.
         if opt["backend"] == "cloud" or model_is_cached(opt["model_size"]):
             self._complete()
             return
-
-        # Offline + not cached → show the download page with progress.
-        self.stack.setCurrentIndex(5)
+        self.stack.setCurrentIndex(6)
         self._sync_step()
         self._update_nav()
         self._start_download(opt["model_size"])
 
     def _start_download(self, size):
-        self.dl_title.setText(f"Downloading the “{size}” model…")
-        self.dl_status.setText("This happens once. Please keep this window open.")
+        self.dl_title.setText(self.tr("dl_title", m=size))
+        self.dl_status.setText(self.tr("dl_wait"))
         self.dl_expected = MODEL_SIZE_MB.get(size, 1000)
         self.dl_size = size
         self.dl_bar.setValue(0)
-
         self.dl_proc = QProcess(self)
         self.dl_proc.finished.connect(self._on_download_done)
         self.dl_proc.setProgram(sys.executable)
         self.dl_proc.setArguments([
-            "-c",
-            f"from faster_whisper.utils import download_model; download_model('{size}')"])
-        # Force the STANDARD HuggingFace download backend. The newer xet /
-        # hf_transfer backends stream the big model.bin through a separate cache
-        # the progress poller can't see, so the bar would sit at 0% then jump to
-        # 100%. The standard backend writes a growing file in the model folder,
-        # which model_downloaded_mb() tracks correctly.
+            "-c", f"from faster_whisper.utils import download_model; download_model('{size}')"])
         env = QProcessEnvironment.systemEnvironment()
         env.insert("HF_HUB_DISABLE_XET", "1")
         env.insert("HF_HUB_ENABLE_HF_TRANSFER", "0")
         self.dl_proc.setProcessEnvironment(env)
         self.dl_proc.start()
-
         self.dl_timer = QTimer(self)
         self.dl_timer.timeout.connect(self._poll_download)
         self.dl_timer.start(500)
@@ -825,13 +1117,13 @@ class WizardWindow(QWidget):
         mb = model_downloaded_mb(self.dl_size)
         pct = int(min(99, (mb / self.dl_expected) * 100)) if self.dl_expected else 0
         self.dl_bar.setValue(pct)
-        self.dl_status.setText(f"{mb:.0f} MB of ~{self.dl_expected:.0f} MB")
+        self.dl_status.setText(self.tr("dl_of", a=f"{mb:.0f}", b=f"{self.dl_expected:.0f}"))
 
-    def _on_download_done(self, exit_code, _status):
+    def _on_download_done(self, code, _s):
         if self.dl_timer:
             self.dl_timer.stop()
         self.dl_bar.setValue(100)
-        self.dl_status.setText("Done.")
+        self.dl_status.setText(self.tr("dl_done"))
         self._complete()
 
     def _complete(self):
@@ -840,19 +1132,18 @@ class WizardWindow(QWidget):
         self.close()
 
 
-# Hotkey capture (Windows). Defined after Qt imports so the class resolves.
 class HotkeyCapture(QPushButton):
     captured = pyqtSignal(int, str)
 
-    def __init__(self, parent=None):
-        super().__init__("Click here, then press a key", parent)
+    def __init__(self, label, parent=None):
+        super().__init__(label, parent)
         self._capturing = False
         self.clicked.connect(self._start)
         self.setMinimumHeight(40)
 
     def _start(self):
         self._capturing = True
-        self.setText("Press any key now…")
+        self.setText("…")
         self.grabKeyboard()
 
     def keyPressEvent(self, e):
@@ -861,7 +1152,7 @@ class HotkeyCapture(QPushButton):
             label = (e.text().upper().strip() or e.text().strip() or str(vk))
             self._capturing = False
             self.releaseKeyboard()
-            self.setText(f"Key:  {label}")
+            self.setText(f"{label}")
             self.captured.emit(vk, label)
         else:
             super().keyPressEvent(e)
