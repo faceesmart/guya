@@ -1,0 +1,344 @@
+"""
+macOS platform adapter for Voice Widget.
+
+Provides the same function/class names that voice_widget.py uses on Windows,
+backed by macOS APIs:
+
+  - Global hotkey:    pynput.keyboard.Listener (CGEventTap under the hood)
+  - Paste to target:  pyperclip + Cmd+V via pynput
+  - Foreground app:   NSWorkspace.frontmostApplication
+  - Permissions:      AXIsProcessTrusted (Accessibility)
+  - GPU check:        no-op (M1 has no CUDA; faster-whisper has no MPS yet)
+
+Hotkey: Right Option (⌥). A modifier key so press/release alone doesn't
+type anything — no event suppression needed.
+"""
+
+import logging
+import threading
+import time
+import subprocess
+
+import pyperclip
+
+log = logging.getLogger("Guya")
+
+
+# ============================================================
+# OPTIONAL DEPS (pynput, pyobjc)
+# ============================================================
+# Imported lazily so the module is importable for inspection even if
+# the deps aren't installed yet (install.sh handles them).
+
+try:
+    from pynput import keyboard as _pynput_kb
+    _PYNPUT_OK = True
+except ImportError as e:
+    _pynput_kb = None
+    _PYNPUT_OK = False
+    log.warning(f"pynput not available: {e}. Install with: pip install pynput")
+
+try:
+    from AppKit import NSWorkspace, NSRunningApplication, NSApplicationActivateIgnoringOtherApps
+    _APPKIT_OK = True
+except ImportError as e:
+    NSWorkspace = None
+    NSRunningApplication = None
+    NSApplicationActivateIgnoringOtherApps = 0
+    _APPKIT_OK = False
+    log.warning(f"AppKit not available: {e}. Install with: pip install pyobjc-framework-Cocoa")
+
+try:
+    from ApplicationServices import AXIsProcessTrusted, AXIsProcessTrustedWithOptions
+    from CoreFoundation import CFDictionaryCreate, kCFTypeDictionaryKeyCallBacks, kCFTypeDictionaryValueCallBacks
+    _AX_OK = True
+except ImportError as e:
+    AXIsProcessTrusted = None
+    _AX_OK = False
+    log.warning(f"ApplicationServices not available: {e}.")
+
+
+# ============================================================
+# HOTKEY: Right Option (⌥)
+# ============================================================
+
+# The "key" we listen for. Right Option is a modifier — pressing it alone
+# produces no character, so no suppression is needed and no stray characters
+# leak into the target app while held.
+HOTKEY_NAME = "Right Option (⌥)"
+
+
+def _is_hotkey(key) -> bool:
+    """Return True if the pynput key is our push-to-talk key."""
+    if _pynput_kb is None:
+        return False
+    # On macOS pynput exposes Key.alt_r for right option.
+    return key == _pynput_kb.Key.alt_r
+
+
+# ============================================================
+# FOREGROUND APP CAPTURE
+# ============================================================
+#
+# On macOS we can't easily reference a single text input "control"
+# the way Win32 does (NSView hierarchy varies by app). Instead we
+# remember the frontmost NSRunningApplication and reactivate it
+# before sending Cmd+V. AppKit + the system clipboard handle the rest.
+
+def get_foreground_window():
+    """Return an opaque token representing the frontmost app.
+
+    On macOS this is the bundle identifier (string) of the front app,
+    or None if AppKit unavailable.
+    """
+    if not _APPKIT_OK:
+        return None
+    try:
+        app = NSWorkspace.sharedWorkspace().frontmostApplication()
+        if app is None:
+            return None
+        bundle_id = app.bundleIdentifier()
+        return str(bundle_id) if bundle_id else None
+    except Exception as e:
+        log.warning(f"get_foreground_window failed: {e}")
+        return None
+
+
+def force_foreground_window(token) -> bool:
+    """Bring the app identified by `token` (bundle id) back to the front."""
+    if not _APPKIT_OK or not token:
+        return False
+    try:
+        # Find the running app by bundle id and activate it.
+        apps = NSWorkspace.sharedWorkspace().runningApplications()
+        for app in apps:
+            bid = app.bundleIdentifier()
+            if bid and str(bid) == token:
+                app.activateWithOptions_(NSApplicationActivateIgnoringOtherApps)
+                return True
+        log.debug(f"No running app for bundle id {token}")
+        return False
+    except Exception as e:
+        log.warning(f"force_foreground_window failed: {e}")
+        return False
+
+
+def get_focused_control(token):
+    """No-op on macOS: we operate at app granularity, not view granularity."""
+    return token
+
+
+# ============================================================
+# TEXT INPUT: clipboard + Cmd+V into the target app
+# ============================================================
+
+def _send_cmd_v():
+    """Press Cmd+V via pynput. Cmd up/down each character."""
+    if _pynput_kb is None:
+        return False
+    try:
+        controller = _pynput_kb.Controller()
+        with controller.pressed(_pynput_kb.Key.cmd):
+            controller.press('v')
+            controller.release('v')
+        return True
+    except Exception as e:
+        log.error(f"Cmd+V via pynput failed: {e}")
+        return False
+
+
+def paste_text_to_window(target_token, text: str) -> bool:
+    """Copy `text` to clipboard, restore focus to target app, send Cmd+V.
+
+    Mirrors paste_text_to_window from the Windows path so voice_widget.py
+    can call the same name on both platforms.
+    """
+    if not text:
+        return False
+
+    try:
+        pyperclip.copy(text)
+    except Exception as e:
+        log.error(f"Clipboard copy failed: {e}")
+        return False
+
+    if target_token:
+        force_foreground_window(target_token)
+        # Small delay so the activation has time to take effect before keystroke.
+        time.sleep(0.08)
+    else:
+        log.warning("No target app token — pasting into whatever is frontmost")
+
+    ok = _send_cmd_v()
+    if ok:
+        log.info(f"Pasted {len(text)} chars to target={target_token}")
+    return ok
+
+
+def erase_text_in_window(target_token, count: int):
+    """Delete `count` characters by sending Backspace via pynput."""
+    if count <= 0 or _pynput_kb is None:
+        return
+    if target_token:
+        force_foreground_window(target_token)
+        time.sleep(0.05)
+    try:
+        controller = _pynput_kb.Controller()
+        for _ in range(count):
+            controller.press(_pynput_kb.Key.backspace)
+            controller.release(_pynput_kb.Key.backspace)
+    except Exception as e:
+        log.warning(f"erase_text_in_window failed: {e}")
+
+
+# ============================================================
+# KEYBOARD HOOK: same interface as the Windows KeyboardHookThread
+# ============================================================
+
+class KeyboardHookThread(threading.Thread):
+    """Global hotkey listener for Right Option (⌥) on macOS.
+
+    Matches the Windows KeyboardHookThread interface so voice_widget.py
+    doesn't need to know the difference. Uses pynput's Listener which
+    sits on top of a CGEventTap. Requires Accessibility permission
+    (System Settings → Privacy & Security → Accessibility).
+
+    Press/release of the hotkey trigger on_press / on_release callbacks
+    on this thread. The widget then marshals to the Qt main thread.
+    """
+
+    def __init__(self, on_press, on_release, is_enabled_func):
+        super().__init__(daemon=True)
+        self.on_press = on_press
+        self.on_release = on_release
+        self.is_enabled_func = is_enabled_func
+        self._listener = None
+        self._key_held = False
+        # Captured frontmost app at hotkey press — read by widget on _start_recording
+        self.captured_hwnd = None
+
+    def _on_press(self, key):
+        try:
+            if not _is_hotkey(key):
+                return
+            if not self.is_enabled_func():
+                return
+            if self._key_held:
+                return  # ignore key repeat
+            self._key_held = True
+            # Capture frontmost app NOW, before Qt focus changes
+            self.captured_hwnd = get_foreground_window()
+            log.info(f"Hook captured target app={self.captured_hwnd}")
+            self.on_press()
+        except Exception as e:
+            log.error(f"Hook on_press error: {e}")
+
+    def _on_release(self, key):
+        try:
+            if not _is_hotkey(key):
+                return
+            if not self._key_held:
+                return
+            self._key_held = False
+            self.on_release()
+        except Exception as e:
+            log.error(f"Hook on_release error: {e}")
+
+    def run(self):
+        if _pynput_kb is None:
+            log.error("pynput unavailable — keyboard hook disabled")
+            return
+        log.info(f"Keyboard hook starting (key: {HOTKEY_NAME})")
+        # suppress=False: we don't want to swallow keys globally.
+        # Right Option alone produces no character, so suppression is unnecessary.
+        try:
+            with _pynput_kb.Listener(
+                on_press=self._on_press,
+                on_release=self._on_release,
+                suppress=False,
+            ) as listener:
+                self._listener = listener
+                listener.join()
+        except Exception as e:
+            log.error(f"Keyboard listener crashed: {e}")
+            log.error("If this is a permissions error: grant Accessibility in "
+                      "System Settings → Privacy & Security → Accessibility")
+
+    def stop(self):
+        if self._listener is not None:
+            try:
+                self._listener.stop()
+            except Exception:
+                pass
+            self._listener = None
+
+
+# ============================================================
+# PERMISSION & PRE-FLIGHT CHECKS
+# ============================================================
+
+def is_accessibility_granted() -> bool:
+    """Return True if our process has Accessibility permission.
+
+    Without this, the global keyboard listener won't receive events and
+    pynput can't synthesize Cmd+V into other apps.
+    """
+    if not _AX_OK:
+        return False
+    try:
+        return bool(AXIsProcessTrusted())
+    except Exception:
+        return False
+
+
+def prompt_accessibility_grant():
+    """Open System Settings to the Accessibility pane so the user can grant access."""
+    try:
+        subprocess.Popen([
+            "open",
+            "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility",
+        ])
+    except Exception as e:
+        log.warning(f"Failed to open Accessibility settings: {e}")
+
+
+def check_admin() -> bool:
+    """Drop-in replacement for Windows check_admin(): logs whether Accessibility
+    has been granted. Returns True if granted."""
+    ok = is_accessibility_granted()
+    if ok:
+        log.info("Accessibility permission: GRANTED")
+    else:
+        log.warning("Accessibility permission: NOT GRANTED")
+        log.warning("Global hotkey and paste will NOT work without it.")
+        log.warning("Grant access: System Settings → Privacy & Security → Accessibility")
+    return ok
+
+
+def check_gpu_lightweight():
+    """Return (gpu_ok, info_str). On macOS faster-whisper has no Metal/MPS
+    backend, so we always report CPU — but we tell the user it's Apple Silicon."""
+    try:
+        # Get the chip name from sysctl (e.g. "Apple M1 Pro")
+        out = subprocess.run(
+            ["sysctl", "-n", "machdep.cpu.brand_string"],
+            capture_output=True, text=True, timeout=2,
+        )
+        chip = out.stdout.strip() or "Apple Silicon"
+    except Exception:
+        chip = "Apple Silicon"
+    return False, f"CPU ({chip})"
+
+
+# ============================================================
+# WINDOW STYLING (no-op on macOS — Qt flags handle it)
+# ============================================================
+
+def apply_nonactivating_style(qwidget):
+    """On Windows this sets WS_EX_NOACTIVATE so clicks don't steal focus.
+
+    On macOS, Qt.WindowDoesNotAcceptFocus + Qt.Tool flags (set in the
+    widget's setWindowFlags call) already achieve this. No extra work
+    needed here.
+    """
+    return True

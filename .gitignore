@@ -1,0 +1,24 @@
+# Python / venv
+venv/
+**/__pycache__/
+*.pyc
+*.pyo
+
+# Guya runtime data (per-user, never committed)
+# config + logs live in ~/.guya, but ignore any local copies too
+.guya/
+*.log
+
+# macOS junk
+.DS_Store
+**/.DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*~
+
+# Model cache (lives in ~/.cache/huggingface)
+*.bin
+models/

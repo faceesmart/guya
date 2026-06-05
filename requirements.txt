@@ -1,0 +1,13 @@
+# Core
+faster-whisper
+PyQt6
+pyaudio
+numpy
+pyperclip
+psutil            # device profiling (CPU/RAM) for the setup wizard
+
+# --- macOS-only (auto-skipped on Windows/Linux) ---
+pynput; sys_platform == "darwin"
+pyobjc-core; sys_platform == "darwin"
+pyobjc-framework-Cocoa; sys_platform == "darwin"
+pyobjc-framework-ApplicationServices; sys_platform == "darwin"
