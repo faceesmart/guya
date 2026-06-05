@@ -1,57 +1,65 @@
 """
 Guya entry point.
 
-    python -m guya            → normal launch
+    python -m guya            → normal launch (wizard on first run)
     python -m guya --setup    → force the setup wizard (reconfigure)
     python -m guya --reset    → delete config, then run the wizard
 
 Decision rule:
-    config missing  → run the setup wizard, then launch the widget
-    config present  → launch the widget directly
+    config missing / --setup / --reset → run the setup wizard, then (on success)
+        relaunch in a FRESH process so the Whisper model loads before Qt is
+        imported (required on Windows: CTranslate2's CUDA backend segfaults if
+        Qt initializes first).
+    config present → launch the widget directly.
 """
 
+import os
 import sys
 
 from . import config as guya_config
 
 
 def _run_wizard() -> bool:
-    """Run the setup wizard. Returns True if setup completed (config saved).
-
-    NOTE: The full Qt wizard is Milestone 2. Until it lands, this writes the
-    default config so the widget is runnable, and tells the user. This keeps
-    `python -m guya` working end-to-end during development.
-    """
+    """Show the setup wizard. Returns True if setup completed (config saved)."""
     try:
-        from . import wizard  # noqa: F401  (exists once M2 lands)
+        from . import wizard
         return wizard.run()
-    except ImportError:
-        print("[guya] Setup wizard not built yet (Milestone 2).")
-        print("[guya] Writing default configuration so the widget can run...")
-        ok = guya_config.save_config(guya_config.DEFAULT_CONFIG)
-        if ok:
-            print(f"[guya] Default config written to {guya_config.CONFIG_PATH}")
-        return ok
+    except Exception as e:
+        # Safety net: if the wizard can't run (e.g. missing Qt during a headless
+        # test), fall back to writing defaults so the app is still usable.
+        print(f"[guya] Wizard unavailable ({e}); writing default config.")
+        return guya_config.save_config(guya_config.DEFAULT_CONFIG)
+
+
+def _relaunch_fresh():
+    """Re-exec `python -m guya` so the next start has a clean, Qt-free process
+    for model loading. Config now exists, so it goes straight to the widget."""
+    os.execv(sys.executable, [sys.executable, "-m", "guya"])
 
 
 def main():
     args = set(sys.argv[1:])
 
+    need_wizard = False
     if "--reset" in args:
         guya_config.reset_config()
         print("[guya] Configuration reset.")
-        if not _run_wizard():
-            sys.exit(1)
+        need_wizard = True
     elif "--setup" in args:
-        if not _run_wizard():
-            sys.exit(1)
+        need_wizard = True
     elif not guya_config.config_exists():
-        print("[guya] First run — no configuration found.")
-        if not _run_wizard():
-            print("[guya] Setup did not complete. Exiting.")
-            sys.exit(1)
+        print("[guya] First run — no configuration found. Starting setup…")
+        need_wizard = True
 
-    # Launch the widget. Importing widget triggers config load + logging setup.
+    if need_wizard:
+        if not _run_wizard():
+            print("[guya] Setup cancelled or did not complete. Exiting.")
+            sys.exit(1)
+        print("[guya] Setup complete. Starting Guya…")
+        _relaunch_fresh()   # replaces this process; does not return
+        return
+
+    # Config present → launch the widget (model loads before Qt is imported).
     from . import widget
     widget.main()
 

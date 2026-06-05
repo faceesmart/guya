@@ -1417,7 +1417,7 @@ def main():
     threading.excepthook = thread_exception_handler
 
     log.info("=" * 50)
-    log.info("Voice Widget starting...")
+    log.info("Guya starting...")
     log.info(f"Python: {sys.version}")
     log.info(f"Model: {MODEL_SIZE} | Device: {DEVICE} | Compute: {COMPUTE_TYPE}")
     log.info(f"Language: {LANGUAGE}")
