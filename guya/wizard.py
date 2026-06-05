@@ -18,9 +18,11 @@ import logging
 try:
     from . import config as guya_config
     from . import profiler
+    from . import benchmark
 except ImportError:
     import config as guya_config
     import profiler
+    import benchmark
 
 log = logging.getLogger("Guya")
 
@@ -73,7 +75,7 @@ from PyQt6.QtWidgets import (  # noqa: E402
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame,
     QStackedWidget, QButtonGroup, QRadioButton, QComboBox, QApplication,
 )
-from PyQt6.QtCore import Qt, pyqtSignal  # noqa: E402
+from PyQt6.QtCore import Qt, pyqtSignal, QProcess  # noqa: E402
 from PyQt6.QtGui import QFont  # noqa: E402
 
 
@@ -137,8 +139,13 @@ class ModelCard(QRadioButton):
             title += "   ★ Recommended"
         badge = "ONLINE" if o["backend"] == "cloud" else "OFFLINE"
         disabled = "" if o["enabled"] else "   (not suitable for this PC)"
+        # Predicted wait time from the on-device benchmark, if available.
+        speed = ""
+        lat = o.get("predicted_latency_sec")
+        if lat is not None:
+            speed = f"\n⏱ ~{lat:g}s (estimated) to transcribe 10s of speech on your machine"
         self.setText(
-            f"{title}\n{o['subtitle']}\n{badge} · {o['note']}{disabled}"
+            f"{title}\n{o['subtitle']}\n{badge} · {o['note']}{disabled}{speed}"
         )
         self.setStyleSheet(f"""
             QRadioButton {{
@@ -170,6 +177,9 @@ class WizardWindow(QWidget):
         self.completed = False
         self.profile = None
         self.model_options = []
+        self.rtf_base = None          # measured proxy real-time factor
+        self.bench_proc = None        # QProcess running the benchmark
+        self.bench_done = False
         self.choices = {
             "model_opt": None,           # selected option dict
             "language": "fa",
@@ -274,7 +284,8 @@ class WizardWindow(QWidget):
     def _page_analyze(self):
         w, lay = self._page()
         lay.addLayout(self._title("Step 1 — Your computer",
-                                  "Guya will check your hardware to recommend the best model."))
+                                  "Guya checks your hardware AND measures its real speed, "
+                                  "then recommends the best model for your machine."))
         self.analyze_btn = self._btn("Analyze my PC", GREEN, "#0a0a0f")
         self.analyze_btn.setMinimumHeight(44)
         self.analyze_btn.clicked.connect(self._do_analyze)
@@ -288,6 +299,13 @@ class WizardWindow(QWidget):
         self.profile_box.setWordWrap(True)
         self.profile_box.setVisible(False)
         lay.addWidget(self.profile_box)
+
+        self.bench_status = QLabel("")
+        self.bench_status.setFont(QFont(UI_FONT, 11))
+        self.bench_status.setStyleSheet(f"color: {BLUE};")
+        self.bench_status.setWordWrap(True)
+        self.bench_status.setVisible(False)
+        lay.addWidget(self.bench_status)
         lay.addStretch()
         return w
 
@@ -295,6 +313,7 @@ class WizardWindow(QWidget):
         self.analyze_btn.setText("Analyzing…")
         self.analyze_btn.setEnabled(False)
         QApplication.processEvents()
+
         self.profile = profiler.get_device_profile()
         p = self.profile
         gpu_line = (f"GPU:  {p['gpu_name']}  ({p['vram_gb']:.1f} GB)"
@@ -310,11 +329,66 @@ class WizardWindow(QWidget):
             f"{gpu_line}"
         )
         self.profile_box.setVisible(True)
-        self.analyze_btn.setText("Re-analyze")
-        self.analyze_btn.setEnabled(True)
-        # Build model options now
+
+        # Build spec-based options first (fallback if the benchmark can't run).
         self.model_options = profiler.recommend_models(self.profile)
         self._populate_models()
+
+        # Now MEASURE the device with the on-device benchmark (async).
+        self._start_benchmark()
+
+    # ---- on-device benchmark (async via QProcess) ----
+
+    def _start_benchmark(self):
+        device = "cuda" if self.profile["has_cuda"] else "cpu"
+        compute = "float16" if self.profile["has_cuda"] else "int8"
+        self.bench_status.setVisible(True)
+        self.bench_status.setStyleSheet(f"color: {BLUE};")
+        self.bench_status.setText("⏱  Measuring your computer's speed… (downloads a small "
+                                  "test model the first time — about 20–40s)")
+        QApplication.processEvents()
+
+        self.bench_proc = QProcess(self)
+        self.bench_proc.finished.connect(self._on_benchmark_done)
+        self.bench_proc.setProgram(sys.executable)
+        self.bench_proc.setArguments(["-m", "guya.benchmark",
+                                      "--device", device, "--compute", compute])
+        self.bench_proc.start()
+        self._update_nav()
+
+    def _on_benchmark_done(self, exit_code, _status):
+        out = ""
+        try:
+            out = bytes(self.bench_proc.readAllStandardOutput()).decode("utf-8", "replace")
+            out += bytes(self.bench_proc.readAllStandardError()).decode("utf-8", "replace")
+        except Exception:
+            pass
+
+        rtf = None
+        for line in out.splitlines():
+            if line.startswith("BENCH_JSON:"):
+                import json
+                try:
+                    rtf = json.loads(line[len("BENCH_JSON:"):]).get("rtf_base")
+                except Exception:
+                    pass
+
+        if rtf is not None:
+            self.rtf_base = rtf
+            benchmark.annotate_and_recommend(self.model_options, rtf)
+            self._populate_models()
+            self.bench_status.setStyleSheet(f"color: {GREEN};")
+            self.bench_status.setText(
+                f"✓  Speed measured. Recommendation below is tuned to YOUR machine "
+                f"(each model now shows its expected wait time).")
+        else:
+            # Benchmark failed → keep the spec-based recommendation.
+            self.bench_status.setStyleSheet(f"color: {DIM};")
+            self.bench_status.setText(
+                "Could not run the speed test; using a specs-based recommendation instead.")
+        self.bench_done = True
+        self.analyze_btn.setText("Re-analyze")
+        self.analyze_btn.setEnabled(True)
         self._update_nav()
 
     # ---- Page 2: Model ----
