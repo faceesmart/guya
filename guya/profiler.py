@@ -157,7 +157,7 @@ def recommend_models(profile: dict) -> list:
     options.append({
         "id": "accurate",
         "title": "Accurate",
-        "subtitle": f"{accurate_size} · best quality (Persian & English)",
+        "subtitle": f"{accurate_size} · best quality (Persian and English)",
         "model_size": accurate_size,
         "backend": "faster-whisper",
         "device": accurate_device,
