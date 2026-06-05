@@ -37,9 +37,14 @@ if IS_WIN:
     import ctypes
     import ctypes.wintypes
 
-# UI font: "Segoe UI" is Windows-only. On macOS, "" tells Qt to use the
-# system default (SF Pro on modern macOS) which looks native.
-UI_FONT = "Segoe UI" if IS_WIN else ""
+# UI font: a concrete, always-present family per OS. An empty family makes Qt
+# fall back to a poor default, so we name one explicitly.
+if IS_WIN:
+    UI_FONT = "Segoe UI"
+elif IS_MAC:
+    UI_FONT = "Helvetica Neue"
+else:
+    UI_FONT = "DejaVu Sans"
 
 # Enable faulthandler to get tracebacks on native crashes (SIGSEGV etc.)
 faulthandler.enable()

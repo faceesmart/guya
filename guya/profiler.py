@@ -135,27 +135,30 @@ def recommend_models(profile: dict) -> list:
 
     options = []
 
-    # ---- Offline: Accurate (large-v3) ----
+    # ---- Offline: Accurate ----
+    # Model choice depends on the compute backend:
+    #   * Real CUDA GPU  -> full large-v3 (the GPU can handle it; best quality).
+    #   * CPU / Apple     -> large-v3-turbo: ~4x faster than large-v3 on CPU at
+    #                        nearly identical accuracy. This is the right "best
+    #                        feasible" model for a CPU machine (and what the
+    #                        original project used on the RTX laptop too).
     if has_cuda and vram >= 4:
-        accurate_note = f"Uses your GPU ({profile.get('gpu_name','GPU')})"
+        accurate_size = "large-v3"
         accurate_device = "cuda"
+        accurate_note = f"Uses your GPU ({profile.get('gpu_name','GPU')})"
         accurate_enabled = True
         accurate_rec = True
-    elif apple or ram >= 16:
-        accurate_note = "Runs on CPU — most accurate but slower"
-        accurate_device = "cpu"
-        accurate_enabled = True
-        accurate_rec = apple  # on Apple Silicon, large is the quality pick
     else:
-        accurate_note = "Needs a strong GPU or 16 GB+ RAM"
+        accurate_size = "large-v3-turbo"
         accurate_device = "cpu"
-        accurate_enabled = ram >= 8
-        accurate_rec = False
+        accurate_note = "Best quality that runs well on CPU"
+        accurate_enabled = (ram >= 8) or apple
+        accurate_rec = accurate_enabled  # the quality pick when feasible
     options.append({
         "id": "accurate",
         "title": "Accurate",
-        "subtitle": "large-v3 · best quality (Persian & English)",
-        "model_size": "large-v3",
+        "subtitle": f"{accurate_size} · best quality (Persian & English)",
+        "model_size": accurate_size,
         "backend": "faster-whisper",
         "device": accurate_device,
         "recommended": accurate_rec,

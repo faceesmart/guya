@@ -26,7 +26,14 @@ log = logging.getLogger("Guya")
 
 IS_WIN = sys.platform == "win32"
 IS_MAC = sys.platform == "darwin"
-UI_FONT = "Segoe UI" if IS_WIN else ""
+# Use a concrete, always-present font per OS. An empty family makes Qt fall
+# back to a poor default ("Sans Serif"), which rendered messy/unreadable.
+if IS_WIN:
+    UI_FONT = "Segoe UI"
+elif IS_MAC:
+    UI_FONT = "Helvetica Neue"   # clean, always present on macOS
+else:
+    UI_FONT = "DejaVu Sans"
 
 # ---- palette (matches the rest of Guya) ----
 BG_PRIMARY = "#0a0a0f"
@@ -46,8 +53,12 @@ DIM = "#475569"
 def run() -> bool:
     """Show the wizard. Returns True if the user completed setup (config saved)."""
     from PyQt6.QtWidgets import QApplication
+    from PyQt6.QtGui import QFont as _QFont
     app = QApplication.instance() or QApplication(sys.argv)
     app.setStyle("Fusion")
+    # Set a clean default font for the whole wizard so nothing falls back to
+    # an ugly substitute.
+    app.setFont(_QFont(UI_FONT, 11))
     win = WizardWindow()
     win.show()
     win.raise_()
