@@ -22,3 +22,7 @@ venv/
 # Model cache (lives in ~/.cache/huggingface)
 *.bin
 models/
+
+# Generated double-click launchers (machine-specific paths)
+Start Guya.command
+Start Guya.bat
