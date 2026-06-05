@@ -110,7 +110,7 @@ from PyQt6.QtWidgets import (  # noqa: E402
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame,
     QStackedWidget, QComboBox, QApplication, QLineEdit, QProgressBar,
 )
-from PyQt6.QtCore import Qt, QProcess, QTimer, pyqtSignal  # noqa: E402
+from PyQt6.QtCore import Qt, QProcess, QProcessEnvironment, QTimer, pyqtSignal  # noqa: E402
 from PyQt6.QtGui import QFont  # noqa: E402
 
 
@@ -806,6 +806,15 @@ class WizardWindow(QWidget):
         self.dl_proc.setArguments([
             "-c",
             f"from faster_whisper.utils import download_model; download_model('{size}')"])
+        # Force the STANDARD HuggingFace download backend. The newer xet /
+        # hf_transfer backends stream the big model.bin through a separate cache
+        # the progress poller can't see, so the bar would sit at 0% then jump to
+        # 100%. The standard backend writes a growing file in the model folder,
+        # which model_downloaded_mb() tracks correctly.
+        env = QProcessEnvironment.systemEnvironment()
+        env.insert("HF_HUB_DISABLE_XET", "1")
+        env.insert("HF_HUB_ENABLE_HF_TRANSFER", "0")
+        self.dl_proc.setProcessEnvironment(env)
         self.dl_proc.start()
 
         self.dl_timer = QTimer(self)
