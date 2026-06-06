@@ -148,10 +148,20 @@ def _send_cmd_v():
 
 
 def paste_text_to_window(target_token, text: str) -> bool:
-    """Copy `text` to clipboard, restore focus to target app, send Cmd+V.
+    """Copy `text` to clipboard and paste it (Cmd+V) into the frontmost app.
 
-    Mirrors paste_text_to_window from the Windows path so voice_widget.py
-    can call the same name on both platforms.
+    IMPORTANT: we deliberately paste into whatever is frontmost RIGHT NOW rather
+    than re-activating `target_token`. Reasons:
+      * The widget is non-activating (WA_ShowWithoutActivating +
+        WindowDoesNotAcceptFocus), so the user's text field is still the
+        frontmost window at paste time — no need to switch back to it.
+      * `target_token` was captured inside the pynput background thread, where
+        NSWorkspace.frontmostApplication() returns a STALE value (the app that
+        launched Guya, e.g. the terminal). Re-activating it pasted into the
+        wrong app. Ignoring it fixes that.
+
+    This function is called on the Qt main thread, so the frontmost app here is
+    the correct, current one.
     """
     if not text:
         return False
@@ -162,16 +172,15 @@ def paste_text_to_window(target_token, text: str) -> bool:
         log.error(f"Clipboard copy failed: {e}")
         return False
 
-    if target_token:
-        force_foreground_window(target_token)
-        # Small delay so the activation has time to take effect before keystroke.
-        time.sleep(0.08)
-    else:
-        log.warning("No target app token — pasting into whatever is frontmost")
-
+    # Give the clipboard a moment to settle, then paste into the current app.
+    time.sleep(0.05)
     ok = _send_cmd_v()
     if ok:
-        log.info(f"Pasted {len(text)} chars to target={target_token}")
+        try:
+            front = get_foreground_window()
+        except Exception:
+            front = "?"
+        log.info(f"Pasted {len(text)} chars into frontmost app ({front})")
     return ok
 
 
