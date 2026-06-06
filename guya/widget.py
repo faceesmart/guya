@@ -107,6 +107,12 @@ COMPUTE_TYPE = CFG["model"]["compute_type"]  # "auto" | "float16" | "int8" | ...
 MODEL_BACKEND = CFG["model"]["backend"]      # "faster-whisper" | "cloud"
 LANGUAGE = CFG["language"]
 
+# Hybrid mode: an offline model AND a cloud key are both configured, so the
+# widget can switch between them at runtime.
+CLOUD_ENABLED = bool(CFG["cloud"].get("enabled") and CFG["cloud"].get("api_key"))
+HYBRID = (MODEL_BACKEND == "faster-whisper") and CLOUD_ENABLED
+OFFLINE_LANGUAGE = CFG["language"]            # the language offline mode uses
+
 # Audio
 SAMPLE_RATE = CFG["audio"]["sample_rate"]
 CHUNK_SIZE = CFG["audio"]["chunk_size"]
@@ -1482,6 +1488,7 @@ def main():
     # CTranslate2 CUDA segfaults if Qt's OpenGL DLLs are loaded first.
     # Online backend: no local model to load — just hold the provider + key.
     # =========================================================
+    cloud_model = None
     if MODEL_BACKEND == "cloud":
         provider = CFG["cloud"]["provider"] or cloud_engine.DEFAULT_PROVIDER
         api_key = CFG["cloud"]["api_key"]
@@ -1493,6 +1500,11 @@ def main():
     else:
         log.info("Loading model BEFORE Qt (CUDA/Qt order fix)...")
         model = load_model_sync(progress_callback=lambda msg: None)
+        # Hybrid: also prepare the cloud backend so the widget can switch.
+        if HYBRID:
+            provider = CFG["cloud"]["provider"] or cloud_engine.DEFAULT_PROVIDER
+            cloud_model = CloudModel(provider, CFG["cloud"]["api_key"])
+            log.info(f"Hybrid mode: offline + online ({provider}) both available")
 
     # =========================================================
     # STEP 2: NOW import PyQt6 (safe because CUDA is initialized)
@@ -1553,10 +1565,21 @@ def main():
 
         STATES = ("loading", "idle", "listening", "processing", "done")
 
-        def __init__(self, model=None):
+        def __init__(self, model=None, cloud_model=None):
             super().__init__()
-            self._language = LANGUAGE
-            self._model = model
+            # Backend setup: offline model and/or cloud model.
+            self._offline_model = model if not isinstance(model, CloudModel) else None
+            self._cloud_model = cloud_model or (model if isinstance(model, CloudModel) else None)
+            self._hybrid = bool(self._offline_model and self._cloud_model)
+            self._offline_language = OFFLINE_LANGUAGE
+            if self._offline_model is not None:
+                self._backend = "offline"
+                self._model = self._offline_model
+                self._language = self._offline_language
+            else:
+                self._backend = "online"
+                self._model = self._cloud_model
+                self._language = LANGUAGE
             self._recording_thread = None
             self._realtime_transcriber = None
             self._transcription_thread = None
@@ -1568,8 +1591,9 @@ def main():
             self._press_pos = None
             self._was_dragged = False
 
-            # Collapsed / expanded state
+            # Collapsed / expanded state. Hybrid needs more room for the switch.
             self._expanded = False
+            self._expanded_width = 360 if self._hybrid else WIDGET_EXPANDED_WIDTH
             self._current_width = WIDGET_COLLAPSED_SIZE
             self._target_width = WIDGET_COLLAPSED_SIZE
 
@@ -1587,10 +1611,10 @@ def main():
             self._bridge.partial_text.connect(self._on_partial_text)
             self._bridge.error.connect(self._on_error)
 
-            if model is not None:
+            if self._model is not None:
                 self._state = "idle"
                 self._label_text = f"Hold {HOTKEY_LABEL} to speak"
-                log.info("Model was pre-loaded, starting in idle state")
+                log.info(f"Model pre-loaded; backend={self._backend} hybrid={self._hybrid}")
             else:
                 self._state = "loading"
                 self._label_text = "Loading\u2026"
@@ -1631,7 +1655,7 @@ def main():
             if self._expanded:
                 return
             self._expanded = True
-            self._target_width = WIDGET_EXPANDED_WIDTH
+            self._target_width = self._expanded_width
             log.debug("Widget expanding")
 
         def _collapse(self):
@@ -1721,28 +1745,62 @@ def main():
                 self._label_text = "OFF"
             self.update()
 
-        def _get_toggle_rect(self):
-            w = self.width()
-            h = self.height()
-            btn_w = 32
-            btn_h = 18
-            btn_x = w - btn_w - 44
-            btn_y = (h - btn_h) // 2
-            return QRect(btn_x, btn_y, btn_w, btn_h)
+        # Right-side cluster, laid out right→left:
+        #   [language badge]  [backend pill (hybrid)]  [enable toggle]
 
         def _get_badge_rect(self):
-            """Return the clickable rect for the language badge."""
-            w = self.width()
-            h = self.height()
+            """Clickable rect for the language badge (rightmost)."""
+            w = self.width(); h = self.height()
             badge_text = self._language_label()
-            badge_font = QFont(UI_FONT, 9)
-            badge_font.setWeight(QFont.Weight.DemiBold)
-            fm = QFontMetrics(badge_font)
-            badge_w = fm.horizontalAdvance(badge_text) + 12
+            f = QFont(UI_FONT, 9); f.setWeight(QFont.Weight.DemiBold)
+            badge_w = QFontMetrics(f).horizontalAdvance(badge_text) + 14
             badge_h = 18
-            badge_x = w - badge_w - 8
-            badge_y = (h - badge_h) // 2
-            return QRect(badge_x, badge_y, badge_w, badge_h)
+            return QRect(w - badge_w - 8, (h - badge_h) // 2, badge_w, badge_h)
+
+        def _get_backend_rect(self):
+            """Clickable rect for the OFFLINE/ONLINE switch (hybrid only)."""
+            if not self._hybrid:
+                return QRect(0, 0, 0, 0)
+            h = self.height()
+            txt = self._backend_label()
+            f = QFont(UI_FONT, 8); f.setWeight(QFont.Weight.Bold)
+            bw = QFontMetrics(f).horizontalAdvance(txt) + 18
+            bh = 20
+            badge = self._get_badge_rect()
+            return QRect(badge.x() - bw - 8, (h - bh) // 2, bw, bh)
+
+        def _get_toggle_rect(self):
+            w = self.width(); h = self.height()
+            btn_w = 32; btn_h = 18
+            ref = self._get_backend_rect() if self._hybrid else self._get_badge_rect()
+            btn_x = ref.x() - btn_w - 10
+            return QRect(btn_x, (h - btn_h) // 2, btn_w, btn_h)
+
+        def _backend_label(self) -> str:
+            return "ONLINE" if self._backend == "online" else "OFFLINE"
+
+        def _set_backend(self, backend: str):
+            if backend == self._backend:
+                return
+            if backend == "online" and not self._cloud_model:
+                return
+            if backend == "offline" and not self._offline_model:
+                return
+            self._backend = backend
+            self._model = self._cloud_model if backend == "online" else self._offline_model
+            if backend == "offline":
+                # Offline is limited to the language it was set up for (e.g. EN).
+                self._language = self._offline_language
+            else:
+                # Online (cloud large-v3) handles Persian well — default to it,
+                # and the badge can cycle FA/EN/DUAL from here.
+                if self._language == self._offline_language and self._offline_language == "en":
+                    self._language = "fa"
+            log.info(f"Backend switched to {backend} | language={self._language}")
+            self.update()
+
+        def _toggle_backend(self):
+            self._set_backend("online" if self._backend == "offline" else "offline")
 
         # ---- Recording ----
 
@@ -1941,7 +1999,12 @@ def main():
             return "FA"
 
         def _cycle_language(self):
-            """Cycle: FA → EN → DUAL → FA"""
+            """Cycle FA → EN → DUAL → FA.
+
+            In hybrid OFFLINE mode the language is locked to the offline
+            language (e.g. EN); cycling only works ONLINE (or non-hybrid)."""
+            if self._hybrid and self._backend == "offline":
+                return  # offline is locked to its configured language
             if self._language == "fa":
                 self._language = "en"
             elif self._language == "en":
@@ -2052,7 +2115,12 @@ def main():
                 self._toggle_enabled()
                 return
 
-            # 3. Language badge
+            # 3. Backend switch (hybrid only)
+            if self._hybrid and self._get_backend_rect().contains(pos):
+                self._toggle_backend()
+                return
+
+            # 4. Language badge
             badge_rect = self._get_badge_rect()
             if badge_rect.contains(pos):
                 self._cycle_language()
@@ -2296,6 +2364,33 @@ def main():
                 badge_text,
             )
 
+            # Backend switch pill (hybrid only): OFFLINE (green) / ONLINE (violet)
+            if self._hybrid:
+                self._draw_backend_pill(painter)
+
+        def _draw_backend_pill(self, painter):
+            r = self._get_backend_rect()
+            online = self._backend == "online"
+            # violet for online, green for offline
+            accent = QColor(124, 108, 255) if online else QColor(52, 211, 153)
+            bg = QColor(accent.red(), accent.green(), accent.blue(), 38)
+            rr = r.height() / 2
+            path = QPainterPath()
+            path.addRoundedRect(QRectF(r.x(), r.y(), r.width(), r.height()), rr, rr)
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.setBrush(QBrush(bg))
+            painter.drawPath(path)
+            pen = QPen(QColor(accent.red(), accent.green(), accent.blue(), 150))
+            pen.setWidthF(1.0)
+            painter.setPen(pen)
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            painter.drawRoundedRect(QRectF(r.x() + 0.5, r.y() + 0.5,
+                                           r.width() - 1, r.height() - 1), rr, rr)
+            f = QFont(UI_FONT, 8); f.setWeight(QFont.Weight.Bold)
+            painter.setFont(f)
+            painter.setPen(accent)
+            painter.drawText(r, Qt.AlignmentFlag.AlignCenter, self._backend_label())
+
         def _draw_toggle(self, painter, w, h):
             """iOS-style glass toggle: green/grey track, white knob."""
             rect = self._get_toggle_rect()
@@ -2440,7 +2535,7 @@ def main():
         except Exception as e:
             log.warning(f"Could not set activation policy: {e}")
 
-    widget = VoiceWidget(model=model)
+    widget = VoiceWidget(model=model, cloud_model=cloud_model)
     widget.show()
     if IS_MAC:
         widget.raise_()  # ensure widget is on top of stacking order

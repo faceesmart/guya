@@ -166,6 +166,9 @@ LANG = {
         "dl_connecting": "Connecting…", "cancel": "Cancel",
         "installed": "✓ Installed", "not_installed": "↓ will download",
         "cloud_example": "Example: gsk_AbC12dEf34GhIj…",
+        "hybrid_enable": "Also enable Online mode — switch between offline and "
+                         "online right on the widget (e.g. offline for English, "
+                         "online for Persian).",
     },
     "fa": {
         "win_title": "گویا — راه‌اندازی",
@@ -268,6 +271,8 @@ LANG = {
         "dl_connecting": "در حال اتصال…", "cancel": "لغو",
         "installed": "✓ نصب‌شده", "not_installed": "↓ دانلود می‌شود",
         "cloud_example": "نمونه: gsk_AbC12dEf34GhIj…",
+        "hybrid_enable": "همچنین حالت آنلاین را فعال کن — روی خود ویجت بین آفلاین و "
+                         "آنلاین جابه‌جا شو (مثلاً آفلاین برای انگلیسی، آنلاین برای فارسی).",
     },
 }
 
@@ -861,12 +866,30 @@ class WizardWindow(QWidget):
         self.model_container = QVBoxLayout()
         self.model_container.setSpacing(12)
         col.addLayout(self.model_container)
+
+        # "Also enable Online" checkbox — shown when an OFFLINE model is chosen.
+        self.hybrid_check = QCheckBox()
+        self._t(self.hybrid_check, "hybrid_enable")
+        self.hybrid_check.setFont(QFont(UI_FONT, 11))
+        self.hybrid_check.setStyleSheet(
+            f"QCheckBox {{ color: {TEXT2}; spacing: 8px; }}"
+            f"QCheckBox::indicator {{ width: 18px; height: 18px; }}")
+        self.hybrid_check.setVisible(False)
+        self.hybrid_check.stateChanged.connect(self._on_hybrid_toggled)
+        col.addWidget(self.hybrid_check)
+
         self.cloud_panel = self._build_cloud_panel()
         self.cloud_panel.setVisible(False)
         col.addWidget(self.cloud_panel)
         col.addStretch()
         lay.addWidget(area, 1)
         return w
+
+    def _on_hybrid_toggled(self, _state):
+        # Show the cloud key panel when "also enable online" is ticked.
+        if self.choices.get("model_opt") and self.choices["model_opt"]["backend"] != "cloud":
+            self.cloud_panel.setVisible(self.hybrid_check.isChecked())
+        self._update_nav()
 
     def _build_cloud_panel(self):
         f = QFrame(); f.setObjectName("cp")
@@ -1014,7 +1037,14 @@ class WizardWindow(QWidget):
             c.set_selected(c is card)
         self.selected_model_id = card.payload["id"]
         self.choices["model_opt"] = card.payload
-        self.cloud_panel.setVisible(card.payload["backend"] == "cloud")
+        is_cloud = card.payload["backend"] == "cloud"
+        # Offline model → offer the "also enable online" checkbox.
+        # Cloud model → show the key panel directly, hide the checkbox.
+        self.hybrid_check.setVisible(not is_cloud)
+        if is_cloud:
+            self.cloud_panel.setVisible(True)
+        else:
+            self.cloud_panel.setVisible(self.hybrid_check.isChecked())
         self._update_nav()
 
     def _on_key_changed(self, text):
@@ -1231,6 +1261,9 @@ class WizardWindow(QWidget):
                 can = False
             elif opt["backend"] == "cloud" and not self.choices.get("cloud_api_key"):
                 can = False
+            elif (opt["backend"] != "cloud" and self.hybrid_check.isChecked()
+                  and not self.choices.get("cloud_api_key")):
+                can = False    # enabling online but no key yet
         self.next_btn.setEnabled(can)
         self._t(self.next_btn, "finish" if idx == 5 else "next")
 
@@ -1246,6 +1279,14 @@ class WizardWindow(QWidget):
         if opt["backend"] == "cloud":
             cfg["cloud"]["provider"] = "groq"
             cfg["cloud"]["api_key"] = self.choices.get("cloud_api_key", "")
+            cfg["cloud"]["enabled"] = False        # online-only, not hybrid
+        elif self.hybrid_check.isChecked() and self.choices.get("cloud_api_key"):
+            # Hybrid: offline model + online available, switchable in the widget.
+            cfg["cloud"]["provider"] = "groq"
+            cfg["cloud"]["api_key"] = self.choices.get("cloud_api_key", "")
+            cfg["cloud"]["enabled"] = True
+        else:
+            cfg["cloud"]["enabled"] = False
         cfg["language"] = self.choices["language"]
         cfg["hotkey"]["vk"] = self.choices["hotkey_vk"]
         cfg["hotkey"]["label"] = self.choices["hotkey_label"]

@@ -49,10 +49,13 @@ DEFAULT_CONFIG = {
         "compute_type": "auto",        # "auto"|"float16"|"int8"|"int8_float16"
     },
 
-    # Online fallback (only used when model.backend == "cloud").
+    # Online provider. Used when model.backend == "cloud" (online-only) OR, in
+    # hybrid mode, alongside an offline model when "enabled" is true — letting
+    # the widget switch between offline and online while running.
     "cloud": {
         "provider": None,              # e.g. "openai" | "groq" | "deepgram"
         "api_key": None,
+        "enabled": False,              # hybrid: offline + online both available
     },
 
     # Default transcription language. "fa"=Persian, "en"=English, "dual"=bilingual.
