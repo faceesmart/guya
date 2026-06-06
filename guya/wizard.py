@@ -166,9 +166,9 @@ LANG = {
         "dl_connecting": "Connecting…", "cancel": "Cancel",
         "installed": "✓ Installed", "not_installed": "↓ will download",
         "cloud_example": "Example: gsk_AbC12dEf34GhIj…",
-        "hybrid_enable": "Also enable Online mode — switch between offline and "
-                         "online right on the widget (e.g. offline for English, "
-                         "online for Persian).",
+        "hybrid_enable": "Also enable Online mode",
+        "hybrid_desc": "Switch between offline and online right on the widget — "
+                       "e.g. offline for English, online for Persian.",
     },
     "fa": {
         "win_title": "گویا — راه‌اندازی",
@@ -271,8 +271,9 @@ LANG = {
         "dl_connecting": "در حال اتصال…", "cancel": "لغو",
         "installed": "✓ نصب‌شده", "not_installed": "↓ دانلود می‌شود",
         "cloud_example": "نمونه: gsk_AbC12dEf34GhIj…",
-        "hybrid_enable": "همچنین حالت آنلاین را فعال کن — روی خود ویجت بین آفلاین و "
-                         "آنلاین جابه‌جا شو (مثلاً آفلاین برای انگلیسی، آنلاین برای فارسی).",
+        "hybrid_enable": "همچنین حالت آنلاین را فعال کن",
+        "hybrid_desc": "روی خود ویجت بین آفلاین و آنلاین جابه‌جا شو — مثلاً آفلاین "
+                       "برای انگلیسی، آنلاین برای فارسی.",
     },
 }
 
@@ -854,7 +855,8 @@ class WizardWindow(QWidget):
         inner = QWidget()
         inner.setStyleSheet("background: transparent;")
         col = QVBoxLayout(inner)
-        col.setContentsMargins(2, 2, 10, 2)
+        # Generous right margin so cards clear the macOS overlay scrollbar.
+        col.setContentsMargins(2, 2, 16, 2)
         col.setSpacing(12)
         area.setWidget(inner)
         return area, col
@@ -867,16 +869,25 @@ class WizardWindow(QWidget):
         self.model_container.setSpacing(12)
         col.addLayout(self.model_container)
 
-        # "Also enable Online" checkbox — shown when an OFFLINE model is chosen.
+        # "Also enable Online" box — shown when an OFFLINE model is chosen.
+        self.hybrid_box = QFrame()
+        self.hybrid_box.setStyleSheet(
+            f"QFrame {{ background: {CARD}; border: 1px solid {BORDER};"
+            f"border-radius: 12px; }} QLabel {{ border: none; background: transparent; }}"
+            f"QCheckBox {{ border: none; background: transparent; color: {TEXT}; spacing: 8px; }}"
+            f"QCheckBox::indicator {{ width: 18px; height: 18px; }}")
+        hb = QVBoxLayout(self.hybrid_box)
+        hb.setContentsMargins(16, 12, 16, 12); hb.setSpacing(4)
         self.hybrid_check = QCheckBox()
         self._t(self.hybrid_check, "hybrid_enable")
-        self.hybrid_check.setFont(QFont(UI_FONT, 11))
-        self.hybrid_check.setStyleSheet(
-            f"QCheckBox {{ color: {TEXT2}; spacing: 8px; }}"
-            f"QCheckBox::indicator {{ width: 18px; height: 18px; }}")
-        self.hybrid_check.setVisible(False)
+        self.hybrid_check.setFont(QFont(UI_FONT, 12, QFont.Weight.DemiBold))
         self.hybrid_check.stateChanged.connect(self._on_hybrid_toggled)
-        col.addWidget(self.hybrid_check)
+        hb.addWidget(self.hybrid_check)
+        hd = QLabel(); hd.setFont(QFont(UI_FONT, 10)); hd.setWordWrap(True)
+        hd.setStyleSheet(f"color: {TEXT2};"); self._t(hd, "hybrid_desc")
+        hb.addWidget(hd)
+        self.hybrid_box.setVisible(False)
+        col.addWidget(self.hybrid_box)
 
         self.cloud_panel = self._build_cloud_panel()
         self.cloud_panel.setVisible(False)
@@ -1012,6 +1023,7 @@ class WizardWindow(QWidget):
                 f"{self.tr('perf_speed')} {_dots(perf['speed'])}")
             line.setFont(QFont(UI_FONT, 11))
             line.setStyleSheet(f"color: {TEXT2};")
+            line.setWordWrap(True)
             card._body.addWidget(line)
 
         # --- Pros / cons, one clean line each ---
@@ -1038,9 +1050,9 @@ class WizardWindow(QWidget):
         self.selected_model_id = card.payload["id"]
         self.choices["model_opt"] = card.payload
         is_cloud = card.payload["backend"] == "cloud"
-        # Offline model → offer the "also enable online" checkbox.
-        # Cloud model → show the key panel directly, hide the checkbox.
-        self.hybrid_check.setVisible(not is_cloud)
+        # Offline model → offer the "also enable online" box.
+        # Cloud model → show the key panel directly, hide the box.
+        self.hybrid_box.setVisible(not is_cloud)
         if is_cloud:
             self.cloud_panel.setVisible(True)
         else:
