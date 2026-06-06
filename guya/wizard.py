@@ -148,10 +148,20 @@ LANG = {
                      "launcher and start.",
         "tip_offline": "Guya will download the model if needed (with a progress bar), "
                        "create a double-click launcher, and start.",
-        "dl_title": "Downloading the “{m}” model…",
+        "dl_title": "Downloading the “{m}” model",
         "dl_wait": "This happens once. Please keep this window open.",
         "dl_of": "{a} MB of ~{b} MB", "dl_done": "Done.",
         "lbl_fa": "Persian", "lbl_en": "English", "lbl_dual": "Bilingual",
+        # performance / ratings
+        "perf_acc": "accuracy", "perf_speed": "speed",
+        "model_name": "Model",
+        # cloud link
+        "cloud_open": "↗ Open the Groq key page",
+        # download status / controls
+        "dl_downloading": "Downloading…", "dl_paused": "Paused",
+        "dl_error": "Download failed — check your internet connection and try again.",
+        "dl_pause": "Pause", "dl_resume": "Resume", "dl_retry": "Try again",
+        "dl_connecting": "Connecting…",
     },
     "fa": {
         "win_title": "گویا — راه‌اندازی",
@@ -236,12 +246,36 @@ LANG = {
                      "می‌سازد و شروع می‌کند.",
         "tip_offline": "گویا در صورت نیاز مدل را دانلود می‌کند (با نوار پیشرفت)، یک فایل "
                        "اجرای دوبار-کلیکی می‌سازد و شروع می‌کند.",
-        "dl_title": "در حال دانلود مدل «{m}»…",
+        "dl_title": "در حال دانلود مدل «{m}»",
         "dl_wait": "این فقط یک‌بار اتفاق می‌افتد. لطفاً این پنجره را باز نگه دارید.",
         "dl_of": "{a} مگابایت از ~{b} مگابایت", "dl_done": "انجام شد.",
         "lbl_fa": "فارسی", "lbl_en": "انگلیسی", "lbl_dual": "دوزبانه",
+        # performance / ratings
+        "perf_acc": "دقت", "perf_speed": "سرعت",
+        "model_name": "مدل",
+        # cloud link
+        "cloud_open": "↗ باز کردن صفحهٔ کلید Groq",
+        # download status / controls
+        "dl_downloading": "در حال دانلود…", "dl_paused": "متوقف شد",
+        "dl_error": "دانلود ناموفق بود — اتصال اینترنت را بررسی و دوباره تلاش کنید.",
+        "dl_pause": "توقف", "dl_resume": "ادامه", "dl_retry": "تلاش دوباره",
+        "dl_connecting": "در حال اتصال…",
     },
 }
+
+# Per-model performance ratings (0–4) for the cards. Accuracy is per-language;
+# speed is the model's inherent speed (cloud = fast server, needs internet).
+MODEL_PERF = {
+    "accurate": {"fa_acc": 4, "en_acc": 4, "speed": 2},
+    "balanced": {"fa_acc": 2, "en_acc": 4, "speed": 2},
+    "fast":     {"fa_acc": 1, "en_acc": 3, "speed": 4},
+    "cloud":    {"fa_acc": 4, "en_acc": 4, "speed": 4},
+}
+
+
+def _dots(n, total=4):
+    n = max(0, min(total, int(n)))
+    return "●" * n + "○" * (total - n)
 
 
 def run() -> bool:
@@ -261,6 +295,7 @@ def run() -> bool:
 from PyQt6.QtWidgets import (  # noqa: E402
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame,
     QStackedWidget, QApplication, QLineEdit, QProgressBar, QCheckBox,
+    QScrollArea,
 )
 from PyQt6.QtCore import (  # noqa: E402
     Qt, QProcess, QProcessEnvironment, QTimer, pyqtSignal,
@@ -355,6 +390,7 @@ class WizardWindow(QWidget):
         self.bench_proc = None
         self.dl_proc = None
         self.dl_timer = None
+        self.dl_paused = False
         self.cards = []
         self.lang_cards = []
         self.selected_model_id = None
@@ -366,7 +402,7 @@ class WizardWindow(QWidget):
         }
         self.spec_edits = {}
 
-        self.setFixedSize(640, 720)
+        self.setFixedSize(680, 760)
         self.setStyleSheet(f"background: {BG}; color: {TEXT};")
 
         root = QVBoxLayout(self)
@@ -478,6 +514,14 @@ class WizardWindow(QWidget):
             if ph:
                 try:
                     w.setPlaceholderText(self.tr(ph))
+                except Exception:
+                    pass
+            lk = w.property("i18nLink")
+            if lk:
+                try:
+                    w.setText(f'<a href="https://console.groq.com/keys" '
+                              f'style="color:{ACCENT};text-decoration:none;">'
+                              f'{self.tr(lk)}</a>')
                 except Exception:
                     pass
         self._sync_step()
@@ -765,50 +809,84 @@ class WizardWindow(QWidget):
 
     # ---- Page 3: Model ----
 
+    def _scroll_area(self):
+        """A transparent vertical scroll area + inner content layout."""
+        area = QScrollArea()
+        area.setWidgetResizable(True)
+        area.setFrameShape(QFrame.Shape.NoFrame)
+        area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        area.setStyleSheet(
+            "QScrollArea { background: transparent; border: none; }"
+            "QScrollBar:vertical { background: transparent; width: 8px; margin: 2px; }"
+            f"QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px;"
+            "min-height: 30px; }"
+            "QScrollBar::add-line, QScrollBar::sub-line { height: 0; }")
+        inner = QWidget()
+        inner.setStyleSheet("background: transparent;")
+        col = QVBoxLayout(inner)
+        col.setContentsMargins(2, 2, 10, 2)
+        col.setSpacing(12)
+        area.setWidget(inner)
+        return area, col
+
     def _page_model(self):
         w, lay = self._page()
         self._heading(lay, "model_title", "model_sub")
+        area, col = self._scroll_area()
         self.model_container = QVBoxLayout()
-        self.model_container.setSpacing(10)
-        lay.addLayout(self.model_container)
+        self.model_container.setSpacing(12)
+        col.addLayout(self.model_container)
         self.cloud_panel = self._build_cloud_panel()
         self.cloud_panel.setVisible(False)
-        lay.addWidget(self.cloud_panel)
-        lay.addStretch()
+        col.addWidget(self.cloud_panel)
+        col.addStretch()
+        lay.addWidget(area, 1)
         return w
 
     def _build_cloud_panel(self):
         f = QFrame(); f.setObjectName("cp")
         f.setStyleSheet(
             f"QFrame#cp {{ background: {CARD}; border: 1.5px solid {ACCENT};"
-            f"border-radius: 12px; }} QLabel {{ background: transparent; border: none; }}")
-        v = QVBoxLayout(f); v.setContentsMargins(16, 13, 16, 13); v.setSpacing(7)
-        title = QLabel(); title.setFont(QFont(UI_FONT, 12, QFont.Weight.Bold))
+            f"border-radius: 14px; }} QLabel {{ background: transparent; border: none; }}")
+        v = QVBoxLayout(f); v.setContentsMargins(20, 18, 20, 18); v.setSpacing(11)
+        title = QLabel(); title.setFont(QFont(UI_FONT, 15, QFont.Weight.Bold))
         title.setStyleSheet(f"color: {TEXT};"); self._t(title, "cloud_guide_title")
         v.addWidget(title)
         for sk in ("cloud_step1", "cloud_step2", "cloud_step3"):
-            s = QLabel(); s.setFont(QFont(UI_FONT, 10)); s.setStyleSheet(f"color: {TEXT2};")
+            s = QLabel(); s.setFont(QFont(UI_FONT, 12)); s.setStyleSheet(f"color: {TEXT};")
             s.setWordWrap(True); self._t(s, sk); v.addWidget(s)
+
+        # Clickable link button that opens the Groq key page in the browser.
+        self.cloud_link = QLabel()
+        self.cloud_link.setOpenExternalLinks(True)
+        self.cloud_link.setFont(QFont(UI_FONT, 12, QFont.Weight.DemiBold))
+        self.cloud_link.setText(
+            f'<a href="https://console.groq.com/keys" style="color:{ACCENT};'
+            f'text-decoration:none;">{self.tr("cloud_open")}</a>')
+        self.cloud_link.setProperty("i18nLink", "cloud_open")
+        v.addWidget(self.cloud_link)
+
         self.key_edit = QLineEdit()
         self._t(self.key_edit, "cloud_key_ph", placeholder=True)
         self.key_edit.setEchoMode(QLineEdit.EchoMode.Password)
-        self.key_edit.setMinimumHeight(38)
+        self.key_edit.setMinimumHeight(44)
+        self.key_edit.setFont(QFont(UI_FONT, 12))
         self.key_edit.setStyleSheet(
             f"QLineEdit {{ background: {BG}; color: {TEXT}; border: 1px solid {BORDER};"
-            f"border-radius: 9px; padding: 6px 12px; }}"
+            f"border-radius: 10px; padding: 8px 14px; }}"
             f"QLineEdit:focus {{ border: 1px solid {ACCENT}; }}")
         self.key_edit.textChanged.connect(self._on_key_changed)
         v.addWidget(self.key_edit)
         row = QHBoxLayout()
         self.test_btn = self._btn("cloud_test", "primary")
-        self.test_btn.setMinimumSize(96, 38)
+        self.test_btn.setMinimumSize(110, 42)
         self.test_btn.clicked.connect(self._test_cloud)
         row.addWidget(self.test_btn)
-        self.cloud_status = QLabel(); self.cloud_status.setFont(QFont(UI_FONT, 10))
+        self.cloud_status = QLabel(); self.cloud_status.setFont(QFont(UI_FONT, 11))
         self.cloud_status.setStyleSheet(f"color: {TEXT2};"); self.cloud_status.setWordWrap(True)
         row.addWidget(self.cloud_status, 1)
         v.addLayout(row)
-        priv = QLabel(); priv.setFont(QFont(UI_FONT, 9)); priv.setStyleSheet(f"color: {DIM};")
+        priv = QLabel(); priv.setFont(QFont(UI_FONT, 10)); priv.setStyleSheet(f"color: {DIM};")
         priv.setWordWrap(True); self._t(priv, "cloud_privacy")
         v.addWidget(priv)
         return f
@@ -831,61 +909,74 @@ class WizardWindow(QWidget):
         if to_select:
             self._select_model(to_select)
 
+    def _pill(self, key, color):
+        """A small rounded tag (OFFLINE / ONLINE)."""
+        p = QLabel(); p.setFont(QFont(UI_FONT, 9, QFont.Weight.Bold))
+        rgba = "rgba(52,211,153,0.16)" if color == GREEN else "rgba(124,108,255,0.18)"
+        p.setStyleSheet(f"color: {color}; background: {rgba}; border-radius: 9px;"
+                        f"padding: 3px 11px;")
+        self._t(p, key)
+        return p
+
     def _fill_model_card(self, card, opt):
+        card.setMinimumHeight(168)
+        card._body.setContentsMargins(20, 16, 20, 16)
+        card._body.setSpacing(9)
+        perf = MODEL_PERF.get(opt["id"], {"fa_acc": 2, "en_acc": 3, "speed": 3})
+        is_cloud = opt["backend"] == "cloud"
         title_key = {"accurate": "title_accurate", "balanced": "title_balanced",
                      "fast": "title_fast", "cloud": "title_cloud"}.get(opt["id"], "title_fast")
-        top = QHBoxLayout(); top.setSpacing(8)
-        t = QLabel(); t.setFont(QFont(UI_FONT, 15, QFont.Weight.Bold))
+
+        # --- Header: title + recommended badge + offline/online pill ---
+        top = QHBoxLayout(); top.setSpacing(10)
+        t = QLabel(); t.setFont(QFont(UI_FONT, 19, QFont.Weight.Bold))
         t.setStyleSheet(f"color: {TEXT};"); self._t(t, title_key)
-        top.addWidget(t); top.addStretch()
+        top.addWidget(t)
         if opt["recommended"]:
-            badge = QLabel(); badge.setFont(QFont(UI_FONT, 9, QFont.Weight.DemiBold))
-            badge.setStyleSheet(f"color: {ACCENT}; background: rgba(124,108,255,0.12);"
-                                f"border-radius: 8px; padding: 2px 9px;")
-            self._t(badge, "recommended"); badge.setText("★ " + self.tr("recommended"))
+            badge = QLabel("★ " + self.tr("recommended"))
+            badge.setFont(QFont(UI_FONT, 10, QFont.Weight.DemiBold))
+            badge.setStyleSheet(f"color: {ACCENT}; background: rgba(124,108,255,0.14);"
+                                f"border-radius: 9px; padding: 3px 11px;")
             top.addWidget(badge)
-        kind = QLabel(); kind.setFont(QFont(UI_FONT, 8, QFont.Weight.DemiBold))
-        kind.setStyleSheet(f"color: {TEXT2};")
-        self._t(kind, "online" if opt["backend"] == "cloud" else "offline")
-        top.addWidget(kind)
+        top.addStretch()
+        top.addWidget(self._pill("online" if is_cloud else "offline",
+                                 ACCENT if is_cloud else GREEN))
         card._body.addLayout(top)
 
-        sub = QLabel(opt["subtitle"]); sub.setFont(QFont(UI_FONT, 10))
-        sub.setStyleSheet(f"color: {TEXT2};")
-        card._body.addWidget(sub)
-
+        # --- Model name + estimated latency ---
+        meta_bits = [f"{self.tr('model_name')}: {opt['model_size']}"]
         lat = opt.get("predicted_latency_sec")
         if lat is not None:
-            lt = QLabel(self.tr("lat_est", n=f"{lat:g}"))
-            lt.setProperty("i18nKey", "")  # dynamic; not auto-retranslated
-            lt.setFont(QFont(UI_FONT, 9, QFont.Weight.DemiBold))
-            lt.setStyleSheet(f"color: {ACCENT};")
-            card._body.addWidget(lt)
+            meta_bits.append(self.tr("lat_est", n=f"{lat:g}"))
+        meta = QLabel("   ·   ".join(meta_bits))
+        meta.setFont(QFont(UI_FONT, 11)); meta.setWordWrap(True)
+        meta.setStyleSheet(f"color: {ACCENT if lat is not None else TEXT2};")
+        card._body.addWidget(meta)
 
-        # Pros / cons
-        pc = QHBoxLayout(); pc.setSpacing(16)
-        pros_box = QVBoxLayout(); pros_box.setSpacing(2)
-        ph = QLabel(); ph.setFont(QFont(UI_FONT, 9, QFont.Weight.DemiBold))
-        ph.setStyleSheet(f"color: {GREEN};"); self._t(ph, "pros")
-        pros_box.addWidget(ph)
-        for pk in opt.get("pros", []):
-            l = QLabel("+ " + self.tr(pk)); l.setFont(QFont(UI_FONT, 9))
-            l.setStyleSheet(f"color: {TEXT2};"); l.setWordWrap(True)
-            pros_box.addWidget(l)
-        cons_box = QVBoxLayout(); cons_box.setSpacing(2)
-        ch = QLabel(); ch.setFont(QFont(UI_FONT, 9, QFont.Weight.DemiBold))
-        ch.setStyleSheet(f"color: {RED};"); self._t(ch, "cons")
-        cons_box.addWidget(ch)
-        for ck in opt.get("cons", []):
-            l = QLabel("− " + self.tr(ck)); l.setFont(QFont(UI_FONT, 9))
-            l.setStyleSheet(f"color: {TEXT2};"); l.setWordWrap(True)
-            cons_box.addWidget(l)
-        pc.addLayout(pros_box, 1); pc.addLayout(cons_box, 1)
-        wrap = QWidget(); wrap.setLayout(pc)
-        card._body.addWidget(wrap)
+        # --- Per-language performance ratings ---
+        for lang_key, acc in (("lbl_fa", perf["fa_acc"]), ("lbl_en", perf["en_acc"])):
+            line = QLabel(
+                f"{self.tr(lang_key)}   "
+                f"{self.tr('perf_acc')} {_dots(acc)}    "
+                f"{self.tr('perf_speed')} {_dots(perf['speed'])}")
+            line.setFont(QFont(UI_FONT, 11))
+            line.setStyleSheet(f"color: {TEXT2};")
+            card._body.addWidget(line)
+
+        # --- Pros / cons, one clean line each ---
+        if opt.get("pros"):
+            pros = QLabel("✓  " + "   ·   ".join(self.tr(k) for k in opt["pros"]))
+            pros.setFont(QFont(UI_FONT, 10)); pros.setWordWrap(True)
+            pros.setStyleSheet(f"color: {GREEN};")
+            card._body.addWidget(pros)
+        if opt.get("cons"):
+            cons = QLabel("✕  " + "   ·   ".join(self.tr(k) for k in opt["cons"]))
+            cons.setFont(QFont(UI_FONT, 10)); cons.setWordWrap(True)
+            cons.setStyleSheet(f"color: {RED};")
+            card._body.addWidget(cons)
 
         if not opt["enabled"]:
-            ns = QLabel("· " + self.tr("not_suitable")); ns.setFont(QFont(UI_FONT, 9))
+            ns = QLabel("· " + self.tr("not_suitable")); ns.setFont(QFont(UI_FONT, 10))
             ns.setStyleSheet(f"color: {DIM};")
             card._body.addWidget(ns)
         card.style_self()
@@ -955,13 +1046,15 @@ class WizardWindow(QWidget):
     def _page_review(self):
         w, lay = self._page()
         self._heading(lay, "review_title", "review_sub")
-        self.summary = QLabel(); self.summary.setFont(QFont(UI_FONT, 12))
-        self.summary.setStyleSheet(
-            f"color: {TEXT}; background: {CARD}; border: 1px solid {BORDER};"
-            f"border-radius: 12px; padding: 18px;")
-        self.summary.setWordWrap(True)
-        lay.addWidget(self.summary)
-        self.finish_tip = QLabel(); self.finish_tip.setFont(QFont(UI_FONT, 10))
+        self.summary_box = QFrame()
+        self.summary_box.setStyleSheet(
+            f"QFrame {{ background: {CARD}; border: 1px solid {BORDER}; border-radius: 14px; }}"
+            f"QLabel {{ border: none; background: transparent; }}")
+        self.summary_layout = QVBoxLayout(self.summary_box)
+        self.summary_layout.setContentsMargins(22, 18, 22, 18)
+        self.summary_layout.setSpacing(14)
+        lay.addWidget(self.summary_box)
+        self.finish_tip = QLabel(); self.finish_tip.setFont(QFont(UI_FONT, 11))
         self.finish_tip.setStyleSheet(f"color: {TEXT2};"); self.finish_tip.setWordWrap(True)
         lay.addWidget(self.finish_tip)
         lay.addStretch()
@@ -974,12 +1067,31 @@ class WizardWindow(QWidget):
         backend = self.tr("sum_online") if opt.get("backend") == "cloud" else self.tr("sum_offline")
         tk = {"accurate": "title_accurate", "balanced": "title_balanced",
               "fast": "title_fast", "cloud": "title_cloud"}.get(opt.get("id"), "title_fast")
-        title = self.tr(tk)
-        self.summary.setText(
-            f"{self.tr('sum_model')}:  {title}  ({opt.get('model_size','?')})\n"
-            f"{self.tr('sum_runs')}:  {backend}\n"
-            f"{self.tr('sum_language')}:  {lang}\n"
-            f"{self.tr('sum_key')}:  {self.choices['hotkey_label']}")
+
+        if not hasattr(self, "summary_layout"):
+            return
+        while self.summary_layout.count():
+            it = self.summary_layout.takeAt(0)
+            if it.widget():
+                it.widget().deleteLater()
+
+        rows = [
+            ("🧠", "sum_model", f"{self.tr(tk)}  ·  {opt.get('model_size','?')}"),
+            ("📍", "sum_runs", backend),
+            ("🗣", "sum_language", lang),
+            ("⌨️", "sum_key", self.choices["hotkey_label"]),
+        ]
+        for icon, lkey, val in rows:
+            r = QHBoxLayout(); r.setSpacing(12)
+            ic = QLabel(icon); ic.setFont(QFont(UI_FONT, 15)); ic.setFixedWidth(28)
+            lb = QLabel(self.tr(lkey)); lb.setFont(QFont(UI_FONT, 12))
+            lb.setStyleSheet(f"color: {TEXT2};"); lb.setFixedWidth(150)
+            vl = QLabel(val); vl.setFont(QFont(UI_FONT, 13, QFont.Weight.DemiBold))
+            vl.setStyleSheet(f"color: {TEXT};")
+            r.addWidget(ic); r.addWidget(lb); r.addWidget(vl, 1)
+            cont = QWidget(); cont.setLayout(r)
+            self.summary_layout.addWidget(cont)
+
         self.finish_tip.setText(
             self.tr("tip_cloud") if opt.get("backend") == "cloud" else self.tr("tip_offline"))
 
@@ -988,21 +1100,39 @@ class WizardWindow(QWidget):
     def _page_download(self):
         w, lay = self._page()
         lay.addStretch()
-        self.dl_title = QLabel(); self.dl_title.setFont(QFont(UI_FONT, 18, QFont.Weight.Bold))
+        self.dl_title = QLabel(); self.dl_title.setFont(QFont(UI_FONT, 20, QFont.Weight.Bold))
         self.dl_title.setStyleSheet(f"color: {TEXT};")
         self.dl_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.dl_title.setWordWrap(True)
         lay.addWidget(self.dl_title)
+
+        # state line (downloading / paused / error) with a status dot
+        self.dl_state = QLabel(); self.dl_state.setFont(QFont(UI_FONT, 12, QFont.Weight.DemiBold))
+        self.dl_state.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.dl_state.setWordWrap(True)
+        lay.addWidget(self.dl_state)
+
         self.dl_bar = QProgressBar(); self.dl_bar.setRange(0, 100); self.dl_bar.setValue(0)
-        self.dl_bar.setMinimumHeight(22)
+        self.dl_bar.setMinimumHeight(26)
         self.dl_bar.setStyleSheet(
             f"QProgressBar {{ background: {CARD}; border: 1px solid {BORDER};"
-            f"border-radius: 11px; text-align: center; color: {TEXT}; }}"
-            f"QProgressBar::chunk {{ background: {ACCENT}; border-radius: 10px; }}")
+            f"border-radius: 13px; text-align: center; color: {TEXT}; }}"
+            f"QProgressBar::chunk {{ background: {ACCENT}; border-radius: 12px; }}")
         lay.addWidget(self.dl_bar)
-        self.dl_status = QLabel(); self.dl_status.setFont(QFont(UI_FONT, 10))
+
+        self.dl_status = QLabel(); self.dl_status.setFont(QFont(UI_FONT, 11))
         self.dl_status.setStyleSheet(f"color: {TEXT2};")
         self.dl_status.setAlignment(Qt.AlignmentFlag.AlignCenter)
         lay.addWidget(self.dl_status)
+
+        # Pause / Resume-Retry controls
+        ctl = QHBoxLayout(); ctl.addStretch()
+        self.dl_pause_btn = self._btn("dl_pause", "ghost")
+        self.dl_pause_btn.setMinimumSize(130, 40)
+        self.dl_pause_btn.clicked.connect(self._toggle_pause)
+        ctl.addWidget(self.dl_pause_btn)
+        ctl.addStretch()
+        lay.addLayout(ctl)
         lay.addStretch()
         return w
 
@@ -1093,24 +1223,38 @@ class WizardWindow(QWidget):
         self._update_nav()
         self._start_download(opt["model_size"])
 
+    def _set_dl_state(self, key, color):
+        dot = {GREEN: "●", ACCENT: "●", RED: "●", TEXT2: "○"}.get(color, "●")
+        self.dl_state.setStyleSheet(f"color: {color};")
+        self.dl_state.setText(f"{dot}  {self.tr(key)}")
+
     def _start_download(self, size):
         self.dl_title.setText(self.tr("dl_title", m=size))
         self.dl_status.setText(self.tr("dl_wait"))
         self.dl_expected = MODEL_SIZE_MB.get(size, 1000)
         self.dl_size = size
-        self.dl_bar.setValue(0)
+        self.dl_paused = False
+        self._t(self.dl_pause_btn, "dl_pause")
+        self.dl_pause_btn.setEnabled(True)
+        self._spawn_download()
+
+    def _spawn_download(self):
+        self._set_dl_state("dl_connecting", ACCENT)
         self.dl_proc = QProcess(self)
         self.dl_proc.finished.connect(self._on_download_done)
         self.dl_proc.setProgram(sys.executable)
         self.dl_proc.setArguments([
-            "-c", f"from faster_whisper.utils import download_model; download_model('{size}')"])
+            "-c",
+            "from faster_whisper.utils import download_model; "
+            f"download_model('{self.dl_size}')"])
         env = QProcessEnvironment.systemEnvironment()
         env.insert("HF_HUB_DISABLE_XET", "1")
         env.insert("HF_HUB_ENABLE_HF_TRANSFER", "0")
         self.dl_proc.setProcessEnvironment(env)
         self.dl_proc.start()
-        self.dl_timer = QTimer(self)
-        self.dl_timer.timeout.connect(self._poll_download)
+        if self.dl_timer is None:
+            self.dl_timer = QTimer(self)
+            self.dl_timer.timeout.connect(self._poll_download)
         self.dl_timer.start(500)
 
     def _poll_download(self):
@@ -1118,13 +1262,40 @@ class WizardWindow(QWidget):
         pct = int(min(99, (mb / self.dl_expected) * 100)) if self.dl_expected else 0
         self.dl_bar.setValue(pct)
         self.dl_status.setText(self.tr("dl_of", a=f"{mb:.0f}", b=f"{self.dl_expected:.0f}"))
+        if mb > 1:               # bytes are arriving → it's really downloading
+            self._set_dl_state("dl_downloading", GREEN)
+
+    def _toggle_pause(self):
+        if self.dl_paused:
+            # Resume / retry — HuggingFace resumes from the partial file.
+            self.dl_paused = False
+            self._t(self.dl_pause_btn, "dl_pause")
+            self._spawn_download()
+        else:
+            # Pause — kill the process; partial bytes are kept on disk.
+            self.dl_paused = True
+            if self.dl_timer:
+                self.dl_timer.stop()
+            if self.dl_proc and self.dl_proc.state() != QProcess.ProcessState.NotRunning:
+                self.dl_proc.kill()
+            self._set_dl_state("dl_paused", TEXT2)
+            self._t(self.dl_pause_btn, "dl_resume")
 
     def _on_download_done(self, code, _s):
+        if self.dl_paused:
+            return                              # user paused; not an error
         if self.dl_timer:
             self.dl_timer.stop()
-        self.dl_bar.setValue(100)
-        self.dl_status.setText(self.tr("dl_done"))
-        self._complete()
+        if model_is_cached(self.dl_size):
+            self.dl_bar.setValue(100)
+            self._set_dl_state("dl_done", GREEN)
+            self.dl_status.setText(self.tr("dl_done"))
+            self._complete()
+        else:
+            # Process ended but model isn't there → network / server error.
+            self._set_dl_state("dl_error", RED)
+            self._t(self.dl_pause_btn, "dl_retry")
+            self.dl_paused = True               # so "retry" re-spawns
 
     def _complete(self):
         self.completed = True
