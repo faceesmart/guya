@@ -110,33 +110,45 @@ LANG = {
         "bench_failed": "Could not run the speed test; using a specs-based guess.",
 
         "mode_title": "How should it run?",
-        "mode_sub": "Pick where your speech is turned into text. You can change "
-                    "this later by running setup again.",
+        "mode_sub": "Choose where your speech becomes text. You can change this "
+                    "anytime by running setup again.",
         "mode_offline": "Offline", "mode_offline_sub": "Runs on your computer",
         "mode_online": "Online", "mode_online_sub": "Runs on a free cloud server",
-        "mode_dual": "Dual", "mode_dual_sub": "Both — switch on the widget",
-        "mode_off_p1": "Private — nothing leaves your device",
-        "mode_off_p2": "Free, works without internet",
-        "mode_off_c1": "Limited by your hardware (Persian needs a strong device)",
-        "mode_on_p1": "Full accuracy on any computer",
-        "mode_on_p2": "Nothing to download, light on memory",
-        "mode_on_c1": "Needs internet + a free key",
-        "mode_on_c2": "Sends your voice to the provider's server",
-        "mode_du_p1": "Offline for one language, online for the other",
-        "mode_du_p2": "Switch anytime, right on the widget",
-        "mode_du_c1": "Needs both set up (and a free key)",
-        "mode_best": "Best for your device: {m}  (≈{n}s for 10s of speech)",
-        "mode_online_model": "Uses large-v3 — full accuracy",
-        "mode_dual_note": "e.g. English offline (fast, private) + Persian online (accurate)",
+        "mode_dual": "Dual", "mode_dual_sub": "Both — switch with one tap",
+        "mode_off_how": "A speech model runs on your own computer. Your voice is "
+                        "never sent anywhere.",
+        "mode_on_how": "Your voice is sent to a free server (Groq) running a "
+                       "powerful model; the text comes back in a couple of seconds.",
+        "mode_du_how": "Use offline for one language and online for the other, and "
+                       "switch between them with one tap on the widget.",
+        "mode_off_p1": "Completely private — nothing leaves your computer",
+        "mode_off_p2": "Free, and works with no internet",
+        "mode_off_c1": "Accuracy is limited by your computer (good Persian needs a "
+                       "powerful machine or GPU)",
+        "mode_on_p1": "Top accuracy on ANY computer — even old or weak ones",
+        "mode_on_p2": "Nothing to download; barely uses memory",
+        "mode_on_c1": "Needs internet and a free account (about a minute to set up)",
+        "mode_on_c2": "Your voice is sent to the provider's server",
+        "mode_du_p1": "Best of both: fast private English offline + accurate Persian online",
+        "mode_du_p2": "One tap to switch, right on the widget",
+        "mode_du_c1": "Sets up both — an offline model and a free online key",
+        "mode_best": "Best model for your computer:  {m}  (about {n}s to type 10s of speech)",
+        "mode_online_model": "Always uses large-v3 — the most accurate model",
+        "mode_dual_note": "e.g. English offline (instant, private) + Persian online (most accurate)",
 
         "setup_off_title": "Choose your offline model",
-        "setup_off_sub": "These run on your computer.",
-        "setup_on_title": "Connect online (free)",
-        "setup_on_sub": "Get a free key — it takes a minute.",
+        "setup_off_sub": "All of these run on your computer. Pick the balance of "
+                         "accuracy and speed you want.",
+        "setup_on_title": "Connect to the free server",
+        "setup_on_sub": "Create a free Groq key — it takes about a minute. No card needed.",
         "setup_du_title": "Set up both",
-        "setup_du_sub": "An offline model for one language, online for the other.",
+        "setup_du_sub": "Pick the offline model for one language, then connect online "
+                        "for the other. You'll switch between them on the widget.",
         "setup_du_offline": "Offline model",
+        "setup_du_off_sub": "Runs on your computer — best for the language you use most "
+                            "(e.g. English).",
         "setup_du_online": "Online connection",
+        "setup_du_on_sub": "A free cloud model for your other language (e.g. Persian).",
 
         "recommended": "Recommended", "offline": "OFFLINE", "online": "ONLINE",
         "not_suitable": "not suitable for this PC",
@@ -225,33 +237,44 @@ LANG = {
         "bench_failed": "آزمایش سرعت انجام نشد؛ از حدس مبتنی بر مشخصات استفاده می‌شود.",
 
         "mode_title": "چطور اجرا شود؟",
-        "mode_sub": "انتخاب کنید گفتار شما کجا به متن تبدیل شود. بعداً می‌توانید با "
-                    "اجرای دوبارهٔ راه‌اندازی تغییرش دهید.",
+        "mode_sub": "انتخاب کنید گفتار شما کجا به متن تبدیل شود. هر وقت خواستید "
+                    "می‌توانید با اجرای دوبارهٔ راه‌اندازی تغییرش دهید.",
         "mode_offline": "آفلاین", "mode_offline_sub": "روی کامپیوتر شما اجرا می‌شود",
         "mode_online": "آنلاین", "mode_online_sub": "روی سرور ابری رایگان اجرا می‌شود",
-        "mode_dual": "دوگانه", "mode_dual_sub": "هر دو — روی ویجت جابه‌جا شو",
-        "mode_off_p1": "خصوصی — هیچ‌چیز از دستگاه شما خارج نمی‌شود",
-        "mode_off_p2": "رایگان، بدون نیاز به اینترنت",
-        "mode_off_c1": "محدود به سخت‌افزار شما (فارسی به دستگاه قوی نیاز دارد)",
-        "mode_on_p1": "دقت کامل روی هر کامپیوتری",
-        "mode_on_p2": "بدون دانلود، سبک",
-        "mode_on_c1": "به اینترنت و یک کلید رایگان نیاز دارد",
-        "mode_on_c2": "صدای شما به سرور سرویس‌دهنده ارسال می‌شود",
-        "mode_du_p1": "آفلاین برای یک زبان، آنلاین برای زبان دیگر",
-        "mode_du_p2": "هر وقت خواستی، روی خود ویجت جابه‌جا شو",
-        "mode_du_c1": "به تنظیم هر دو (و یک کلید رایگان) نیاز دارد",
-        "mode_best": "بهترین برای دستگاه شما: {m}  (حدود {n} ثانیه برای ۱۰ ثانیه گفتار)",
-        "mode_online_model": "از large-v3 استفاده می‌کند — دقت کامل",
-        "mode_dual_note": "مثلاً انگلیسی آفلاین (سریع، خصوصی) + فارسی آنلاین (دقیق)",
+        "mode_dual": "دوگانه", "mode_dual_sub": "هر دو — با یک ضربه جابه‌جا شو",
+        "mode_off_how": "یک مدل گفتار روی کامپیوتر خودتان اجرا می‌شود. صدای شما به "
+                        "هیچ‌جا فرستاده نمی‌شود.",
+        "mode_on_how": "صدای شما به یک سرور رایگان (Groq) با مدلی قدرتمند فرستاده "
+                       "می‌شود و متن در چند ثانیه برمی‌گردد.",
+        "mode_du_how": "برای یک زبان آفلاین و برای زبان دیگر آنلاین استفاده کنید و "
+                       "با یک ضربه روی ویجت بینشان جابه‌جا شوید.",
+        "mode_off_p1": "کاملاً خصوصی — هیچ‌چیز از کامپیوتر شما خارج نمی‌شود",
+        "mode_off_p2": "رایگان، و بدون اینترنت کار می‌کند",
+        "mode_off_c1": "دقت محدود به کامپیوتر شماست (فارسی خوب به دستگاه قوی یا کارت گرافیک نیاز دارد)",
+        "mode_on_p1": "بالاترین دقت روی هر کامپیوتری — حتی قدیمی یا ضعیف",
+        "mode_on_p2": "بدون دانلود؛ تقریباً بدون مصرف حافظه",
+        "mode_on_c1": "به اینترنت و یک حساب رایگان نیاز دارد (حدود یک دقیقه)",
+        "mode_on_c2": "صدای شما به سرور سرویس‌دهنده فرستاده می‌شود",
+        "mode_du_p1": "بهترینِ هر دو: انگلیسی آفلاین سریع و خصوصی + فارسی آنلاین دقیق",
+        "mode_du_p2": "یک ضربه برای جابه‌جایی، درست روی ویجت",
+        "mode_du_c1": "هر دو را تنظیم می‌کند — یک مدل آفلاین و یک کلید آنلاین رایگان",
+        "mode_best": "بهترین مدل برای کامپیوتر شما:  {m}  (حدود {n} ثانیه برای ۱۰ ثانیه گفتار)",
+        "mode_online_model": "همیشه از large-v3 استفاده می‌کند — دقیق‌ترین مدل",
+        "mode_dual_note": "مثلاً انگلیسی آفلاین (فوری، خصوصی) + فارسی آنلاین (دقیق‌ترین)",
 
         "setup_off_title": "مدل آفلاین را انتخاب کنید",
-        "setup_off_sub": "این‌ها روی کامپیوتر شما اجرا می‌شوند.",
-        "setup_on_title": "اتصال آنلاین (رایگان)",
-        "setup_on_sub": "یک کلید رایگان بگیرید — یک دقیقه طول می‌کشد.",
+        "setup_off_sub": "همهٔ این‌ها روی کامپیوتر شما اجرا می‌شوند. تعادل دقت و سرعت "
+                         "دلخواهتان را انتخاب کنید.",
+        "setup_on_title": "اتصال به سرور رایگان",
+        "setup_on_sub": "یک کلید رایگان Groq بسازید — حدود یک دقیقه. بدون نیاز به کارت.",
         "setup_du_title": "هر دو را تنظیم کنید",
-        "setup_du_sub": "یک مدل آفلاین برای یک زبان، آنلاین برای زبان دیگر.",
+        "setup_du_sub": "مدل آفلاین را برای یک زبان انتخاب کنید، سپس برای زبان دیگر "
+                        "آنلاین متصل شوید. روی ویجت بینشان جابه‌جا می‌شوید.",
         "setup_du_offline": "مدل آفلاین",
+        "setup_du_off_sub": "روی کامپیوتر شما اجرا می‌شود — برای زبانی که بیشتر استفاده "
+                            "می‌کنید (مثلاً انگلیسی).",
         "setup_du_online": "اتصال آنلاین",
+        "setup_du_on_sub": "یک مدل ابری رایگان برای زبان دیگرتان (مثلاً فارسی).",
 
         "recommended": "پیشنهادی", "offline": "آفلاین", "online": "آنلاین",
         "not_suitable": "برای این کامپیوتر مناسب نیست",
@@ -849,9 +872,11 @@ class WizardWindow(QWidget):
     def _page_mode(self):
         w, lay = self._page()
         self._heading(lay, "mode_title", "mode_sub")
+        area, col = self._scroll_area()
         self.mode_container = QVBoxLayout(); self.mode_container.setSpacing(12)
-        lay.addLayout(self.mode_container)
-        lay.addStretch()
+        col.addLayout(self.mode_container)
+        col.addStretch()
+        lay.addWidget(area, 1)
         return w
 
     def _build_mode_cards(self):
@@ -871,17 +896,21 @@ class WizardWindow(QWidget):
                                 n=f"{lat:g}" if lat is not None else "?")
 
         specs = [
-            ("offline", "mode_offline", "mode_offline_sub", best_line,
+            ("offline", "💻", "mode_offline", "mode_off_how", best_line,
              ["mode_off_p1", "mode_off_p2"], ["mode_off_c1"]),
-            ("online", "mode_online", "mode_online_sub", self.tr("mode_online_model"),
+            ("online", "☁️", "mode_online", "mode_on_how", self.tr("mode_online_model"),
              ["mode_on_p1", "mode_on_p2"], ["mode_on_c1", "mode_on_c2"]),
-            ("dual", "mode_dual", "mode_dual_sub", self.tr("mode_dual_note"),
+            ("dual", "🔀", "mode_dual", "mode_du_how", self.tr("mode_dual_note"),
              ["mode_du_p1", "mode_du_p2"], ["mode_du_c1"]),
         ]
-        for mid, tk, sk, detail, pros, cons in specs:
+        for mid, icon, tk, how_k, detail, pros, cons in specs:
             c = Card(self._select_mode, mid)
-            c.setMinimumHeight(150)
+            c.setMinimumHeight(176)
+            c._body.setContentsMargins(18, 15, 18, 15)
+            c._body.setSpacing(7)
+            # Title row: icon + name + recommended badge
             top = QHBoxLayout(); top.setSpacing(10)
+            ic = QLabel(icon); ic.setFont(QFont(UI_FONT, 17)); top.addWidget(ic)
             t = QLabel(); t.setFont(QFont(UI_FONT, 18, QFont.Weight.Bold))
             t.setStyleSheet(f"color: {TEXT};"); self._t(t, tk); top.addWidget(t)
             if mid == self.recommended_mode:
@@ -892,19 +921,20 @@ class WizardWindow(QWidget):
                 top.addWidget(badge)
             top.addStretch()
             c._body.addLayout(top)
-            sub = QLabel(); sub.setFont(QFont(UI_FONT, 11)); sub.setStyleSheet(f"color: {TEXT2};")
-            self._t(sub, sk); c._body.addWidget(sub)
+            # How it works (plain language)
+            how = QLabel(); how.setFont(QFont(UI_FONT, 11)); how.setWordWrap(True)
+            how.setStyleSheet(f"color: {TEXT};"); self._t(how, how_k); c._body.addWidget(how)
+            # Key fact (best model / model used / example)
             if detail:
                 d = QLabel(detail); d.setFont(QFont(UI_FONT, 10, QFont.Weight.DemiBold))
                 d.setStyleSheet(f"color: {ACCENT};"); d.setWordWrap(True); c._body.addWidget(d)
-            if pros:
-                pl = QLabel("✓  " + "   ·   ".join(self.tr(k) for k in pros))
-                pl.setFont(QFont(UI_FONT, 10)); pl.setWordWrap(True)
-                pl.setStyleSheet(f"color: {GREEN};"); c._body.addWidget(pl)
-            if cons:
-                cl = QLabel("✕  " + "   ·   ".join(self.tr(k) for k in cons))
-                cl.setFont(QFont(UI_FONT, 10)); cl.setWordWrap(True)
-                cl.setStyleSheet(f"color: {RED};"); c._body.addWidget(cl)
+            # Pros / cons, each on its own line for clarity
+            for k in pros:
+                l = QLabel("✓  " + self.tr(k)); l.setFont(QFont(UI_FONT, 10)); l.setWordWrap(True)
+                l.setStyleSheet(f"color: {GREEN};"); c._body.addWidget(l)
+            for k in cons:
+                l = QLabel("✕  " + self.tr(k)); l.setFont(QFont(UI_FONT, 10)); l.setWordWrap(True)
+                l.setStyleSheet(f"color: {RED};"); c._body.addWidget(l)
             c.set_selected(self.mode == mid)
             c.style_self()
             self.mode_cards.append(c); self.mode_container.addWidget(c)
@@ -935,6 +965,25 @@ class WizardWindow(QWidget):
         lay.addWidget(area, 1)
         return w
 
+    def _section_header(self, number, title, subtitle):
+        """A numbered step header: ① Title  /  subtitle — for the Dual setup."""
+        box = QWidget()
+        h = QHBoxLayout(box); h.setContentsMargins(0, 4, 0, 0); h.setSpacing(12)
+        num = QLabel(str(number))
+        num.setFont(QFont(UI_FONT, 13, QFont.Weight.Bold))
+        num.setFixedSize(30, 30)
+        num.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        num.setStyleSheet(f"color: {ACCENT_TEXT}; background: {ACCENT}; border-radius: 15px;")
+        h.addWidget(num)
+        txt = QVBoxLayout(); txt.setSpacing(1)
+        t = QLabel(title); t.setFont(QFont(UI_FONT, 14, QFont.Weight.Bold))
+        t.setStyleSheet(f"color: {TEXT};")
+        s = QLabel(subtitle); s.setFont(QFont(UI_FONT, 10)); s.setWordWrap(True)
+        s.setStyleSheet(f"color: {TEXT2};")
+        txt.addWidget(t); txt.addWidget(s)
+        h.addLayout(txt, 1)
+        return box
+
     def _build_setup(self):
         # Clear
         while self.setup_col.count():
@@ -951,18 +1000,15 @@ class WizardWindow(QWidget):
             self.setup_head.setText(self.tr("setup_on_title"))
             self.setup_sub.setText(self.tr("setup_on_sub"))
             self.setup_col.addWidget(self._build_cloud_panel())
-        else:  # dual
+        else:  # dual — two clearly numbered steps
             self.setup_head.setText(self.tr("setup_du_title"))
             self.setup_sub.setText(self.tr("setup_du_sub"))
-            sec1 = QLabel(self.tr("setup_du_offline"))
-            sec1.setFont(QFont(UI_FONT, 12, QFont.Weight.DemiBold))
-            sec1.setStyleSheet(f"color: {TEXT2};")
-            self.setup_col.addWidget(sec1)
+            self.setup_col.addWidget(self._section_header(
+                "1", self.tr("setup_du_offline"), self.tr("setup_du_off_sub")))
             self._add_model_cards(self.setup_col)
-            sec2 = QLabel(self.tr("setup_du_online"))
-            sec2.setFont(QFont(UI_FONT, 12, QFont.Weight.DemiBold))
-            sec2.setStyleSheet(f"color: {TEXT2};")
-            self.setup_col.addWidget(sec2)
+            self.setup_col.addSpacing(6)
+            self.setup_col.addWidget(self._section_header(
+                "2", self.tr("setup_du_online"), self.tr("setup_du_on_sub")))
             self.setup_col.addWidget(self._build_cloud_panel())
         self.setup_col.addStretch()
         self._update_nav()
