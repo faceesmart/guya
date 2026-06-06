@@ -58,8 +58,8 @@ ACCURACY_RANK = {
     "large-v3": 6,
 }
 
-PROXY_MODEL = "base"          # small, quick to download (~140 MB) and run
-PROXY_AUDIO_SEC = 6.0         # length of the synthetic benchmark clip
+PROXY_MODEL = "tiny"          # smallest model (~75 MB) — fastest to fetch + run
+PROXY_AUDIO_SEC = 5.0         # length of the synthetic benchmark clip
 
 # Latency budget, expressed as real-time factor for a typical utterance.
 #   <= COMFORTABLE  → feels responsive (transcription ≤ utterance length)

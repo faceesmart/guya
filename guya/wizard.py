@@ -122,9 +122,11 @@ LANG = {
         "con_privacy": "Sends your voice to the provider's servers",
 
         "cloud_guide_title": "Connect a free online account (Groq)",
-        "cloud_step1": "1.  Open  console.groq.com/keys  and sign in (free, no card)",
-        "cloud_step2": "2.  Create an API key and copy it",
-        "cloud_step3": "3.  Paste it below and press Test",
+        "cloud_step1": '1.  Open <a href="https://console.groq.com/keys" '
+                       'style="color:#7c6cff;text-decoration:none;">console.groq.com/keys</a>'
+                       ' and sign in (free, no card needed)',
+        "cloud_step2": '2.  Click <b>Create API Key</b>, name it “guya”, and copy the key',
+        "cloud_step3": "3.  Paste the key below and press Test",
         "cloud_key_ph": "Paste your API key (gsk_…)",
         "cloud_test": "Test",
         "cloud_testing": "Checking your key…",
@@ -161,7 +163,9 @@ LANG = {
         "dl_downloading": "Downloading…", "dl_paused": "Paused",
         "dl_error": "Download failed — check your internet connection and try again.",
         "dl_pause": "Pause", "dl_resume": "Resume", "dl_retry": "Try again",
-        "dl_connecting": "Connecting…",
+        "dl_connecting": "Connecting…", "cancel": "Cancel",
+        "installed": "✓ Installed", "not_installed": "↓ will download",
+        "cloud_example": "Example: gsk_AbC12dEf34GhIj…",
     },
     "fa": {
         "win_title": "گویا — راه‌اندازی",
@@ -220,9 +224,11 @@ LANG = {
         "con_privacy": "صدای شما به سرور سرویس‌دهنده ارسال می‌شود",
 
         "cloud_guide_title": "اتصال به یک حساب آنلاین رایگان (Groq)",
-        "cloud_step1": "۱.  به  console.groq.com/keys  بروید و وارد شوید (رایگان، بدون کارت)",
-        "cloud_step2": "۲.  یک کلید API بسازید و کپی کنید",
-        "cloud_step3": "۳.  آن را پایین بچسبانید و «آزمایش» را بزنید",
+        "cloud_step1": '۱.  به <a href="https://console.groq.com/keys" '
+                       'style="color:#7c6cff;text-decoration:none;">console.groq.com/keys</a>'
+                       ' بروید و وارد شوید (رایگان، بدون کارت)',
+        "cloud_step2": '۲.  روی <b>Create API Key</b> بزنید، نامش را «guya» بگذارید و کلید را کپی کنید',
+        "cloud_step3": "۳.  کلید را پایین بچسبانید و «آزمایش» را بزنید",
         "cloud_key_ph": "کلید API خود را بچسبانید (gsk_…)",
         "cloud_test": "آزمایش",
         "cloud_testing": "در حال بررسی کلید…",
@@ -259,7 +265,9 @@ LANG = {
         "dl_downloading": "در حال دانلود…", "dl_paused": "متوقف شد",
         "dl_error": "دانلود ناموفق بود — اتصال اینترنت را بررسی و دوباره تلاش کنید.",
         "dl_pause": "توقف", "dl_resume": "ادامه", "dl_retry": "تلاش دوباره",
-        "dl_connecting": "در حال اتصال…",
+        "dl_connecting": "در حال اتصال…", "cancel": "لغو",
+        "installed": "✓ نصب‌شده", "not_installed": "↓ دانلود می‌شود",
+        "cloud_example": "نمونه: gsk_AbC12dEf34GhIj…",
     },
 }
 
@@ -451,6 +459,23 @@ class WizardWindow(QWidget):
 
         self.retranslate()
         self._update_nav()
+        self._prewarm_proxy()
+
+    def _prewarm_proxy(self):
+        """Download the tiny benchmark model in the background while the user
+        reads the first pages, so the speed test on the Device step is instant."""
+        if model_is_cached(benchmark.PROXY_MODEL):
+            return
+        self._prewarm_proc = QProcess(self)
+        self._prewarm_proc.setProgram(sys.executable)
+        self._prewarm_proc.setArguments([
+            "-c",
+            "from faster_whisper.utils import download_model; "
+            f"download_model('{benchmark.PROXY_MODEL}')"])
+        env = QProcessEnvironment.systemEnvironment()
+        env.insert("HF_HUB_DISABLE_XET", "1")
+        self._prewarm_proc.setProcessEnvironment(env)
+        self._prewarm_proc.start()
 
     # ---- i18n ----
 
@@ -854,17 +879,10 @@ class WizardWindow(QWidget):
         v.addWidget(title)
         for sk in ("cloud_step1", "cloud_step2", "cloud_step3"):
             s = QLabel(); s.setFont(QFont(UI_FONT, 12)); s.setStyleSheet(f"color: {TEXT};")
-            s.setWordWrap(True); self._t(s, sk); v.addWidget(s)
-
-        # Clickable link button that opens the Groq key page in the browser.
-        self.cloud_link = QLabel()
-        self.cloud_link.setOpenExternalLinks(True)
-        self.cloud_link.setFont(QFont(UI_FONT, 12, QFont.Weight.DemiBold))
-        self.cloud_link.setText(
-            f'<a href="https://console.groq.com/keys" style="color:{ACCENT};'
-            f'text-decoration:none;">{self.tr("cloud_open")}</a>')
-        self.cloud_link.setProperty("i18nLink", "cloud_open")
-        v.addWidget(self.cloud_link)
+            s.setWordWrap(True)
+            s.setTextFormat(Qt.TextFormat.RichText)
+            s.setOpenExternalLinks(True)      # the embedded link opens the browser
+            self._t(s, sk); v.addWidget(s)
 
         self.key_edit = QLineEdit()
         self._t(self.key_edit, "cloud_key_ph", placeholder=True)
@@ -877,6 +895,9 @@ class WizardWindow(QWidget):
             f"QLineEdit:focus {{ border: 1px solid {ACCENT}; }}")
         self.key_edit.textChanged.connect(self._on_key_changed)
         v.addWidget(self.key_edit)
+        ex = QLabel(); ex.setFont(QFont(UI_FONT, 10)); ex.setStyleSheet(f"color: {DIM};")
+        self._t(ex, "cloud_example")
+        v.addWidget(ex)
         row = QHBoxLayout()
         self.test_btn = self._btn("cloud_test", "primary")
         self.test_btn.setMinimumSize(110, 42)
@@ -939,6 +960,13 @@ class WizardWindow(QWidget):
                                 f"border-radius: 9px; padding: 3px 11px;")
             top.addWidget(badge)
         top.addStretch()
+        # "Installed" / "will download" indicator for offline models.
+        if not is_cloud:
+            cached = model_is_cached(opt["model_size"])
+            ind = QLabel(self.tr("installed" if cached else "not_installed"))
+            ind.setFont(QFont(UI_FONT, 9, QFont.Weight.DemiBold))
+            ind.setStyleSheet(f"color: {GREEN if cached else TEXT2};")
+            top.addWidget(ind)
         top.addWidget(self._pill("online" if is_cloud else "offline",
                                  ACCENT if is_cloud else GREEN))
         card._body.addLayout(top)
@@ -1125,9 +1153,13 @@ class WizardWindow(QWidget):
         self.dl_status.setAlignment(Qt.AlignmentFlag.AlignCenter)
         lay.addWidget(self.dl_status)
 
-        # Pause / Resume-Retry controls
+        # Cancel / Pause-Resume controls
         ctl = QHBoxLayout(); ctl.addStretch()
-        self.dl_pause_btn = self._btn("dl_pause", "ghost")
+        self.dl_cancel_btn = self._btn("cancel", "ghost")
+        self.dl_cancel_btn.setMinimumSize(130, 40)
+        self.dl_cancel_btn.clicked.connect(self._cancel_download)
+        ctl.addWidget(self.dl_cancel_btn)
+        self.dl_pause_btn = self._btn("dl_pause", "primary")
         self.dl_pause_btn.setMinimumSize(130, 40)
         self.dl_pause_btn.clicked.connect(self._toggle_pause)
         ctl.addWidget(self.dl_pause_btn)
@@ -1135,6 +1167,17 @@ class WizardWindow(QWidget):
         lay.addLayout(ctl)
         lay.addStretch()
         return w
+
+    def _cancel_download(self):
+        """Stop the download and go back to the Review step."""
+        self.dl_paused = True
+        if self.dl_timer:
+            self.dl_timer.stop()
+        if self.dl_proc and self.dl_proc.state() != QProcess.ProcessState.NotRunning:
+            self.dl_proc.kill()
+        self.stack.setCurrentIndex(5)      # back to Review
+        self._sync_step()
+        self._update_nav()
 
     # ---- Navigation ----
 
