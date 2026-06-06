@@ -864,11 +864,15 @@ class WizardWindow(QWidget):
     def _page_model(self):
         w, lay = self._page()
         self._heading(lay, "model_title", "model_sub")
+        # Scrollable list of model cards.
         area, col = self._scroll_area()
         self.model_container = QVBoxLayout()
         self.model_container.setSpacing(12)
         col.addLayout(self.model_container)
+        col.addStretch()
+        lay.addWidget(area, 1)
 
+        # --- Fixed area BELOW the scroll (always visible, no deep scrolling) ---
         # "Also enable Online" box — shown when an OFFLINE model is chosen.
         self.hybrid_box = QFrame()
         self.hybrid_box.setStyleSheet(
@@ -877,7 +881,7 @@ class WizardWindow(QWidget):
             f"QCheckBox {{ border: none; background: transparent; color: {TEXT}; spacing: 8px; }}"
             f"QCheckBox::indicator {{ width: 18px; height: 18px; }}")
         hb = QVBoxLayout(self.hybrid_box)
-        hb.setContentsMargins(16, 12, 16, 12); hb.setSpacing(4)
+        hb.setContentsMargins(16, 10, 16, 10); hb.setSpacing(3)
         self.hybrid_check = QCheckBox()
         self._t(self.hybrid_check, "hybrid_enable")
         self.hybrid_check.setFont(QFont(UI_FONT, 12, QFont.Weight.DemiBold))
@@ -887,13 +891,11 @@ class WizardWindow(QWidget):
         hd.setStyleSheet(f"color: {TEXT2};"); self._t(hd, "hybrid_desc")
         hb.addWidget(hd)
         self.hybrid_box.setVisible(False)
-        col.addWidget(self.hybrid_box)
+        lay.addWidget(self.hybrid_box)
 
         self.cloud_panel = self._build_cloud_panel()
         self.cloud_panel.setVisible(False)
-        col.addWidget(self.cloud_panel)
-        col.addStretch()
-        lay.addWidget(area, 1)
+        lay.addWidget(self.cloud_panel)
         return w
 
     def _on_hybrid_toggled(self, _state):
