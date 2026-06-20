@@ -26,3 +26,7 @@ models/
 # Generated double-click launchers (machine-specific paths)
 Start Guya.command
 Start Guya.bat
+
+# Generated launchers (per-machine)
+Start Guya.vbs
+Guya.app/
