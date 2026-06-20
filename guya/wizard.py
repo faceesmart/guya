@@ -132,10 +132,13 @@ LANG = {
         "lang_both_desc": "Bilingual — great for Dual mode (offline + online).",
 
         "dev_title": "Your computer",
-        "dev_sub": "Guya checks your hardware and measures its real speed.",
+        "dev_sub": "This is what we found. Tap Edit to correct anything, then continue.",
         "dev_analyze": "Analyze my PC", "dev_analyzing": "Analyzing…",
         "dev_reanalyze": "Re-analyze",
         "dev_edit_hint": "Detected automatically. Click any value to correct it.",
+        "dev_edit": "Edit",
+        "load_title": "Analyzing your device",
+        "load_sub": "Checking your hardware and measuring its real speed.\nThis takes a few seconds…",
         "spec_os": "Operating system", "spec_cpu": "Processor",
         "spec_ram": "Memory (GB)", "spec_gpu": "Graphics (GPU)",
         "gpu_none": "None / not usable",
@@ -282,10 +285,13 @@ LANG = {
         "lang_both_desc": "دوزبانه — عالی برای حالت دوگانه (آفلاین + آنلاین).",
 
         "dev_title": "کامپیوتر شما",
-        "dev_sub": "گویا سخت‌افزار شما را بررسی و سرعت واقعی آن را اندازه می‌گیرد.",
+        "dev_sub": "این چیزی است که پیدا کردیم. برای اصلاح روی «ویرایش» بزنید، سپس ادامه دهید.",
         "dev_analyze": "بررسی کامپیوتر", "dev_analyzing": "در حال بررسی…",
         "dev_reanalyze": "بررسی دوباره",
         "dev_edit_hint": "خودکار شناسایی شد. برای اصلاح روی هر مقدار کلیک کنید.",
+        "dev_edit": "ویرایش",
+        "load_title": "در حال بررسی دستگاه شما",
+        "load_sub": "بررسی سخت‌افزار و اندازه‌گیری سرعت واقعی آن.\nچند ثانیه طول می‌کشد…",
         "spec_os": "سیستم‌عامل", "spec_cpu": "پردازنده",
         "spec_ram": "حافظه (گیگابایت)", "spec_gpu": "کارت گرافیک",
         "gpu_none": "ندارد / غیرقابل‌استفاده",
@@ -395,11 +401,32 @@ LANG = {
 }
 
 
+def _load_fonts():
+    """Load the bundled Vazirmatn font (clean modern Persian + Latin). Returns
+    the family name to use, or the platform default if loading fails."""
+    global UI_FONT
+    try:
+        from PyQt6.QtGui import QFontDatabase
+        fonts_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "fonts")
+        loaded = False
+        for fn in ("Vazirmatn-Regular.ttf", "Vazirmatn-Medium.ttf",
+                   "Vazirmatn-SemiBold.ttf", "Vazirmatn-Bold.ttf"):
+            p = os.path.join(fonts_dir, fn)
+            if os.path.isfile(p) and QFontDatabase.addApplicationFont(p) != -1:
+                loaded = True
+        if loaded and "Vazirmatn" in QFontDatabase.families():
+            UI_FONT = "Vazirmatn"
+    except Exception as e:
+        log.warning(f"Could not load Vazirmatn: {e}")
+    return UI_FONT
+
+
 def run() -> bool:
     from PyQt6.QtWidgets import QApplication
     from PyQt6.QtGui import QFont as _QFont
     app = QApplication.instance() or QApplication(sys.argv)
     app.setStyle("Fusion")
+    _load_fonts()
     app.setFont(_QFont(UI_FONT, 11))
     win = WizardWindow()
     win.show()
@@ -417,7 +444,7 @@ from PyQt6.QtWidgets import (  # noqa: E402
 from PyQt6.QtCore import (  # noqa: E402
     Qt, QProcess, QProcessEnvironment, QTimer, pyqtSignal,
 )
-from PyQt6.QtGui import QFont, QColor  # noqa: E402
+from PyQt6.QtGui import QFont, QColor, QPainter, QPen  # noqa: E402
 
 
 def _shadow(widget, blur=24, dy=6, alpha=120):
@@ -428,6 +455,39 @@ def _shadow(widget, blur=24, dy=6, alpha=120):
     eff.setColor(QColor(0, 0, 0, alpha))
     widget.setGraphicsEffect(eff)
     return widget
+
+
+class Spinner(QWidget):
+    """A smooth rotating-arc loading indicator (Apple-style)."""
+
+    def __init__(self, size=72, parent=None):
+        super().__init__(parent)
+        self.setFixedSize(size, size)
+        self._angle = 0
+        self._timer = QTimer(self)
+        self._timer.timeout.connect(self._tick)
+
+    def start(self):
+        self._timer.start(16)
+
+    def stop(self):
+        self._timer.stop()
+
+    def _tick(self):
+        self._angle = (self._angle + 5) % 360
+        self.update()
+
+    def paintEvent(self, _e):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        r = self.rect().adjusted(7, 7, -7, -7)
+        track = QPen(QColor(45, 212, 191, 40)); track.setWidth(6)
+        track.setCapStyle(Qt.PenCapStyle.RoundCap)
+        p.setPen(track); p.drawArc(r, 0, 360 * 16)
+        arc = QPen(QColor(45, 212, 191)); arc.setWidth(6)
+        arc.setCapStyle(Qt.PenCapStyle.RoundCap)
+        p.setPen(arc); p.drawArc(r, -self._angle * 16, 100 * 16)
+        p.end()
 
 
 def _hub_root():
@@ -459,8 +519,9 @@ def model_downloaded_mb(size: str) -> float:
 # Pages:  0 Welcome  1 Language  2 Device  3 Mode  4 Setup  5 Key  6 Review  7 Download
 STEPS_KEYS = ["step_welcome", "step_language", "step_device", "step_mode",
               "step_setup", "step_key", "step_finish"]
-# pages: 0 Welcome 1 Lang 2 Device 3 Mode 4 Setup 5 Key 6 Review 7 Download 8 Done 9 EasySummary
-PAGE_TO_STEP = [0, 1, 2, 3, 4, 5, 6, 6, 6, 4]
+# pages: 0 Welcome 1 Lang 2 Device 3 Mode 4 Setup 5 Key 6 Review 7 Download
+#        8 Done 9 EasySummary 10 Loading
+PAGE_TO_STEP = [0, 1, 2, 3, 4, 5, 6, 6, 6, 4, 2]
 
 
 class Card(QFrame):
@@ -626,6 +687,7 @@ class WizardWindow(QWidget):
         self.stack.addWidget(self._page_download())      # 7
         self.stack.addWidget(self._page_done())          # 8
         self.stack.addWidget(self._page_easy_summary())  # 9
+        self.stack.addWidget(self._page_loading())       # 10
 
         navw = QWidget()
         nav = QHBoxLayout(navw)
@@ -717,11 +779,11 @@ class WizardWindow(QWidget):
                 except Exception:
                     pass
         self._sync_step()
-        if self.profile is not None:
-            self._render_specs()
         # Rebuild whichever choice page is current so dynamic text re-translates.
         idx = self.stack.currentIndex()
-        if idx == 3:
+        if idx == 2:
+            self._build_device_page()
+        elif idx == 3:
             self._build_mode_cards()
         elif idx == 4:
             self._build_setup()
@@ -729,6 +791,8 @@ class WizardWindow(QWidget):
             self._refresh_summary()
         elif idx == 8:
             self._fill_done()
+        elif idx == 9:
+            self._build_easy_summary()
 
     # ---- styled widgets ----
 
@@ -881,40 +945,138 @@ class WizardWindow(QWidget):
                                              language=self.choices["language"])
         self._update_nav()
 
-    # ---- Page 2: Device ----
+    # ---- Page 10: Loading (analyzing the device) ----
+
+    def _page_loading(self):
+        w, lay = self._page()
+        lay.addStretch()
+        self.loading_spinner = Spinner(78)
+        row = QHBoxLayout(); row.addStretch(); row.addWidget(self.loading_spinner); row.addStretch()
+        lay.addLayout(row)
+        lay.addSpacing(26)
+        self.load_title = QLabel(); self.load_title.setFont(QFont(UI_FONT, 21, QFont.Weight.Bold))
+        self.load_title.setStyleSheet(f"color: {TEXT};")
+        self.load_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._t(self.load_title, "load_title"); lay.addWidget(self.load_title)
+        self.load_sub = QLabel(); self.load_sub.setFont(QFont(UI_FONT, 12))
+        self.load_sub.setStyleSheet(f"color: {TEXT2};"); self.load_sub.setWordWrap(True)
+        self.load_sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._t(self.load_sub, "load_sub"); lay.addWidget(self.load_sub)
+        lay.addStretch()
+        return w
+
+    def _start_loading(self):
+        self.stack.setCurrentIndex(10); self._sync_step(); self._update_nav()
+        self.loading_spinner.start()
+        if self.profile is None:
+            self._run_analysis()
+        else:
+            QTimer.singleShot(450, self._after_analysis)
+        # Safety net: proceed even if the benchmark hangs.
+        self._loading_timer = QTimer(self); self._loading_timer.setSingleShot(True)
+        self._loading_timer.timeout.connect(self._after_analysis)
+        self._loading_timer.start(75000)
+
+    def _run_analysis(self):
+        self.profile = profiler.get_device_profile()
+        self.model_options = profiler.recommend_models(self.profile)
+        self._start_benchmark()
+
+    def _after_analysis(self):
+        idx = self.stack.currentIndex()
+        if idx == 10:                       # leaving the loading screen
+            if getattr(self, "_loading_timer", None):
+                self._loading_timer.stop()
+            if self.loading_spinner:
+                self.loading_spinner.stop()
+            if self.easy:
+                self.stack.setCurrentIndex(9); self._build_easy_summary()
+            else:
+                self.stack.setCurrentIndex(2); self._build_device_page()
+            self._sync_step(); self._update_nav()
+        elif idx == 9:
+            self._build_easy_summary()
+        elif idx == 2:
+            self._build_device_page()
+
+    # ---- Page 2: Device (config display; analysis runs on the Loading page) ----
 
     def _page_device(self):
         w, lay = self._page()
         self._heading(lay, "dev_title", "dev_sub")
-        self.analyze_btn = self._btn("dev_analyze", "green")
-        self.analyze_btn.clicked.connect(self._do_analyze)
-        lay.addWidget(self.analyze_btn)
-        self.specs_box = QFrame()
-        self.specs_box.setStyleSheet(
-            f"QFrame {{ background: {CARD}; border: 1px solid {BORDER}; border-radius: 12px; }}"
-            f"QLabel {{ border: none; background: transparent; }}")
-        self.specs_layout = QVBoxLayout(self.specs_box)
-        self.specs_layout.setContentsMargins(16, 12, 16, 12); self.specs_layout.setSpacing(8)
-        self.specs_box.setVisible(False)
-        lay.addWidget(self.specs_box)
-        self.bench_status = QLabel(); self.bench_status.setFont(QFont(UI_FONT, 10))
-        self.bench_status.setStyleSheet(f"color: {ACCENT};"); self.bench_status.setWordWrap(True)
-        self.bench_status.setVisible(False)
-        lay.addWidget(self.bench_status)
-        lay.addStretch()
+        area, col = self._scroll_area()
+        self.device_col = col
+        lay.addWidget(area, 1)
         return w
 
-    def _do_analyze(self):
-        self._t(self.analyze_btn, "dev_analyzing"); self.analyze_btn.setEnabled(False)
-        QApplication.processEvents()
-        self.profile = profiler.get_device_profile()
-        self._render_specs()
-        self.model_options = profiler.recommend_models(self.profile)
-        self._start_benchmark()
+    def _build_device_page(self):
+        while self.device_col.count():
+            it = self.device_col.takeAt(0)
+            if it.widget():
+                it.widget().deleteLater()
+        self.device_col.addWidget(self._device_card())
+        st = QLabel(); st.setFont(QFont(UI_FONT, 10, QFont.Weight.DemiBold)); st.setWordWrap(True)
+        if self.rtf_base is None:
+            st.setStyleSheet(f"color: {ACCENT};"); st.setText(self.tr("bench_measuring"))
+        else:
+            st.setStyleSheet(f"color: {GREEN};"); st.setText(self.tr("bench_done"))
+        self.device_col.addWidget(st)
+        self.device_col.addStretch()
 
-    def _render_specs(self):
-        while self.specs_layout.count():
-            it = self.specs_layout.takeAt(0)
+    def _device_card(self):
+        p = self.profile or {}
+        f = QFrame()
+        f.setStyleSheet(f"QFrame {{ background: {_grad('#1a1e24', '#15181d')};"
+                        f"border: 1px solid {BORDER}; border-radius: 18px; }}"
+                        f"QLabel {{ border: none; background: transparent; }}")
+        _shadow(f, blur=20, dy=5, alpha=90)
+        h = QHBoxLayout(f); h.setContentsMargins(20, 18, 20, 18); h.setSpacing(14)
+        ic = QLabel("💻"); ic.setFont(QFont(UI_FONT, 30)); ic.setFixedWidth(46)
+        h.addWidget(ic)
+        col = QVBoxLayout(); col.setSpacing(3)
+        name = QLabel(p.get("cpu_name", "—")); name.setFont(QFont(UI_FONT, 15, QFont.Weight.Bold))
+        name.setStyleSheet(f"color: {TEXT};"); name.setWordWrap(True)
+        col.addWidget(name)
+        ram = f"{p.get('ram_gb', 0):.0f} GB" if p.get("ram_gb") else "8 GB"
+        gpu = p.get("gpu_name") or ("Apple Silicon" if p.get("apple_silicon")
+                                    else ("GPU" if p.get("has_cuda") else "CPU mode"))
+        sub = QLabel(f"{ram}  ·  {gpu}  ·  {p.get('os', '')}")
+        sub.setFont(QFont(UI_FONT, 11)); sub.setStyleSheet(f"color: {TEXT2};"); sub.setWordWrap(True)
+        col.addWidget(sub)
+        h.addLayout(col, 1)
+        edit = QPushButton(self.tr("dev_edit")); edit.setCursor(Qt.CursorShape.PointingHandCursor)
+        edit.setMinimumSize(88, 38); edit.setFont(QFont(UI_FONT, 10, QFont.Weight.DemiBold))
+        edit.setStyleSheet(
+            f"QPushButton {{ background: rgba(45,212,191,0.12); color: {ACCENT};"
+            f"border: 1px solid {ACCENT}; border-radius: 12px; padding: 0 14px; }}"
+            f"QPushButton:hover {{ background: rgba(45,212,191,0.22); }}")
+        edit.clicked.connect(self._open_device_editor)
+        h.addWidget(edit)
+        return f
+
+    def _open_device_editor(self):
+        def build(col, choose):
+            self._render_specs(col)
+            done = self._btn("done_start", "primary"); done.setText("✓")
+            done.setProperty("i18nKey", None); done.setMinimumHeight(42)
+            done.clicked.connect(lambda: choose(True))
+            col.addWidget(done)
+        dlg = PickerDialog(self, self.tr("dev_title"), build)
+        dlg.resize(560, 460)
+        dlg.exec()
+        self.model_options = profiler.recommend_models(self.profile)
+        if self.rtf_base is not None:
+            benchmark.annotate_and_recommend(self.model_options, self.rtf_base,
+                                             language=self.choices["language"])
+        idx = self.stack.currentIndex()
+        if idx == 2:
+            self._build_device_page()
+        elif idx == 9:
+            self._build_easy_summary()
+
+    def _render_specs(self, target):
+        while target.count():
+            it = target.takeAt(0)
             if it.widget():
                 it.widget().deleteLater()
         self.spec_edits = {}
@@ -930,15 +1092,15 @@ class WizardWindow(QWidget):
             if editable:
                 ed = QLineEdit(str(value)); ed.setFont(QFont(UI_FONT, 11, QFont.Weight.DemiBold))
                 ed.setStyleSheet(
-                    f"QLineEdit {{ background: transparent; color: {TEXT}; border: none;"
-                    f"border-bottom: 1px solid {BORDER}; padding: 2px 4px; }}"
-                    f"QLineEdit:focus {{ border-bottom: 1px solid {ACCENT}; }}")
+                    f"QLineEdit {{ background: {CARD}; color: {TEXT}; border: 1px solid {BORDER};"
+                    f"border-radius: 8px; padding: 6px 8px; }}"
+                    f"QLineEdit:focus {{ border: 1px solid {ACCENT}; }}")
                 ed.editingFinished.connect(self._on_spec_edited)
                 self.spec_edits[key] = ed; r.addWidget(ed, 1)
             else:
                 vl = QLabel(str(value)); vl.setFont(QFont(UI_FONT, 11, QFont.Weight.DemiBold))
                 vl.setStyleSheet(f"color: {TEXT};"); r.addWidget(vl, 1)
-            cont = QWidget(); cont.setLayout(r); self.specs_layout.addWidget(cont)
+            cont = QWidget(); cont.setLayout(r); target.addWidget(cont)
 
         add_row("🖥", "spec_os", f"{p['os']} ({p['machine']})", "os", editable=False)
         add_row("⚙️", "spec_cpu", p["cpu_name"], "cpu")
@@ -955,16 +1117,15 @@ class WizardWindow(QWidget):
         self.gpu_name_edit = QLineEdit(str(gpu_val))
         self.gpu_name_edit.setFont(QFont(UI_FONT, 11, QFont.Weight.DemiBold))
         self.gpu_name_edit.setStyleSheet(
-            f"QLineEdit {{ background: transparent; color: {TEXT}; border: none;"
-            f"border-bottom: 1px solid {BORDER}; padding: 2px 4px; }}"
-            f"QLineEdit:focus {{ border-bottom: 1px solid {ACCENT}; }}")
+            f"QLineEdit {{ background: {CARD}; color: {TEXT}; border: 1px solid {BORDER};"
+            f"border-radius: 8px; padding: 6px 8px; }}"
+            f"QLineEdit:focus {{ border: 1px solid {ACCENT}; }}")
         self.gpu_name_edit.editingFinished.connect(self._on_spec_edited)
         gr.addWidget(self.gpu_name_edit, 1)
-        gcont = QWidget(); gcont.setLayout(gr); self.specs_layout.addWidget(gcont)
+        gcont = QWidget(); gcont.setLayout(gr); target.addWidget(gcont)
 
         hint = QLabel(); hint.setFont(QFont(UI_FONT, 9)); hint.setStyleSheet(f"color: {DIM};")
-        self._t(hint, "dev_edit_hint"); self.specs_layout.addWidget(hint)
-        self.specs_box.setVisible(True)
+        self._t(hint, "dev_edit_hint"); target.addWidget(hint)
 
     def _on_spec_edited(self):
         if not self.profile:
@@ -987,14 +1148,11 @@ class WizardWindow(QWidget):
     def _start_benchmark(self):
         device = "cuda" if self.profile["has_cuda"] else "cpu"
         compute = "float16" if self.profile["has_cuda"] else "int8"
-        self.bench_status.setVisible(True); self.bench_status.setStyleSheet(f"color: {ACCENT};")
-        self._t(self.bench_status, "bench_measuring"); QApplication.processEvents()
         self.bench_proc = QProcess(self)
         self.bench_proc.finished.connect(self._on_benchmark_done)
         self.bench_proc.setProgram(sys.executable)
         self.bench_proc.setArguments(["-m", "guya.benchmark", "--device", device, "--compute", compute])
         self.bench_proc.start()
-        self._update_nav()
 
     def _on_benchmark_done(self, code, _s):
         out = ""
@@ -1013,19 +1171,7 @@ class WizardWindow(QWidget):
             self.rtf_base = rtf
             benchmark.annotate_and_recommend(self.model_options, rtf,
                                              language=self.choices["language"])
-            self.bench_status.setStyleSheet(f"color: {GREEN};")
-            self.bench_status.setProperty("i18nKey", "bench_done")
-            self.bench_status.setText(self.tr("bench_done"))
-        else:
-            self.bench_status.setStyleSheet(f"color: {DIM};")
-            self.bench_status.setProperty("i18nKey", "bench_failed")
-            self.bench_status.setText(self.tr("bench_failed"))
-        self._t(self.analyze_btn, "dev_reanalyze"); self.analyze_btn.setEnabled(True)
-        self._update_nav()
-        # If the user is already on the Easy summary, refresh it with the
-        # benchmark-tuned recommendation.
-        if self.easy and self.stack.currentIndex() == 9:
-            self._build_easy_summary()
+        self._after_analysis()
 
     # ---- helpers for recommendations ----
 
@@ -1543,10 +1689,6 @@ class WizardWindow(QWidget):
         return w
 
     def _build_easy_summary(self):
-        # Merge the device analysis in: auto-run it the first time we land here.
-        if self.profile is None:
-            self._do_analyze()
-
         self._compute_recommended_mode()
         if self.mode is None:
             self.mode = self.recommended_mode
@@ -1561,14 +1703,9 @@ class WizardWindow(QWidget):
             if it.widget():
                 it.widget().deleteLater()
 
-        # Analyzing status (device merged into this page)
-        st = QLabel(); st.setFont(QFont(UI_FONT, 10, QFont.Weight.DemiBold))
-        st.setWordWrap(True)
-        if self.rtf_base is None:
-            st.setStyleSheet(f"color: {ACCENT};"); st.setText("⏱  " + self.tr("bench_measuring"))
-        else:
-            st.setStyleSheet(f"color: {GREEN};"); st.setText(self.tr("bench_done"))
-        self.easy_col.addWidget(st)
+        # Device config at the top (changeable via the same modal as Advanced).
+        if self.profile is not None:
+            self.easy_col.addWidget(self._device_card())
 
         # --- How it runs (mode) ---
         meta = next((m for m in MODE_META if m[0] == self.mode), MODE_META[0])
@@ -1717,12 +1854,10 @@ class WizardWindow(QWidget):
         idx = self.stack.currentIndex()
         if idx == 6:
             self._finish(); return
-        # Easy mode: after Language, jump straight to the one-page Easy summary
-        # (which analyzes the computer itself).
-        if idx == 1 and self.easy:
-            self.stack.setCurrentIndex(9)
-            self._build_easy_summary()
-            self._sync_step(); self._update_nav(); return
+        # After Language → the Loading screen analyzes the device, then routes to
+        # the Easy summary (easy) or the Device config page (advanced).
+        if idx == 1:
+            self._start_loading(); return
         new = idx + 1
         self.stack.setCurrentIndex(new)
         if new == 3:
@@ -1756,8 +1891,8 @@ class WizardWindow(QWidget):
 
     def _update_nav(self):
         idx = self.stack.currentIndex()
-        # Welcome (0), Download (7), Done (8) use in-page buttons — no nav bar.
-        if idx in (0, 7, 8):
+        # Welcome (0), Download (7), Done (8), Loading (10) use no nav bar.
+        if idx in (0, 7, 8, 10):
             self.back_btn.setVisible(False); self.next_btn.setVisible(False); return
         # Easy summary (9): Back only (Install is in-page).
         if idx == 9:
