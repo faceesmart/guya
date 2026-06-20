@@ -41,21 +41,22 @@ elif IS_MAC:
 else:
     UI_FONT = "DejaVu Sans"
 
-# ---- palette (refined, Apple/Airbnb-inspired dark glass) ----
-BG = "#0c0c13"
-BG2 = "#101019"          # subtle gradient partner for the window
-CARD = "#181820"
-CARD_SEL = "#211e3a"
-BORDER = "#2b2b3d"
-ACCENT = "#8b7bff"
-ACCENT2 = "#6a5cf5"      # gradient end for buttons
-ACCENT_TEXT = "#ffffff"
+# ---- palette: Calm Teal (dark, accessible — gentle for sensory sensitivity) ----
+BG = "#0c1014"           # deep slate
+BG2 = "#0f141a"          # subtle gradient partner for the window
+CARD = "#16191f"
+CARD_SEL = "#16302e"     # teal-tinted selection
+BORDER = "#283038"
+ACCENT = "#2dd4bf"       # teal
+ACCENT2 = "#14b8a6"      # gradient end for buttons
+ACCENT_RGB = "45,212,191"
+ACCENT_TEXT = "#04211d"  # dark text reads well on teal
 GREEN = "#34d399"
 GREEN2 = "#22c55e"
 RED = "#fb7185"
-TEXT = "#F2F2F7"
-TEXT2 = "#a0a0b4"
-DIM = "#62627a"
+TEXT = "#eef2f4"
+TEXT2 = "#9fb0b3"
+DIM = "#5d6b70"
 
 def _grad(c1, c2):
     return f"qlineargradient(x1:0,y1:0,x2:0,y2:1, stop:0 {c1}, stop:1 {c2})"
@@ -480,11 +481,11 @@ class Card(QFrame):
 
     def style_self(self):
         if not self.enabled_:
-            border, bg = BORDER, "#101018"
+            border, bg = BORDER, "#0f1316"
         elif self.selected:
-            border, bg = ACCENT, _grad("#221f3c", "#1b1930")
+            border, bg = ACCENT, _grad("#16302e", "#102420")
         else:
-            border, bg = BORDER, _grad("#1a1a23", "#15151d")
+            border, bg = BORDER, _grad("#181c22", "#13161b")
         self.setStyleSheet(
             f"QFrame#card {{ background: {bg}; border: 1.5px solid {border};"
             f"border-radius: 18px; }} QLabel {{ background: transparent; border: none; }}")
@@ -512,7 +513,7 @@ class PickerDialog(QDialog):
         outer = QVBoxLayout(self); outer.setContentsMargins(0, 0, 0, 0)
         panel = QFrame(); panel.setObjectName("panel")
         panel.setStyleSheet(
-            f"QFrame#panel {{ background: {_grad('#191922', '#131319')};"
+            f"QFrame#panel {{ background: {_grad('#181c22', '#13161b')};"
             f"border: 1px solid {BORDER}; border-radius: 22px; }}"
             f"QLabel {{ background: transparent; border: none; }}")
         _shadow(panel, blur=48, dy=14, alpha=180)
@@ -738,11 +739,11 @@ class WizardWindow(QWidget):
         b.setFont(QFont(UI_FONT, 12, QFont.Weight.DemiBold))
         if kind == "primary":
             b.setStyleSheet(
-                f"QPushButton {{ background: {_grad('#9a8bff', ACCENT2)}; color: #fff;"
-                f"border: none; border-radius: 14px; padding: 0 26px; }}"
-                f"QPushButton:hover {{ background: {_grad('#a596ff', '#7868f8')}; }}"
+                f"QPushButton {{ background: {_grad('#3ee0cb', ACCENT2)}; color: {ACCENT_TEXT};"
+                f"border: none; border-radius: 14px; padding: 0 26px; font-weight: 700; }}"
+                f"QPushButton:hover {{ background: {_grad('#4fe9d5', '#10a89a')}; }}"
                 f"QPushButton:pressed {{ background: {_grad(ACCENT2, ACCENT2)}; }}"
-                f"QPushButton:disabled {{ background: #23232f; color: {DIM}; }}")
+                f"QPushButton:disabled {{ background: #1c232a; color: {DIM}; }}")
             _shadow(b, blur=22, dy=5, alpha=110)
         elif kind == "green":
             b.setStyleSheet(
@@ -756,7 +757,7 @@ class WizardWindow(QWidget):
                 f"QPushButton {{ background: rgba(255,255,255,0.04); color: {TEXT2};"
                 f"border: 1px solid {BORDER}; border-radius: 14px; padding: 0 26px; }}"
                 f"QPushButton:hover {{ border-color: {ACCENT}; color: {TEXT};"
-                f"background: rgba(139,123,255,0.08); }}"
+                f"background: rgba(45,212,191,0.08); }}"
                 f"QPushButton:disabled {{ color: {DIM}; }}")
         return b
 
@@ -1066,7 +1067,7 @@ class WizardWindow(QWidget):
     def _easy_hint_widget(self):
         h = QLabel(self.tr("easy_hint")); h.setFont(QFont(UI_FONT, 10, QFont.Weight.DemiBold))
         h.setWordWrap(True)
-        h.setStyleSheet(f"color: {ACCENT}; background: rgba(124,108,255,0.10);"
+        h.setStyleSheet(f"color: {ACCENT}; background: rgba(45,212,191,0.10);"
                         f"border-radius: 9px; padding: 9px 12px;")
         return h
 
@@ -1109,7 +1110,7 @@ class WizardWindow(QWidget):
             if mid == self.recommended_mode:
                 badge = QLabel("★ " + self.tr("recommended"))
                 badge.setFont(QFont(UI_FONT, 10, QFont.Weight.DemiBold))
-                badge.setStyleSheet(f"color: {ACCENT}; background: rgba(124,108,255,0.14);"
+                badge.setStyleSheet(f"color: {ACCENT}; background: rgba(45,212,191,0.14);"
                                     f"border-radius: 9px; padding: 3px 11px;")
                 top.addWidget(badge)
             top.addStretch()
@@ -1228,7 +1229,7 @@ class WizardWindow(QWidget):
 
     def _pill(self, key, color):
         p = QLabel(); p.setFont(QFont(UI_FONT, 9, QFont.Weight.Bold))
-        rgba = "rgba(52,211,153,0.16)" if color == GREEN else "rgba(124,108,255,0.18)"
+        rgba = "rgba(52,211,153,0.16)" if color == GREEN else "rgba(45,212,191,0.18)"
         p.setStyleSheet(f"color: {color}; background: {rgba}; border-radius: 9px; padding: 3px 11px;")
         self._t(p, key)
         return p
@@ -1244,7 +1245,7 @@ class WizardWindow(QWidget):
         if opt["recommended"]:
             badge = QLabel("★ " + self.tr("recommended"))
             badge.setFont(QFont(UI_FONT, 10, QFont.Weight.DemiBold))
-            badge.setStyleSheet(f"color: {ACCENT}; background: rgba(124,108,255,0.14);"
+            badge.setStyleSheet(f"color: {ACCENT}; background: rgba(45,212,191,0.14);"
                                 f"border-radius: 9px; padding: 3px 11px;")
             top.addWidget(badge)
         top.addStretch()
@@ -1618,9 +1619,9 @@ class WizardWindow(QWidget):
             cb = QPushButton(self.tr("es_change")); cb.setCursor(Qt.CursorShape.PointingHandCursor)
             cb.setMinimumSize(92, 36); cb.setFont(QFont(UI_FONT, 10, QFont.Weight.DemiBold))
             cb.setStyleSheet(
-                f"QPushButton {{ background: rgba(139,123,255,0.12); color: {ACCENT};"
+                f"QPushButton {{ background: rgba(45,212,191,0.12); color: {ACCENT};"
                 f"border: 1px solid {ACCENT}; border-radius: 11px; padding: 0 14px; }}"
-                f"QPushButton:hover {{ background: rgba(139,123,255,0.22); }}")
+                f"QPushButton:hover {{ background: rgba(45,212,191,0.22); }}")
             cb.clicked.connect(on_change)
             h.addWidget(cb)
         return f
