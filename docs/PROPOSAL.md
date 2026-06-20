@@ -118,16 +118,19 @@ platform: **Windows** (cross-platform code; developed and tested on macOS).
 ("delete that", "new line"); adaptation to atypical/impaired speech; a full
 control panel.
 
-## 8. Timeline (≈ 8 weeks)
+## 8. Timeline (≈ 4 weeks remaining)
 
-| Phase | Weeks | Deliverable |
+A working prototype is already complete, so most of the build is done; the
+remaining effort is on accessible installation/UX and evaluation.
+
+| Phase | Status | Deliverable |
 |---|---|---|
-| Proposal & scope approval | 1 | This document |
-| Finalize V1 core | 1 | Stable offline/online/dual prototype |
-| Accessible installation (one-click installer) | 2 | No-terminal setup |
-| Accessible UX pass ("Easy mode" + polish) | 2 | Caregiver-friendly setup & calm UI |
-| Evaluation (accuracy, latency, user study) | 1.5 | Results & analysis |
-| Thesis write-up & demo | ongoing | Final report + demo video |
+| Proposal & scope approval | ✓ Done | This document |
+| V1 core (offline / online / dual) | ✓ Done | Working prototype |
+| Accessible installation (one-click installer) | Week 1 | No-terminal setup |
+| Accessible UX pass ("Easy mode" + polish) | Week 2 | Caregiver-friendly setup & calm UI |
+| Evaluation (accuracy, latency, user study) | Weeks 3–4 | Results & analysis |
+| Thesis write-up & demo | Ongoing | Final report + demo video |
 
 ## 9. Expected Outcomes
 
