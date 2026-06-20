@@ -40,28 +40,40 @@ def _relaunch_fresh():
 def main():
     args = set(sys.argv[1:])
 
-    need_wizard = False
+    # The Control Panel starts the dictation widget as `--widget`, and runs the
+    # wizard as `--setup-only` (which must NOT relaunch into a Control Panel).
+    if "--widget" in args:
+        from . import widget
+        widget.main()
+        return
+
+    setup_only = "--setup-only" in args
+    need_wizard = setup_only
     if "--reset" in args:
         guya_config.reset_config()
         print("[guya] Configuration reset.")
         need_wizard = True
     elif "--setup" in args:
         need_wizard = True
-    elif not guya_config.config_exists():
+    elif not setup_only and not guya_config.config_exists():
         print("[guya] First run — no configuration found. Starting setup…")
         need_wizard = True
 
     if need_wizard:
         if not _run_wizard():
-            print("[guya] Setup cancelled or did not complete. Exiting.")
+            print("[guya] Setup cancelled or did not complete.")
+            if setup_only:
+                return
             sys.exit(1)
+        if setup_only:
+            return   # parent Control Panel will reload + restart the widget
         print("[guya] Setup complete. Starting Guya…")
-        _relaunch_fresh()   # replaces this process; does not return
+        _relaunch_fresh()   # replaces this process; opens the Control Panel
         return
 
-    # Config present → launch the widget (model loads before Qt is imported).
-    from . import widget
-    widget.main()
+    # Config present → open the Control Panel (which turns the widget on).
+    from . import control_panel
+    control_panel.run()
 
 
 if __name__ == "__main__":
