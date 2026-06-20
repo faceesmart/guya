@@ -74,6 +74,14 @@ def _dots(n, total=4):
     return "●" * n + "○" * (total - n)
 
 
+# Mode metadata (id, icon, title key, how-it-works key, pros keys, cons keys)
+MODE_META = [
+    ("offline", "💻", "mode_offline", "mode_off_how", ["mode_off_p1", "mode_off_p2"], ["mode_off_c1"]),
+    ("online", "☁️", "mode_online", "mode_on_how", ["mode_on_p1", "mode_on_p2"], ["mode_on_c1", "mode_on_c2"]),
+    ("dual", "🔀", "mode_dual", "mode_du_how", ["mode_du_p1", "mode_du_p2"], ["mode_du_c1"]),
+]
+
+
 # ============================================================
 # TRANSLATIONS
 # ============================================================
@@ -101,6 +109,12 @@ LANG = {
         "done_s3": "Let go — your words appear.",
         "done_more": "A “Start Guya” shortcut was created so you can open it anytime.",
         "done_start": "Start Guya",
+
+        "es_title": "Here's your setup",
+        "es_sub": "We picked the best options for your computer. Change anything you like, then install.",
+        "es_mode": "How it runs", "es_model": "Model", "es_key": "Push-to-talk key",
+        "es_change": "Change", "es_pick": "Choose this", "es_install": "Install Guya",
+        "es_mac_key": "Right Option (⌥)",
 
         "lang_title": "Which languages will you speak?",
         "lang_sub": "Persian needs a stronger model than English, so this changes "
@@ -245,6 +259,12 @@ LANG = {
         "done_s3": "رها کنید — کلماتتان ظاهر می‌شوند.",
         "done_more": "یک میان‌بر «Start Guya» ساخته شد تا هر وقت خواستید بازش کنید.",
         "done_start": "شروع گویا",
+
+        "es_title": "این هم تنظیمات شما",
+        "es_sub": "بهترین گزینه‌ها را برای کامپیوتر شما انتخاب کردیم. هرچه خواستید تغییر دهید، سپس نصب کنید.",
+        "es_mode": "نحوهٔ اجرا", "es_model": "مدل", "es_key": "کلید فشار-برای-صحبت",
+        "es_change": "تغییر", "es_pick": "همین را انتخاب کن", "es_install": "نصب گویا",
+        "es_mac_key": "Right Option (⌥)",
 
         "lang_title": "به چه زبان‌هایی صحبت می‌کنید؟",
         "lang_sub": "فارسی به مدلی قوی‌تر از انگلیسی نیاز دارد، پس این انتخاب روی "
@@ -421,8 +441,8 @@ def model_downloaded_mb(size: str) -> float:
 # Pages:  0 Welcome  1 Language  2 Device  3 Mode  4 Setup  5 Key  6 Review  7 Download
 STEPS_KEYS = ["step_welcome", "step_language", "step_device", "step_mode",
               "step_setup", "step_key", "step_finish"]
-# pages: 0 Welcome 1 Lang 2 Device 3 Mode 4 Setup 5 Key 6 Review 7 Download 8 Done
-PAGE_TO_STEP = [0, 1, 2, 3, 4, 5, 6, 6, 6]
+# pages: 0 Welcome 1 Lang 2 Device 3 Mode 4 Setup 5 Key 6 Review 7 Download 8 Done 9 EasySummary
+PAGE_TO_STEP = [0, 1, 2, 3, 4, 5, 6, 6, 6, 4]
 
 
 class Card(QFrame):
@@ -480,6 +500,7 @@ class WizardWindow(QWidget):
         self.mode = None                 # "offline" | "online" | "dual"
         self.recommended_mode = "offline"
         self.easy = True                 # Easy (guided) vs Advanced setup
+        self._easy_expanded = set()      # which Easy rows are expanded to show options
         self.model_cards = []
         self.lang_cards = []
         self.mode_cards = []
@@ -527,6 +548,7 @@ class WizardWindow(QWidget):
         self.stack.addWidget(self._page_review())        # 6
         self.stack.addWidget(self._page_download())      # 7
         self.stack.addWidget(self._page_done())          # 8
+        self.stack.addWidget(self._page_easy_summary())  # 9
 
         navw = QWidget()
         nav = QHBoxLayout(navw)
@@ -916,6 +938,10 @@ class WizardWindow(QWidget):
             self.bench_status.setText(self.tr("bench_failed"))
         self._t(self.analyze_btn, "dev_reanalyze"); self.analyze_btn.setEnabled(True)
         self._update_nav()
+        # If the user is already on the Easy summary, refresh it with the
+        # benchmark-tuned recommendation.
+        if self.easy and self.stack.currentIndex() == 9:
+            self._build_easy_summary()
 
     # ---- helpers for recommendations ----
 
@@ -1220,6 +1246,7 @@ class WizardWindow(QWidget):
         self.choices["cloud_api_key"] = text.strip()
         self.cloud_status.setText("")
         self._update_nav()
+        self._update_easy_install()
 
     def _test_cloud(self):
         key = self.key_edit.text().strip()
@@ -1415,15 +1442,188 @@ class WizardWindow(QWidget):
         self._fill_done()
         self.stack.setCurrentIndex(8); self._sync_step(); self._update_nav()
 
+    # ---- Page 9: Easy summary (everything on one page, each changeable) ----
+
+    def _page_easy_summary(self):
+        w, lay = self._page()
+        self._heading(lay, "es_title", "es_sub")
+        area, col = self._scroll_area()
+        self.easy_col = col
+        lay.addWidget(area, 1)
+        row = QHBoxLayout(); row.addStretch()
+        self.easy_install_btn = self._btn("es_install", "green")
+        self.easy_install_btn.setMinimumSize(180, 46)
+        self.easy_install_btn.clicked.connect(self._easy_install)
+        row.addWidget(self.easy_install_btn); row.addStretch()
+        lay.addLayout(row)
+        return w
+
+    def _build_easy_summary(self):
+        # Apply the recommendation as the default selection.
+        self._compute_recommended_mode()
+        if self.mode is None:
+            self.mode = self.recommended_mode
+        if self.mode in ("offline", "dual") and not self.choices.get("model_opt"):
+            rec = self._recommended_offline()
+            if rec:
+                self.choices["model_opt"] = rec
+                self.selected_model_id = rec["id"]
+
+        while self.easy_col.count():
+            it = self.easy_col.takeAt(0)
+            if it.widget():
+                it.widget().deleteLater()
+
+        # --- How it runs (mode) ---
+        meta = next((m for m in MODE_META if m[0] == self.mode), MODE_META[0])
+        self.easy_col.addWidget(self._easy_row("🧩", self.tr("es_mode"),
+                                               self.tr(meta[2]), "mode"))
+        if "mode" in self._easy_expanded:
+            for mid, icon, tk, how_k, pros, cons in MODE_META:
+                self.easy_col.addWidget(self._easy_option_card(
+                    icon, self.tr(tk), self.tr(how_k), pros, cons,
+                    selected=(mid == self.mode),
+                    on_pick=lambda m=mid: self._easy_pick_mode(m)))
+
+        # --- Model (offline / dual) ---
+        if self.mode in ("offline", "dual"):
+            opt = self.choices.get("model_opt") or {}
+            tkmap = {"accurate": "title_accurate", "balanced": "title_balanced", "fast": "title_fast"}
+            self.easy_col.addWidget(self._easy_row(
+                "🧠", self.tr("es_model"),
+                f"{self.tr(tkmap.get(opt.get('id'),'title_fast'))} · {opt.get('model_size','?')}",
+                "model"))
+            if "model" in self._easy_expanded:
+                for o in self._offline_options():
+                    card = Card(lambda c, oo=o: self._easy_pick_model(oo), o, enabled=o["enabled"])
+                    self._fill_model_card(card, o)
+                    card.set_selected(o["id"] == opt.get("id"))
+                    card.style_self()
+                    self.easy_col.addWidget(card)
+
+        # --- Online key (online / dual) — the cloud guide + field ---
+        if self.mode in ("online", "dual"):
+            self.easy_col.addWidget(self._build_cloud_panel())
+
+        # --- Push-to-talk key ---
+        if IS_MAC:
+            self.choices["hotkey_vk"] = 0xA4; self.choices["hotkey_label"] = "⌥"
+            self.easy_col.addWidget(self._easy_row("⌨️", self.tr("es_key"),
+                                                   self.tr("es_mac_key"), None))
+        else:
+            self.easy_col.addWidget(self._easy_row("⌨️", self.tr("es_key"),
+                                                   self.choices["hotkey_label"], "key"))
+            if "key" in self._easy_expanded:
+                cap = HotkeyCapture(self.tr("key_capture"))
+                cap.setStyleSheet(f"QPushButton {{ background: {CARD}; color: {TEXT};"
+                                  f"border: 1px solid {BORDER}; border-radius: 9px; padding: 10px; }}")
+                cap.captured.connect(self._easy_pick_key)
+                self.easy_col.addWidget(cap)
+
+        self.easy_col.addStretch()
+        self._update_easy_install()
+
+    def _easy_row(self, icon, label, value, change_id):
+        f = QFrame()
+        f.setStyleSheet(f"QFrame {{ background: {CARD}; border: 1px solid {BORDER};"
+                        f"border-radius: 12px; }} QLabel {{ border: none; background: transparent; }}")
+        h = QHBoxLayout(f); h.setContentsMargins(16, 12, 16, 12); h.setSpacing(12)
+        ic = QLabel(icon); ic.setFont(QFont(UI_FONT, 16)); ic.setFixedWidth(30)
+        h.addWidget(ic)
+        tx = QVBoxLayout(); tx.setSpacing(1)
+        lb = QLabel(label); lb.setFont(QFont(UI_FONT, 10)); lb.setStyleSheet(f"color: {TEXT2};")
+        vl = QLabel(value); vl.setFont(QFont(UI_FONT, 13, QFont.Weight.DemiBold))
+        vl.setStyleSheet(f"color: {TEXT};"); vl.setWordWrap(True)
+        tx.addWidget(lb); tx.addWidget(vl)
+        h.addLayout(tx, 1)
+        if change_id is not None:
+            cb = QPushButton(self.tr("es_change")); cb.setCursor(Qt.CursorShape.PointingHandCursor)
+            cb.setMinimumSize(86, 34); cb.setFont(QFont(UI_FONT, 10, QFont.Weight.DemiBold))
+            opened = change_id in self._easy_expanded
+            cb.setStyleSheet(
+                f"QPushButton {{ background: {'rgba(124,108,255,0.18)' if opened else 'transparent'};"
+                f"color: {ACCENT}; border: 1px solid {ACCENT}; border-radius: 9px; padding: 0 12px; }}")
+            cb.clicked.connect(lambda: self._toggle_easy_expand(change_id))
+            h.addWidget(cb)
+        return f
+
+    def _easy_option_card(self, icon, title, how, pros, cons, selected, on_pick):
+        c = Card(lambda card: on_pick(), None)
+        c.set_selected(selected)
+        top = QHBoxLayout(); top.setSpacing(8)
+        ic = QLabel(icon); ic.setFont(QFont(UI_FONT, 15)); top.addWidget(ic)
+        t = QLabel(title); t.setFont(QFont(UI_FONT, 14, QFont.Weight.Bold))
+        t.setStyleSheet(f"color: {TEXT};"); top.addWidget(t); top.addStretch()
+        c._body.addLayout(top)
+        hw = QLabel(how); hw.setFont(QFont(UI_FONT, 10)); hw.setWordWrap(True)
+        hw.setStyleSheet(f"color: {TEXT2};"); c._body.addWidget(hw)
+        for k in pros:
+            l = QLabel("✓  " + self.tr(k)); l.setFont(QFont(UI_FONT, 9)); l.setWordWrap(True)
+            l.setStyleSheet(f"color: {GREEN};"); c._body.addWidget(l)
+        for k in cons:
+            l = QLabel("✕  " + self.tr(k)); l.setFont(QFont(UI_FONT, 9)); l.setWordWrap(True)
+            l.setStyleSheet(f"color: {RED};"); c._body.addWidget(l)
+        c.style_self()
+        return c
+
+    def _toggle_easy_expand(self, key):
+        if key in self._easy_expanded:
+            self._easy_expanded.discard(key)
+        else:
+            self._easy_expanded = {key}   # only one open at a time
+        self._build_easy_summary()
+
+    def _easy_pick_mode(self, mid):
+        self.mode = mid
+        self.choices["model_opt"] = None   # re-pick default model for the new mode
+        self.selected_model_id = None
+        self._easy_expanded.discard("mode")
+        self._build_easy_summary()
+
+    def _easy_pick_model(self, opt):
+        if not opt["enabled"]:
+            return
+        self.choices["model_opt"] = opt
+        self.selected_model_id = opt["id"]
+        self._easy_expanded.discard("model")
+        self._build_easy_summary()
+
+    def _easy_pick_key(self, vk, label):
+        self.choices["hotkey_vk"] = vk; self.choices["hotkey_label"] = label
+        self._easy_expanded.discard("key")
+        self._build_easy_summary()
+
+    def _update_easy_install(self):
+        if not hasattr(self, "easy_install_btn"):
+            return
+        ok = True
+        if self.mode == "online":
+            ok = bool(self.choices.get("cloud_api_key"))
+        elif self.mode == "dual":
+            ok = bool(self.choices.get("model_opt") and self.choices.get("cloud_api_key"))
+        elif self.mode == "offline":
+            ok = bool(self.choices.get("model_opt"))
+        self.easy_install_btn.setEnabled(ok)
+
+    def _easy_install(self):
+        self._finish()
+
     # ---- Navigation ----
 
     def _go_next(self):
         idx = self.stack.currentIndex()
         if idx == 6:
             self._finish(); return
+        # Easy mode: after Device, jump to the one-page Easy summary.
+        if idx == 2 and self.easy:
+            self.stack.setCurrentIndex(9)
+            self._build_easy_summary()
+            self._sync_step(); self._update_nav(); return
         new = idx + 1
         self.stack.setCurrentIndex(new)
-        if new == 3:
+        if new == 2 and self.easy and self.profile is None:
+            self._do_analyze()          # auto-analyze in Easy mode
+        elif new == 3:
             self._build_mode_cards()
         elif new == 4:
             self._build_setup()
@@ -1433,6 +1633,9 @@ class WizardWindow(QWidget):
 
     def _go_back(self):
         idx = self.stack.currentIndex()
+        if idx == 9:                    # Easy summary → back to Device
+            self.stack.setCurrentIndex(2)
+            self._sync_step(); self._update_nav(); return
         if 0 < idx <= 6:
             new = idx - 1
             self.stack.setCurrentIndex(new)
@@ -1454,6 +1657,11 @@ class WizardWindow(QWidget):
         # Welcome (0), Download (7), Done (8) use in-page buttons — no nav bar.
         if idx in (0, 7, 8):
             self.back_btn.setVisible(False); self.next_btn.setVisible(False); return
+        # Easy summary (9): Back only (Install is in-page).
+        if idx == 9:
+            self.back_btn.setVisible(True); self.back_btn.setEnabled(True)
+            self.next_btn.setVisible(False)
+            return
         self.back_btn.setVisible(True); self.next_btn.setVisible(True)
         self.back_btn.setEnabled(idx > 0)
         can = True
