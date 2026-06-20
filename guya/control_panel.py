@@ -21,6 +21,7 @@ import time
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame,
     QApplication, QScrollArea, QMessageBox, QDialog, QPlainTextEdit, QLineEdit,
+    QStackedWidget,
 )
 from PyQt6.QtCore import Qt, QProcess, QTimer, pyqtSignal, QRectF
 from PyQt6.QtGui import QFont, QColor, QPainter, QPen
@@ -177,40 +178,49 @@ class ControlPanel(QWidget):
 
     def _build(self):
         root = QVBoxLayout(self)
-        root.setContentsMargins(26, 22, 26, 20)
-        root.setSpacing(12)
+        root.setContentsMargins(24, 18, 24, 16)
+        root.setSpacing(8)
 
         title = QLabel("گویا  ·  Guya")
-        title.setFont(QFont(UI_FONT, 17, QFont.Weight.Bold))
+        title.setFont(QFont(UI_FONT, 16, QFont.Weight.Bold))
         title.setStyleSheet(f"color: {TEXT2};")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         root.addWidget(title)
 
-        # Power button + status + uptime
-        self.power = PowerButton(132)
+        # Power button + status + uptime (always visible)
+        self.power = PowerButton(116)
         self.power.clicked.connect(self._toggle_widget)
         prow = QHBoxLayout(); prow.addStretch(); prow.addWidget(self.power); prow.addStretch()
-        root.addSpacing(6); root.addLayout(prow)
-
-        self.status_lbl = QLabel("…"); self.status_lbl.setFont(QFont(UI_FONT, 15, QFont.Weight.Bold))
+        root.addLayout(prow)
+        self.status_lbl = QLabel("…"); self.status_lbl.setFont(QFont(UI_FONT, 14, QFont.Weight.Bold))
         self.status_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         root.addWidget(self.status_lbl)
-        self.uptime_lbl = QLabel(""); self.uptime_lbl.setFont(QFont(UI_FONT, 22, QFont.Weight.DemiBold))
+        self.uptime_lbl = QLabel(""); self.uptime_lbl.setFont(QFont(UI_FONT, 20, QFont.Weight.DemiBold))
         self.uptime_lbl.setStyleSheet(f"color: {ACCENT};")
         self.uptime_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         root.addWidget(self.uptime_lbl)
-        root.addSpacing(6)
 
-        # Live controls (synced with the running widget)
+        # Accessibility warning (shown only when the widget reports it's needed)
+        self.access_banner = self._access_banner(); self.access_banner.setVisible(False)
+        root.addWidget(self.access_banner)
+        root.addSpacing(4)
+
+        # Tab switcher: Controls | Settings
+        root.addWidget(self._tabbar(), alignment=Qt.AlignmentFlag.AlignHCenter)
+        self.tabs = QStackedWidget()
+
+        # --- Controls tab (live, synced) ---
+        cpage = QWidget(); cpage.setStyleSheet("background:transparent;")
+        cl = QVBoxLayout(cpage); cl.setContentsMargins(0, 10, 0, 0); cl.setSpacing(9)
         self.controls_box = QFrame(); self.controls_box.setStyleSheet("background:transparent;")
         self.controls_col = QVBoxLayout(self.controls_box)
         self.controls_col.setContentsMargins(0, 0, 0, 0); self.controls_col.setSpacing(9)
-        root.addWidget(self.controls_box)
+        cl.addWidget(self.controls_box); cl.addStretch()
+        self.tabs.addWidget(cpage)
 
-        # Settings
-        head = QLabel("SETTINGS"); head.setFont(QFont(UI_FONT, 10, QFont.Weight.Bold))
-        head.setStyleSheet(f"color: {DIM}; letter-spacing: 1px;")
-        root.addWidget(head)
+        # --- Settings tab (scroll) + Maintenance (fixed below) ---
+        spage = QWidget(); spage.setStyleSheet("background:transparent;")
+        sl = QVBoxLayout(spage); sl.setContentsMargins(0, 10, 0, 0); sl.setSpacing(10)
         area = QScrollArea(); area.setWidgetResizable(True); area.setFrameShape(QFrame.Shape.NoFrame)
         area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         area.setStyleSheet("QScrollArea{background:transparent;border:none;}"
@@ -221,21 +231,69 @@ class ControlPanel(QWidget):
         self.settings_col = QVBoxLayout(inner)
         self.settings_col.setContentsMargins(0, 0, 8, 0); self.settings_col.setSpacing(9)
         area.setWidget(inner)
-        root.addWidget(area, 1)
+        sl.addWidget(area, 1)
         self._fill_settings()
-
-        # Maintenance
         mhead = QLabel("MAINTENANCE"); mhead.setFont(QFont(UI_FONT, 10, QFont.Weight.Bold))
         mhead.setStyleSheet(f"color: {DIM}; letter-spacing: 1px;")
-        root.addWidget(mhead)
+        sl.addWidget(mhead)
         m1 = QHBoxLayout(); m1.setSpacing(9)
         for txt, fn in (("Re-run Setup", self._rerun_setup), ("Update", self._update)):
             b = self._ghost(txt); b.clicked.connect(fn); m1.addWidget(b)
-        root.addLayout(m1)
+        sl.addLayout(m1)
         m2 = QHBoxLayout(); m2.setSpacing(9)
         for txt, fn in (("Open Logs", self._open_logs), ("Uninstall", self._uninstall)):
             b = self._ghost(txt); b.clicked.connect(fn); m2.addWidget(b)
-        root.addLayout(m2)
+        sl.addLayout(m2)
+        self.tabs.addWidget(spage)
+
+        root.addWidget(self.tabs, 1)
+        self._select_tab(0)
+
+    def _tabbar(self):
+        wrap = QFrame(); wrap.setFixedHeight(40)
+        wrap.setStyleSheet(f"QFrame {{ background: rgba(0,0,0,0.28); border: 1px solid {BORDER};"
+                           f"border-radius: 13px; }}")
+        h = QHBoxLayout(wrap); h.setContentsMargins(4, 4, 4, 4); h.setSpacing(4)
+        self._tab_buttons = []
+        for i, name in enumerate(("Controls", "Settings")):
+            b = QPushButton(name); b.setCursor(Qt.CursorShape.PointingHandCursor)
+            b.setFixedHeight(30); b.setMinimumWidth(124)
+            b.setFont(QFont(UI_FONT, 11, QFont.Weight.DemiBold))
+            b.clicked.connect(lambda _=False, idx=i: self._select_tab(idx))
+            self._tab_buttons.append(b); h.addWidget(b)
+        return wrap
+
+    def _select_tab(self, i):
+        self.tabs.setCurrentIndex(i)
+        for j, b in enumerate(self._tab_buttons):
+            if j == i:
+                b.setStyleSheet(f"QPushButton {{ background: {ACCENT}; color: {ACCENT_TEXT};"
+                                f"border: none; border-radius: 10px; }}")
+            else:
+                b.setStyleSheet(f"QPushButton {{ background: transparent; color: {TEXT2};"
+                                f"border: none; border-radius: 10px; }}"
+                                f"QPushButton:hover {{ color: {TEXT}; }}")
+
+    def _access_banner(self):
+        f = QFrame()
+        f.setStyleSheet(f"QFrame {{ background: rgba(251,113,133,0.12); border: 1px solid {RED};"
+                        f"border-radius: 13px; }} QLabel {{ border: none; background: transparent; }}")
+        h = QHBoxLayout(f); h.setContentsMargins(14, 10, 12, 10); h.setSpacing(10)
+        ic = QLabel("⚠"); ic.setFont(QFont(UI_FONT, 15)); h.addWidget(ic)
+        lb = QLabel("Guya needs Accessibility permission to detect your key.")
+        lb.setFont(QFont(UI_FONT, 10)); lb.setWordWrap(True); lb.setStyleSheet(f"color: {TEXT};")
+        h.addWidget(lb, 1)
+        btn = QPushButton("Open Settings"); btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn.setMinimumHeight(34); btn.setFont(QFont(UI_FONT, 10, QFont.Weight.DemiBold))
+        btn.setStyleSheet(f"QPushButton {{ background: {RED}; color: #2a0a12; border: none;"
+                          f"border-radius: 10px; padding: 0 12px; }}")
+        btn.clicked.connect(self._open_accessibility)
+        h.addWidget(btn)
+        return f
+
+    def _open_accessibility(self):
+        QProcess.startDetached(
+            "open", ["x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"])
 
     def _ghost(self, text):
         b = QPushButton(text); b.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -338,6 +396,9 @@ class ControlPanel(QWidget):
             self._live = None
         elif time.monotonic() >= self._pending_until:
             self._live = st
+        # Accessibility warning when the widget can't see the key
+        trusted = (self._live or {}).get("trusted", True)
+        self.access_banner.setVisible(bool(self._live) and not trusted)
         live_sig = None
         if self._live:
             live_sig = (self._live.get("enabled"), self._live.get("backend"),
@@ -365,6 +426,11 @@ class ControlPanel(QWidget):
                 it.widget().deleteLater()
         live = self._live
         if not live:
+            hint = QLabel("Turn Guya on (tap the power button)\nto use the live controls.")
+            hint.setFont(QFont(UI_FONT, 11)); hint.setWordWrap(True)
+            hint.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            hint.setStyleSheet(f"color: {DIM}; padding: 24px;")
+            self.controls_col.addWidget(hint)
             return
         head = QLabel("LIVE  (synced with the widget)")
         head.setFont(QFont(UI_FONT, 10, QFont.Weight.Bold))

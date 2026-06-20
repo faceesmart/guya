@@ -153,6 +153,7 @@ if IS_MAC:
             get_focused_control,
             force_foreground_window,
             check_admin,
+            is_accessibility_granted,
             check_gpu_lightweight as _check_cuda_lightweight,
             apply_nonactivating_style,
             HOTKEY_NAME,
@@ -166,6 +167,7 @@ if IS_MAC:
             get_focused_control,
             force_foreground_window,
             check_admin,
+            is_accessibility_granted,
             check_gpu_lightweight as _check_cuda_lightweight,
             apply_nonactivating_style,
             HOTKEY_NAME,
@@ -175,6 +177,9 @@ else:
     # Windows: hotkey comes from config (vk + label), default 'G'.
     HOTKEY_NAME = CFG["hotkey"]["name"]
     HOTKEY_LABEL = CFG["hotkey"]["label"]
+
+    def is_accessibility_granted():
+        return True
 
 # Hotkey virtual-key code (Windows). macOS uses Right Option regardless.
 if IS_WIN:
@@ -1587,7 +1592,7 @@ def main():
             self._transcription_thread = None
             self._is_recording = False
             self._is_processing = False
-            self._is_enabled = False
+            self._is_enabled = True         # ready to record as soon as it loads
             self._last_cmd_seq = 0          # Control Panel command sync
             self._anim_tick = 0
             self._drag_pos = None
@@ -1716,7 +1721,7 @@ def main():
                     "enabled": self._is_enabled, "backend": self._backend,
                     "language": self._language, "hybrid": self._hybrid,
                     "offline_language": self._offline_language,
-                    "state": self._state,
+                    "state": self._state, "trusted": bool(is_accessibility_granted()),
                 })
                 cmd = guya_runtime.read_cmd()
                 seq = cmd.get("seq", 0)
