@@ -41,18 +41,24 @@ elif IS_MAC:
 else:
     UI_FONT = "DejaVu Sans"
 
-# ---- palette ----
-BG = "#0b0b12"
-CARD = "#16161f"
-CARD_SEL = "#1d1b33"
-BORDER = "#26263a"
-ACCENT = "#7c6cff"
-ACCENT_TEXT = "#0b0b12"
+# ---- palette (refined, Apple/Airbnb-inspired dark glass) ----
+BG = "#0c0c13"
+BG2 = "#101019"          # subtle gradient partner for the window
+CARD = "#181820"
+CARD_SEL = "#211e3a"
+BORDER = "#2b2b3d"
+ACCENT = "#8b7bff"
+ACCENT2 = "#6a5cf5"      # gradient end for buttons
+ACCENT_TEXT = "#ffffff"
 GREEN = "#34d399"
-RED = "#f87171"
-TEXT = "#ECECF1"
-TEXT2 = "#9a9ab0"
-DIM = "#5a5a72"
+GREEN2 = "#22c55e"
+RED = "#fb7185"
+TEXT = "#F2F2F7"
+TEXT2 = "#a0a0b4"
+DIM = "#62627a"
+
+def _grad(c1, c2):
+    return f"qlineargradient(x1:0,y1:0,x2:0,y2:1, stop:0 {c1}, stop:1 {c2})"
 
 MODEL_SIZE_MB = {
     "tiny": 75, "base": 145, "small": 484, "medium": 1530,
@@ -405,11 +411,22 @@ def run() -> bool:
 from PyQt6.QtWidgets import (  # noqa: E402
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame,
     QStackedWidget, QApplication, QLineEdit, QProgressBar, QScrollArea,
+    QDialog, QGraphicsDropShadowEffect,
 )
 from PyQt6.QtCore import (  # noqa: E402
     Qt, QProcess, QProcessEnvironment, QTimer, pyqtSignal,
 )
-from PyQt6.QtGui import QFont  # noqa: E402
+from PyQt6.QtGui import QFont, QColor  # noqa: E402
+
+
+def _shadow(widget, blur=24, dy=6, alpha=120):
+    """Soft drop shadow for depth (Apple-like)."""
+    eff = QGraphicsDropShadowEffect(widget)
+    eff.setBlurRadius(blur)
+    eff.setOffset(0, dy)
+    eff.setColor(QColor(0, 0, 0, alpha))
+    widget.setGraphicsEffect(eff)
+    return widget
 
 
 def _hub_root():
@@ -465,12 +482,12 @@ class Card(QFrame):
         if not self.enabled_:
             border, bg = BORDER, "#101018"
         elif self.selected:
-            border, bg = ACCENT, CARD_SEL
+            border, bg = ACCENT, _grad("#221f3c", "#1b1930")
         else:
-            border, bg = BORDER, CARD
+            border, bg = BORDER, _grad("#1a1a23", "#15151d")
         self.setStyleSheet(
             f"QFrame#card {{ background: {bg}; border: 1.5px solid {border};"
-            f"border-radius: 14px; }} QLabel {{ background: transparent; border: none; }}")
+            f"border-radius: 18px; }} QLabel {{ background: transparent; border: none; }}")
 
     def set_selected(self, s):
         self.selected = s
@@ -479,6 +496,62 @@ class Card(QFrame):
     def mousePressEvent(self, e):
         if self.enabled_:
             self.on_click(self)
+
+
+class PickerDialog(QDialog):
+    """A modern modal that floats over the wizard to pick an option.
+    `build(content_layout, choose)` populates the body; cards call choose(value)."""
+
+    def __init__(self, parent, title, build):
+        super().__init__(parent)
+        self.value = None
+        self.setModal(True)
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Dialog)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.setLayoutDirection(parent.layoutDirection())
+        outer = QVBoxLayout(self); outer.setContentsMargins(0, 0, 0, 0)
+        panel = QFrame(); panel.setObjectName("panel")
+        panel.setStyleSheet(
+            f"QFrame#panel {{ background: {_grad('#191922', '#131319')};"
+            f"border: 1px solid {BORDER}; border-radius: 22px; }}"
+            f"QLabel {{ background: transparent; border: none; }}")
+        _shadow(panel, blur=48, dy=14, alpha=180)
+        outer.addWidget(panel)
+        v = QVBoxLayout(panel); v.setContentsMargins(22, 20, 22, 20); v.setSpacing(12)
+        head = QHBoxLayout()
+        t = QLabel(title); t.setFont(QFont(UI_FONT, 17, QFont.Weight.Bold))
+        t.setStyleSheet(f"color: {TEXT};"); head.addWidget(t); head.addStretch()
+        x = QPushButton("✕"); x.setCursor(Qt.CursorShape.PointingHandCursor)
+        x.setFixedSize(34, 34)
+        x.setStyleSheet(f"QPushButton {{ background: rgba(255,255,255,0.05); color: {TEXT2};"
+                        f"border: none; border-radius: 17px; font-size: 14px; }}"
+                        f"QPushButton:hover {{ background: rgba(255,255,255,0.12); color: {TEXT}; }}")
+        x.clicked.connect(self.reject); head.addWidget(x)
+        v.addLayout(head)
+        area = QScrollArea(); area.setWidgetResizable(True)
+        area.setFrameShape(QFrame.Shape.NoFrame)
+        area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        area.setStyleSheet("QScrollArea{background:transparent;border:none;}"
+                           "QScrollBar:vertical{background:transparent;width:8px;}"
+                           f"QScrollBar::handle:vertical{{background:{BORDER};border-radius:4px;}}"
+                           "QScrollBar::add-line,QScrollBar::sub-line{height:0;}")
+        inner = QWidget(); inner.setStyleSheet("background:transparent;")
+        col = QVBoxLayout(inner); col.setContentsMargins(2, 2, 12, 2); col.setSpacing(11)
+        build(col, self._choose)
+        col.addStretch()
+        area.setWidget(inner)
+        v.addWidget(area)
+
+    def _choose(self, value):
+        self.value = value
+        self.accept()
+
+    def sizeHint(self):
+        from PyQt6.QtCore import QSize
+        p = self.parent()
+        if p:
+            return QSize(int(p.width() * 0.82), int(p.height() * 0.74))
+        return QSize(560, 600)
 
 
 # ============================================================
@@ -500,7 +573,6 @@ class WizardWindow(QWidget):
         self.mode = None                 # "offline" | "online" | "dual"
         self.recommended_mode = "offline"
         self.easy = True                 # Easy (guided) vs Advanced setup
-        self._easy_expanded = set()      # which Easy rows are expanded to show options
         self.model_cards = []
         self.lang_cards = []
         self.mode_cards = []
@@ -512,8 +584,12 @@ class WizardWindow(QWidget):
         }
         self.spec_edits = {}
 
-        self.setFixedSize(680, 760)
-        self.setStyleSheet(f"background: {BG}; color: {TEXT};")
+        # Resizable + bigger, with a subtle vertical gradient background.
+        self.resize(880, 900)
+        self.setMinimumSize(720, 760)
+        self.setStyleSheet(
+            f"WizardWindow {{ background: {_grad(BG, BG2)}; }}"
+            f"QWidget {{ color: {TEXT}; }}")
 
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
@@ -658,23 +734,30 @@ class WizardWindow(QWidget):
     def _btn(self, key, kind="primary"):
         b = QPushButton(); b.setProperty("i18nKey", key); b.setText(self.tr(key))
         b.setCursor(Qt.CursorShape.PointingHandCursor)
-        b.setMinimumSize(120, 42)
-        b.setFont(QFont(UI_FONT, 11, QFont.Weight.DemiBold))
+        b.setMinimumSize(120, 46)
+        b.setFont(QFont(UI_FONT, 12, QFont.Weight.DemiBold))
         if kind == "primary":
-            b.setStyleSheet(f"QPushButton {{ background: {ACCENT}; color: {ACCENT_TEXT};"
-                            f"border: none; border-radius: 11px; padding: 0 24px; }}"
-                            f"QPushButton:hover {{ background: #8d7dff; }}"
-                            f"QPushButton:disabled {{ background: #23233140; color: {DIM}; }}")
+            b.setStyleSheet(
+                f"QPushButton {{ background: {_grad('#9a8bff', ACCENT2)}; color: #fff;"
+                f"border: none; border-radius: 14px; padding: 0 26px; }}"
+                f"QPushButton:hover {{ background: {_grad('#a596ff', '#7868f8')}; }}"
+                f"QPushButton:pressed {{ background: {_grad(ACCENT2, ACCENT2)}; }}"
+                f"QPushButton:disabled {{ background: #23232f; color: {DIM}; }}")
+            _shadow(b, blur=22, dy=5, alpha=110)
         elif kind == "green":
-            b.setStyleSheet(f"QPushButton {{ background: {GREEN}; color: {ACCENT_TEXT};"
-                            f"border: none; border-radius: 11px; padding: 0 24px; }}"
-                            f"QPushButton:hover {{ background: #4ade80; }}"
-                            f"QPushButton:disabled {{ background: #23233140; color: {DIM}; }}")
+            b.setStyleSheet(
+                f"QPushButton {{ background: {_grad('#4ade80', GREEN2)}; color: #06210f;"
+                f"border: none; border-radius: 14px; padding: 0 26px; }}"
+                f"QPushButton:hover {{ background: {_grad('#5cee92', '#26cf63')}; }}"
+                f"QPushButton:disabled {{ background: #23232f; color: {DIM}; }}")
+            _shadow(b, blur=22, dy=5, alpha=110)
         else:
-            b.setStyleSheet(f"QPushButton {{ background: transparent; color: {TEXT2};"
-                            f"border: 1px solid {BORDER}; border-radius: 11px; padding: 0 24px; }}"
-                            f"QPushButton:hover {{ border-color: {TEXT2}; color: {TEXT}; }}"
-                            f"QPushButton:disabled {{ color: {DIM}; }}")
+            b.setStyleSheet(
+                f"QPushButton {{ background: rgba(255,255,255,0.04); color: {TEXT2};"
+                f"border: 1px solid {BORDER}; border-radius: 14px; padding: 0 26px; }}"
+                f"QPushButton:hover {{ border-color: {ACCENT}; color: {TEXT};"
+                f"background: rgba(139,123,255,0.08); }}"
+                f"QPushButton:disabled {{ color: {DIM}; }}")
         return b
 
     def _heading(self, lay, title_key, sub_key):
@@ -1459,7 +1542,10 @@ class WizardWindow(QWidget):
         return w
 
     def _build_easy_summary(self):
-        # Apply the recommendation as the default selection.
+        # Merge the device analysis in: auto-run it the first time we land here.
+        if self.profile is None:
+            self._do_analyze()
+
         self._compute_recommended_mode()
         if self.mode is None:
             self.mode = self.recommended_mode
@@ -1474,16 +1560,19 @@ class WizardWindow(QWidget):
             if it.widget():
                 it.widget().deleteLater()
 
+        # Analyzing status (device merged into this page)
+        st = QLabel(); st.setFont(QFont(UI_FONT, 10, QFont.Weight.DemiBold))
+        st.setWordWrap(True)
+        if self.rtf_base is None:
+            st.setStyleSheet(f"color: {ACCENT};"); st.setText("⏱  " + self.tr("bench_measuring"))
+        else:
+            st.setStyleSheet(f"color: {GREEN};"); st.setText(self.tr("bench_done"))
+        self.easy_col.addWidget(st)
+
         # --- How it runs (mode) ---
         meta = next((m for m in MODE_META if m[0] == self.mode), MODE_META[0])
         self.easy_col.addWidget(self._easy_row("🧩", self.tr("es_mode"),
-                                               self.tr(meta[2]), "mode"))
-        if "mode" in self._easy_expanded:
-            for mid, icon, tk, how_k, pros, cons in MODE_META:
-                self.easy_col.addWidget(self._easy_option_card(
-                    icon, self.tr(tk), self.tr(how_k), pros, cons,
-                    selected=(mid == self.mode),
-                    on_pick=lambda m=mid: self._easy_pick_mode(m)))
+                                               self.tr(meta[2]), self._open_mode_picker))
 
         # --- Model (offline / dual) ---
         if self.mode in ("offline", "dual"):
@@ -1492,14 +1581,7 @@ class WizardWindow(QWidget):
             self.easy_col.addWidget(self._easy_row(
                 "🧠", self.tr("es_model"),
                 f"{self.tr(tkmap.get(opt.get('id'),'title_fast'))} · {opt.get('model_size','?')}",
-                "model"))
-            if "model" in self._easy_expanded:
-                for o in self._offline_options():
-                    card = Card(lambda c, oo=o: self._easy_pick_model(oo), o, enabled=o["enabled"])
-                    self._fill_model_card(card, o)
-                    card.set_selected(o["id"] == opt.get("id"))
-                    card.style_self()
-                    self.easy_col.addWidget(card)
+                self._open_model_picker))
 
         # --- Online key (online / dual) — the cloud guide + field ---
         if self.mode in ("online", "dual"):
@@ -1512,38 +1594,34 @@ class WizardWindow(QWidget):
                                                    self.tr("es_mac_key"), None))
         else:
             self.easy_col.addWidget(self._easy_row("⌨️", self.tr("es_key"),
-                                                   self.choices["hotkey_label"], "key"))
-            if "key" in self._easy_expanded:
-                cap = HotkeyCapture(self.tr("key_capture"))
-                cap.setStyleSheet(f"QPushButton {{ background: {CARD}; color: {TEXT};"
-                                  f"border: 1px solid {BORDER}; border-radius: 9px; padding: 10px; }}")
-                cap.captured.connect(self._easy_pick_key)
-                self.easy_col.addWidget(cap)
+                                                   self.choices["hotkey_label"], self._open_key_picker))
 
         self.easy_col.addStretch()
         self._update_easy_install()
 
-    def _easy_row(self, icon, label, value, change_id):
+    def _easy_row(self, icon, label, value, on_change):
         f = QFrame()
-        f.setStyleSheet(f"QFrame {{ background: {CARD}; border: 1px solid {BORDER};"
-                        f"border-radius: 12px; }} QLabel {{ border: none; background: transparent; }}")
-        h = QHBoxLayout(f); h.setContentsMargins(16, 12, 16, 12); h.setSpacing(12)
-        ic = QLabel(icon); ic.setFont(QFont(UI_FONT, 16)); ic.setFixedWidth(30)
+        f.setStyleSheet(f"QFrame {{ background: {_grad('#1a1a23', '#15151d')};"
+                        f"border: 1px solid {BORDER}; border-radius: 16px; }}"
+                        f"QLabel {{ border: none; background: transparent; }}")
+        _shadow(f, blur=18, dy=4, alpha=80)
+        h = QHBoxLayout(f); h.setContentsMargins(18, 14, 18, 14); h.setSpacing(12)
+        ic = QLabel(icon); ic.setFont(QFont(UI_FONT, 17)); ic.setFixedWidth(32)
         h.addWidget(ic)
-        tx = QVBoxLayout(); tx.setSpacing(1)
+        tx = QVBoxLayout(); tx.setSpacing(2)
         lb = QLabel(label); lb.setFont(QFont(UI_FONT, 10)); lb.setStyleSheet(f"color: {TEXT2};")
-        vl = QLabel(value); vl.setFont(QFont(UI_FONT, 13, QFont.Weight.DemiBold))
+        vl = QLabel(value); vl.setFont(QFont(UI_FONT, 14, QFont.Weight.DemiBold))
         vl.setStyleSheet(f"color: {TEXT};"); vl.setWordWrap(True)
         tx.addWidget(lb); tx.addWidget(vl)
         h.addLayout(tx, 1)
-        if change_id is not None:
+        if on_change is not None:
             cb = QPushButton(self.tr("es_change")); cb.setCursor(Qt.CursorShape.PointingHandCursor)
-            cb.setMinimumSize(86, 34); cb.setFont(QFont(UI_FONT, 10, QFont.Weight.DemiBold))
-            opened = change_id in self._easy_expanded
+            cb.setMinimumSize(92, 36); cb.setFont(QFont(UI_FONT, 10, QFont.Weight.DemiBold))
             cb.setStyleSheet(
-                f"QPushButton {{ background: {'rgba(124,108,255,0.18)' if opened else 'transparent'};"
-                f"color: {ACCENT}; border: 1px solid {ACCENT}; border-radius: 9px; padding: 0 12px; }}")
-            cb.clicked.connect(lambda: self._toggle_easy_expand(change_id))
+                f"QPushButton {{ background: rgba(139,123,255,0.12); color: {ACCENT};"
+                f"border: 1px solid {ACCENT}; border-radius: 11px; padding: 0 14px; }}"
+                f"QPushButton:hover {{ background: rgba(139,123,255,0.22); }}")
+            cb.clicked.connect(on_change)
             h.addWidget(cb)
         return f
 
@@ -1566,32 +1644,56 @@ class WizardWindow(QWidget):
         c.style_self()
         return c
 
-    def _toggle_easy_expand(self, key):
-        if key in self._easy_expanded:
-            self._easy_expanded.discard(key)
-        else:
-            self._easy_expanded = {key}   # only one open at a time
-        self._build_easy_summary()
+    # ---- Modal pickers (float over the page) ----
 
-    def _easy_pick_mode(self, mid):
-        self.mode = mid
-        self.choices["model_opt"] = None   # re-pick default model for the new mode
-        self.selected_model_id = None
-        self._easy_expanded.discard("mode")
-        self._build_easy_summary()
+    def _open_mode_picker(self):
+        def build(col, choose):
+            for mid, icon, tk, how_k, pros, cons in MODE_META:
+                col.addWidget(self._easy_option_card(
+                    icon, self.tr(tk), self.tr(how_k), pros, cons,
+                    selected=(mid == self.mode), on_pick=lambda m=mid: choose(m)))
+        dlg = PickerDialog(self, self.tr("es_mode"), build)
+        dlg.resize(dlg.sizeHint())
+        if dlg.exec() and dlg.value:
+            self.mode = dlg.value
+            self.choices["model_opt"] = None
+            self.selected_model_id = None
+            self._build_easy_summary()
 
-    def _easy_pick_model(self, opt):
-        if not opt["enabled"]:
-            return
-        self.choices["model_opt"] = opt
-        self.selected_model_id = opt["id"]
-        self._easy_expanded.discard("model")
-        self._build_easy_summary()
+    def _open_model_picker(self):
+        cur = (self.choices.get("model_opt") or {}).get("id")
 
-    def _easy_pick_key(self, vk, label):
-        self.choices["hotkey_vk"] = vk; self.choices["hotkey_label"] = label
-        self._easy_expanded.discard("key")
-        self._build_easy_summary()
+        def build(col, choose):
+            for o in self._offline_options():
+                card = Card(lambda c, oo=o: (choose(oo) if oo["enabled"] else None),
+                            o, enabled=o["enabled"])
+                self._fill_model_card(card, o)
+                card.set_selected(o["id"] == cur); card.style_self()
+                col.addWidget(card)
+        dlg = PickerDialog(self, self.tr("es_model"), build)
+        dlg.resize(dlg.sizeHint())
+        if dlg.exec() and dlg.value:
+            self.choices["model_opt"] = dlg.value
+            self.selected_model_id = dlg.value["id"]
+            self._build_easy_summary()
+
+    def _open_key_picker(self):
+        def build(col, choose):
+            cap = HotkeyCapture(self.tr("key_capture"))
+            cap.setMinimumHeight(56)
+            cap.setStyleSheet(f"QPushButton {{ background: {CARD}; color: {TEXT};"
+                              f"border: 1px solid {BORDER}; border-radius: 12px; padding: 14px;"
+                              f"font-size: 13pt; }}")
+            cap.captured.connect(lambda vk, label: choose((vk, label)))
+            col.addWidget(cap)
+            hint = QLabel(self.tr("key_hint")); hint.setFont(QFont(UI_FONT, 10))
+            hint.setStyleSheet(f"color: {DIM};"); hint.setWordWrap(True)
+            col.addWidget(hint)
+        dlg = PickerDialog(self, self.tr("es_key"), build)
+        dlg.resize(560, 280)
+        if dlg.exec() and dlg.value:
+            self.choices["hotkey_vk"], self.choices["hotkey_label"] = dlg.value
+            self._build_easy_summary()
 
     def _update_easy_install(self):
         if not hasattr(self, "easy_install_btn"):
@@ -1614,16 +1716,15 @@ class WizardWindow(QWidget):
         idx = self.stack.currentIndex()
         if idx == 6:
             self._finish(); return
-        # Easy mode: after Device, jump to the one-page Easy summary.
-        if idx == 2 and self.easy:
+        # Easy mode: after Language, jump straight to the one-page Easy summary
+        # (which analyzes the computer itself).
+        if idx == 1 and self.easy:
             self.stack.setCurrentIndex(9)
             self._build_easy_summary()
             self._sync_step(); self._update_nav(); return
         new = idx + 1
         self.stack.setCurrentIndex(new)
-        if new == 2 and self.easy and self.profile is None:
-            self._do_analyze()          # auto-analyze in Easy mode
-        elif new == 3:
+        if new == 3:
             self._build_mode_cards()
         elif new == 4:
             self._build_setup()
@@ -1633,8 +1734,8 @@ class WizardWindow(QWidget):
 
     def _go_back(self):
         idx = self.stack.currentIndex()
-        if idx == 9:                    # Easy summary → back to Device
-            self.stack.setCurrentIndex(2)
+        if idx == 9:                    # Easy summary → back to Language
+            self.stack.setCurrentIndex(1)
             self._sync_step(); self._update_nav(); return
         if 0 < idx <= 6:
             new = idx - 1
