@@ -26,21 +26,30 @@ Early development. Milestones:
 - [x] **M3** — Benchmark-based model recommendation
 - [x] **M4** — Cloud fallback engine (free online option via Groq)
 
-## Install
+## Install (easiest — no typing)
 
-**Windows** (primary target — GPU acceleration via CUDA):
-```bat
-install.bat
-run.bat
-```
+Just **double-click the installer** for your system:
 
-**macOS / Linux** (development):
+- **Windows:** `Install Guya.bat`
+- **macOS:** `Install Guya.command`  *(first time: right-click → Open)*
+
+It checks for Python (and helps you install it if missing — automatically on
+Windows via winget, or with a simple guide), sets everything up, and opens the
+setup wizard. No commands to type.
+
+After setup it creates a **Start Guya** launcher you double-click to run daily.
+
+<details>
+<summary>Manual install (advanced)</summary>
+
 ```bash
+# Windows
+install.bat
+# macOS / Linux
 ./install.sh
-./run.sh
 ```
-
-First run launches the setup wizard. After that, `run` starts the widget directly.
+Then `python -m guya` (or `run.bat` / `./run.sh`).
+</details>
 
 ## How it works
 
