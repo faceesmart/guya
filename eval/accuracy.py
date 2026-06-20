@@ -55,8 +55,9 @@ def transcribe_cloud(path, lang, api_key):
 
 
 def evaluate(model_name, transcribe_fn, items):
-    """Return per-language aggregates: {lang: {we, wn, ce, cn}} + timing."""
+    """Return (name, per-lang aggregates, rtf, per-clip details)."""
     agg = {}
+    details = []
     audio_sec = 0.0
     t0 = time.time()
     for it in items:
@@ -72,9 +73,12 @@ def evaluate(model_name, transcribe_fn, items):
         ce, cn = cer_counts(it["text"], hyp, lang)
         a = agg.setdefault(lang, {"we": 0, "wn": 0, "ce": 0, "cn": 0, "n": 0})
         a["we"] += we; a["wn"] += wn; a["ce"] += ce; a["cn"] += cn; a["n"] += 1
+        details.append({"audio": os.path.basename(it["audio"]), "lang": lang,
+                        "ref": it["text"], "hyp": hyp,
+                        "wer": (100.0 * we / wn if wn else 0.0)})
     elapsed = time.time() - t0
     rtf = (elapsed / audio_sec) if audio_sec else 0.0
-    return model_name, agg, rtf
+    return model_name, agg, rtf, details
 
 
 def fmt_pct(e, n):
@@ -89,6 +93,8 @@ def main():
     ap.add_argument("--compute", default="int8")
     ap.add_argument("--cloud", action="store_true")
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--examples", type=int, default=0,
+                    help="print the N worst clips per model (ref vs hyp)")
     ap.add_argument("--out", default="eval/results")
     args = ap.parse_args()
 
@@ -118,7 +124,7 @@ def main():
     # ---- print + write table ----
     header = ["Model"] + [f"{l.upper()}-WER" for l in langs] + [f"{l.upper()}-CER" for l in langs] + ["RTF"]
     table = [header]
-    for name, agg, rtf in rows:
+    for name, agg, rtf, _details in rows:
         r = [name]
         for l in langs:
             a = agg.get(l, {})
@@ -146,6 +152,16 @@ def main():
         for row in table:
             f.write(",".join(row) + "\n")
     print(f"\n✓ wrote {args.out}.md and {args.out}.csv")
+
+    # ---- error examples (qualitative analysis) ----
+    if args.examples:
+        for name, _agg, _rtf, details in rows:
+            worst = sorted(details, key=lambda d: -d["wer"])[:args.examples]
+            print(f"\n── {name}: {args.examples} worst clips ──")
+            for d in worst:
+                print(f"  WER {d['wer']:.0f}%  [{d['lang']}] {d['audio']}")
+                print(f"    ref: {d['ref']}")
+                print(f"    hyp: {d['hyp']}")
 
 
 if __name__ == "__main__":
