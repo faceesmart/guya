@@ -87,7 +87,20 @@ LANG = {
 
         "w_tagline": "Speech-to-Text for Persian and English",
         "w_sub": "Hold a key, speak, and your words are typed for you.",
-        "w_note": "This quick setup checks your computer and helps you\nchoose the best option. It takes about a minute.",
+        "w_note": "This quick setup takes about a minute.",
+        "w_easy": "⚡  Easy setup",
+        "w_easy_sub": "Recommended — we guide you and pick the best option for your computer",
+        "w_adv": "Advanced setup",
+        "w_adv_sub": "Choose everything yourself",
+        "easy_hint": "✓ We picked the best option for your computer. Just tap Next — or change it if you like.",
+
+        "done_title": "You're all set!",
+        "done_how": "How to use Guya:",
+        "done_s1": "Click where you want to type — a chat box, a document, anywhere.",
+        "done_s2": "Hold the  {k}  key and speak.",
+        "done_s3": "Let go — your words appear.",
+        "done_more": "A “Start Guya” shortcut was created so you can open it anytime.",
+        "done_start": "Start Guya",
 
         "lang_title": "Which languages will you speak?",
         "lang_sub": "Persian needs a stronger model than English, so this changes "
@@ -170,6 +183,10 @@ LANG = {
         "con_privacy": "Sends your voice to the provider's servers",
 
         "cloud_guide_title": "Connect a free Groq account",
+        "cloud_intro": "This is a free online account that does the speech recognition on a "
+                       "powerful server — so you get top accuracy even on a weak computer. "
+                       "It's free, needs no payment card, and takes about a minute. Just "
+                       "follow these 3 steps:",
         "cloud_step1": '1.  Open <a href="https://console.groq.com/keys" '
                        'style="color:#7c6cff;text-decoration:none;">console.groq.com/keys</a>'
                        ' and sign in (free, no card needed)',
@@ -214,7 +231,20 @@ LANG = {
 
         "w_tagline": "تبدیل گفتار به متن برای فارسی و انگلیسی",
         "w_sub": "یک کلید را نگه دارید، صحبت کنید، و کلماتتان تایپ می‌شود.",
-        "w_note": "این راه‌اندازی سریع کامپیوتر شما را بررسی می‌کند و به انتخاب\nبهترین گزینه کمک می‌کند. حدود یک دقیقه طول می‌کشد.",
+        "w_note": "این راه‌اندازی سریع حدود یک دقیقه طول می‌کشد.",
+        "w_easy": "⚡  راه‌اندازی ساده",
+        "w_easy_sub": "پیشنهادی — راهنمایی‌تان می‌کنیم و بهترین گزینه را برای کامپیوترتان انتخاب می‌کنیم",
+        "w_adv": "راه‌اندازی پیشرفته",
+        "w_adv_sub": "همه‌چیز را خودتان انتخاب کنید",
+        "easy_hint": "✓ بهترین گزینه را برای کامپیوتر شما انتخاب کردیم. فقط «بعدی» را بزنید — یا اگر خواستید تغییرش دهید.",
+
+        "done_title": "همه‌چیز آماده است!",
+        "done_how": "نحوهٔ استفاده از گویا:",
+        "done_s1": "روی جایی که می‌خواهید تایپ کنید کلیک کنید — یک چت‌باکس، یک سند، هرجا.",
+        "done_s2": "کلید  {k}  را نگه دارید و صحبت کنید.",
+        "done_s3": "رها کنید — کلماتتان ظاهر می‌شوند.",
+        "done_more": "یک میان‌بر «Start Guya» ساخته شد تا هر وقت خواستید بازش کنید.",
+        "done_start": "شروع گویا",
 
         "lang_title": "به چه زبان‌هایی صحبت می‌کنید؟",
         "lang_sub": "فارسی به مدلی قوی‌تر از انگلیسی نیاز دارد، پس این انتخاب روی "
@@ -296,6 +326,10 @@ LANG = {
         "con_privacy": "صدای شما به سرور سرویس‌دهنده ارسال می‌شود",
 
         "cloud_guide_title": "اتصال به یک حساب رایگان Groq",
+        "cloud_intro": "این یک حساب آنلاین رایگان است که تشخیص گفتار را روی یک سرور قدرتمند "
+                       "انجام می‌دهد — پس حتی روی کامپیوتر ضعیف هم بالاترین دقت را می‌گیرید. "
+                       "رایگان است، به کارت بانکی نیاز ندارد، و حدود یک دقیقه طول می‌کشد. "
+                       "فقط این ۳ گام را دنبال کنید:",
         "cloud_step1": '۱.  به <a href="https://console.groq.com/keys" '
                        'style="color:#7c6cff;text-decoration:none;">console.groq.com/keys</a>'
                        ' بروید و وارد شوید (رایگان، بدون کارت)',
@@ -387,7 +421,8 @@ def model_downloaded_mb(size: str) -> float:
 # Pages:  0 Welcome  1 Language  2 Device  3 Mode  4 Setup  5 Key  6 Review  7 Download
 STEPS_KEYS = ["step_welcome", "step_language", "step_device", "step_mode",
               "step_setup", "step_key", "step_finish"]
-PAGE_TO_STEP = [0, 1, 2, 3, 4, 5, 6, 6]
+# pages: 0 Welcome 1 Lang 2 Device 3 Mode 4 Setup 5 Key 6 Review 7 Download 8 Done
+PAGE_TO_STEP = [0, 1, 2, 3, 4, 5, 6, 6, 6]
 
 
 class Card(QFrame):
@@ -444,6 +479,7 @@ class WizardWindow(QWidget):
         self.dl_paused = False
         self.mode = None                 # "offline" | "online" | "dual"
         self.recommended_mode = "offline"
+        self.easy = True                 # Easy (guided) vs Advanced setup
         self.model_cards = []
         self.lang_cards = []
         self.mode_cards = []
@@ -490,6 +526,7 @@ class WizardWindow(QWidget):
         self.stack.addWidget(self._page_key())           # 5
         self.stack.addWidget(self._page_review())        # 6
         self.stack.addWidget(self._page_download())      # 7
+        self.stack.addWidget(self._page_done())          # 8
 
         navw = QWidget()
         nav = QHBoxLayout(navw)
@@ -574,6 +611,12 @@ class WizardWindow(QWidget):
                     w.setPlaceholderText(self.tr(ph))
                 except Exception:
                     pass
+            k2 = w.property("i18nKey2")   # two-line buttons (title + subtitle)
+            if k2:
+                try:
+                    w.setText(f"{self.tr(k2[0])}\n{self.tr(k2[1])}")
+                except Exception:
+                    pass
         self._sync_step()
         if self.profile is not None:
             self._render_specs()
@@ -585,6 +628,8 @@ class WizardWindow(QWidget):
             self._build_setup()
         elif idx == 6:
             self._refresh_summary()
+        elif idx == 8:
+            self._fill_done()
 
     # ---- styled widgets ----
 
@@ -650,17 +695,47 @@ class WizardWindow(QWidget):
     def _page_welcome(self):
         w, lay = self._page()
         lay.addStretch()
-        logo = QLabel("گویا"); logo.setFont(QFont(UI_FONT, 48, QFont.Weight.Bold))
+        logo = QLabel("گویا"); logo.setFont(QFont(UI_FONT, 46, QFont.Weight.Bold))
         logo.setStyleSheet(f"color: {TEXT};"); logo.setAlignment(Qt.AlignmentFlag.AlignCenter)
         lay.addWidget(logo)
         nm = QLabel("Guya"); nm.setFont(QFont(UI_FONT, 16, QFont.Weight.DemiBold))
         nm.setStyleSheet(f"color: {ACCENT};"); nm.setAlignment(Qt.AlignmentFlag.AlignCenter)
         lay.addWidget(nm)
-        for key, sz, col in (("w_tagline", 13, TEXT2), ("w_sub", 11, TEXT2), ("w_note", 10, DIM)):
+        for key, sz, col in (("w_tagline", 13, TEXT2), ("w_sub", 11, TEXT2)):
             l = QLabel(); l.setFont(QFont(UI_FONT, sz)); l.setStyleSheet(f"color: {col};")
             l.setAlignment(Qt.AlignmentFlag.AlignCenter); self._t(l, key); lay.addWidget(l)
+        lay.addSpacing(18)
+
+        # Easy vs Advanced choice — two big buttons.
+        ez = self._choice_button("w_easy", "w_easy_sub", primary=True)
+        ez.clicked.connect(lambda: self._start_setup(True))
+        lay.addWidget(ez)
+        adv = self._choice_button("w_adv", "w_adv_sub", primary=False)
+        adv.clicked.connect(lambda: self._start_setup(False))
+        lay.addWidget(adv)
         lay.addStretch()
         return w
+
+    def _choice_button(self, title_key, sub_key, primary):
+        b = QPushButton(); b.setCursor(Qt.CursorShape.PointingHandCursor)
+        b.setMinimumHeight(62)
+        if primary:
+            bg, fg, border, subcol = ACCENT, ACCENT_TEXT, ACCENT, "#2a2350"
+        else:
+            bg, fg, border, subcol = CARD, TEXT, BORDER, TEXT2
+        b.setText(f"{self.tr(title_key)}\n{self.tr(sub_key)}")
+        b.setProperty("i18nKey2", (title_key, sub_key))
+        b.setStyleSheet(
+            f"QPushButton {{ background: {bg}; color: {fg}; border: 1.5px solid {border};"
+            f"border-radius: 13px; padding: 10px 20px; text-align: left; font-size: 13pt;"
+            f"font-weight: 700; }}"
+            f"QPushButton:hover {{ border-color: {ACCENT}; }}")
+        return b
+
+    def _start_setup(self, easy):
+        self.easy = easy
+        self.stack.setCurrentIndex(1)   # → Language
+        self._sync_step(); self._update_nav()
 
     # ---- Page 1: Language ----
 
@@ -879,12 +954,21 @@ class WizardWindow(QWidget):
         lay.addWidget(area, 1)
         return w
 
+    def _easy_hint_widget(self):
+        h = QLabel(self.tr("easy_hint")); h.setFont(QFont(UI_FONT, 10, QFont.Weight.DemiBold))
+        h.setWordWrap(True)
+        h.setStyleSheet(f"color: {ACCENT}; background: rgba(124,108,255,0.10);"
+                        f"border-radius: 9px; padding: 9px 12px;")
+        return h
+
     def _build_mode_cards(self):
         while self.mode_container.count():
             it = self.mode_container.takeAt(0)
             if it.widget():
                 it.widget().deleteLater()
         self.mode_cards = []
+        if self.easy:
+            self.mode_container.addWidget(self._easy_hint_widget())
         self._compute_recommended_mode()
         best = self._recommended_offline()
         best_line = ""
@@ -991,6 +1075,8 @@ class WizardWindow(QWidget):
             if it.widget():
                 it.widget().deleteLater()
         self.model_cards = []
+        if self.easy:
+            self.setup_col.addWidget(self._easy_hint_widget())
 
         if self.mode == "offline":
             self.setup_head.setText(self.tr("setup_off_title"))
@@ -1101,6 +1187,8 @@ class WizardWindow(QWidget):
         v = QVBoxLayout(f); v.setContentsMargins(20, 18, 20, 18); v.setSpacing(11)
         title = QLabel(); title.setFont(QFont(UI_FONT, 15, QFont.Weight.Bold))
         title.setStyleSheet(f"color: {TEXT};"); self._t(title, "cloud_guide_title"); v.addWidget(title)
+        intro = QLabel(); intro.setFont(QFont(UI_FONT, 11)); intro.setWordWrap(True)
+        intro.setStyleSheet(f"color: {TEXT2};"); self._t(intro, "cloud_intro"); v.addWidget(intro)
         for sk in ("cloud_step1", "cloud_step2", "cloud_step3"):
             s = QLabel(); s.setFont(QFont(UI_FONT, 12)); s.setStyleSheet(f"color: {TEXT};")
             s.setWordWrap(True); s.setTextFormat(Qt.TextFormat.RichText); s.setOpenExternalLinks(True)
@@ -1263,6 +1351,70 @@ class WizardWindow(QWidget):
             self.dl_proc.kill()
         self.stack.setCurrentIndex(6); self._sync_step(); self._update_nav()
 
+    # ---- Page 8: Done / How to use ----
+
+    def _page_done(self):
+        w, lay = self._page()
+        lay.addStretch()
+        check = QLabel("✓"); check.setFont(QFont(UI_FONT, 40, QFont.Weight.Bold))
+        check.setStyleSheet(f"color: {GREEN};"); check.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        lay.addWidget(check)
+        self.done_title = QLabel(); self.done_title.setFont(QFont(UI_FONT, 22, QFont.Weight.Bold))
+        self.done_title.setStyleSheet(f"color: {TEXT};")
+        self.done_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        lay.addWidget(self.done_title)
+        lay.addSpacing(10)
+
+        self.done_box = QFrame()
+        self.done_box.setStyleSheet(
+            f"QFrame {{ background: {CARD}; border: 1px solid {BORDER}; border-radius: 14px; }}"
+            f"QLabel {{ border: none; background: transparent; }}")
+        self.done_layout = QVBoxLayout(self.done_box)
+        self.done_layout.setContentsMargins(22, 18, 22, 18); self.done_layout.setSpacing(12)
+        lay.addWidget(self.done_box)
+
+        self.done_more = QLabel(); self.done_more.setFont(QFont(UI_FONT, 10))
+        self.done_more.setStyleSheet(f"color: {DIM};"); self.done_more.setWordWrap(True)
+        self.done_more.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        lay.addWidget(self.done_more)
+        lay.addSpacing(8)
+
+        row = QHBoxLayout(); row.addStretch()
+        self.done_btn = self._btn("done_start", "green"); self.done_btn.setMinimumSize(180, 46)
+        self.done_btn.clicked.connect(self._complete)
+        row.addWidget(self.done_btn); row.addStretch()
+        lay.addLayout(row)
+        lay.addStretch()
+        return w
+
+    def _fill_done(self):
+        if not hasattr(self, "done_layout"):
+            return
+        self.done_title.setText(self.tr("done_title"))
+        self.done_more.setText(self.tr("done_more"))
+        while self.done_layout.count():
+            it = self.done_layout.takeAt(0)
+            if it.widget():
+                it.widget().deleteLater()
+        head = QLabel(self.tr("done_how")); head.setFont(QFont(UI_FONT, 13, QFont.Weight.DemiBold))
+        head.setStyleSheet(f"color: {ACCENT};")
+        self.done_layout.addWidget(head)
+        key = self.choices["hotkey_label"]
+        steps = [("👆", self.tr("done_s1")),
+                 ("🎙", self.tr("done_s2", k=key)),
+                 ("✨", self.tr("done_s3"))]
+        for icon, text in steps:
+            r = QHBoxLayout(); r.setSpacing(12)
+            ic = QLabel(icon); ic.setFont(QFont(UI_FONT, 16)); ic.setFixedWidth(30)
+            tl = QLabel(text); tl.setFont(QFont(UI_FONT, 12)); tl.setWordWrap(True)
+            tl.setStyleSheet(f"color: {TEXT};")
+            r.addWidget(ic); r.addWidget(tl, 1)
+            cont = QWidget(); cont.setLayout(r); self.done_layout.addWidget(cont)
+
+    def _show_done(self):
+        self._fill_done()
+        self.stack.setCurrentIndex(8); self._sync_step(); self._update_nav()
+
     # ---- Navigation ----
 
     def _go_next(self):
@@ -1299,7 +1451,8 @@ class WizardWindow(QWidget):
 
     def _update_nav(self):
         idx = self.stack.currentIndex()
-        if idx == 7:
+        # Welcome (0), Download (7), Done (8) use in-page buttons — no nav bar.
+        if idx in (0, 7, 8):
             self.back_btn.setVisible(False); self.next_btn.setVisible(False); return
         self.back_btn.setVisible(True); self.next_btn.setVisible(True)
         self.back_btn.setEnabled(idx > 0)
@@ -1358,7 +1511,7 @@ class WizardWindow(QWidget):
         launcher_gen.create_launcher()
 
         if need_model is None or model_is_cached(need_model):
-            self._complete(); return
+            self._show_done(); return
         self.stack.setCurrentIndex(7); self._sync_step(); self._update_nav()
         self._start_download(need_model)
 
@@ -1416,7 +1569,7 @@ class WizardWindow(QWidget):
             self.dl_timer.stop()
         if model_is_cached(self.dl_size):
             self.dl_bar.setValue(100); self._set_dl_state("dl_done", GREEN)
-            self.dl_status.setText(self.tr("dl_done")); self._complete()
+            self.dl_status.setText(self.tr("dl_done")); self._show_done()
         else:
             self._set_dl_state("dl_error", RED); self._t(self.dl_pause_btn, "dl_retry")
             self.dl_paused = True
