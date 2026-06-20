@@ -21,43 +21,40 @@ REM ---------------------------------------------------------------
 REM 1. Find a suitable Python (3.10-3.12; PyQt6 has no newer wheels)
 REM ---------------------------------------------------------------
 echo [Step 1/3]  Checking for Python...
-set "PYEXE="
-for %%V in (3.11 3.12 3.10) do (
-    if not defined PYEXE (
-        py -%%V -c "import sys" >nul 2>&1 && set "PYEXE=py -%%V"
-    )
-)
-if not defined PYEXE (
-    for /f "delims=" %%P in ('where python 2^>nul') do (
-        if not defined PYEXE (
-            "%%P" -c "import sys;exit(0 if (3,10)<=sys.version_info[:2]<=(3,12) else 1)" >nul 2>&1 && set "PYEXE=%%P"
-        )
-    )
-)
+call :find_python
+if defined PYEXE goto have_python
 
-if not defined PYEXE (
-    echo    No suitable Python found. Installing it for you...
-    where winget >nul 2>&1
-    if !errorlevel! == 0 (
-        winget install -e --id Python.Python.3.11 --accept-package-agreements --accept-source-agreements --silent
-        REM PATH may not refresh in this window; try the py launcher
-        py -3.11 -c "import sys" >nul 2>&1 && set "PYEXE=py -3.11"
-    )
-)
+echo    No suitable Python found. Installing it for you...
+where winget >nul 2>&1
+if not "%errorlevel%"=="0" goto need_manual
+winget install -e --id Python.Python.3.11 --accept-package-agreements --accept-source-agreements --silent
 
-if not defined PYEXE (
-    echo.
-    echo    Python needs to be installed first.
-    echo    Opening a simple guide and the download page...
-    start "" "docs\python-setup.html"
-    start "" "https://www.python.org/downloads/windows/"
-    echo.
-    echo    IMPORTANT: on the installer, tick "Add Python to PATH".
-    echo    After installing, double-click "Install Guya" again.
-    echo.
-    pause
-    exit /b 1
-)
+REM Re-check (the new Python may not be visible in THIS window yet)
+call :find_python
+if defined PYEXE goto have_python
+
+echo.
+echo    Python was just installed.
+echo    Please CLOSE this window and double-click "Install Guya" again
+echo    so Windows can pick up the new Python.
+echo.
+pause
+exit /b 0
+
+:need_manual
+echo.
+echo    Python needs to be installed first.
+echo    Opening a simple guide and the download page...
+start "" "docs\python-setup.html"
+start "" "https://www.python.org/downloads/windows/"
+echo.
+echo    IMPORTANT: on the installer screen, tick "Add Python to PATH".
+echo    After installing, double-click "Install Guya" again.
+echo.
+pause
+exit /b 1
+
+:have_python
 echo    OK - Python found.
 echo.
 
@@ -75,7 +72,7 @@ python -m pip install --upgrade pip wheel >nul 2>&1
 echo    Installing components (this can take a few minutes)...
 python -m pip install -r requirements.txt
 if errorlevel 1 (
-    echo    Retrying audio component via pipwin...
+    echo    Retrying the audio component...
     python -m pip install pipwin >nul 2>&1
     python -m pipwin install pyaudio >nul 2>&1
     python -m pip install -r requirements.txt
@@ -99,3 +96,17 @@ echo    The setup wizard will appear in a moment.
 echo    You can close this window after it opens.
 echo.
 python -m guya
+exit /b 0
+
+REM ============ subroutine: find a usable Python into PYEXE ============
+:find_python
+set "PYEXE="
+for %%V in (3.11 3.12 3.10) do (
+    if not defined PYEXE (
+        py -%%V -c "import sys" >nul 2>&1 && set "PYEXE=py -%%V"
+    )
+)
+if not defined PYEXE (
+    python -c "import sys" >nul 2>&1 && set "PYEXE=python"
+)
+goto :eof
