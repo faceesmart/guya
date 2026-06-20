@@ -30,3 +30,7 @@ Start Guya.bat
 # Generated launchers (per-machine)
 Start Guya.vbs
 Guya.app/
+
+# Eval generated data + results (regenerable / large)
+eval/data/
+eval/results.*
