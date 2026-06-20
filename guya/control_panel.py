@@ -27,6 +27,7 @@ from PyQt6.QtGui import QFont, QColor, QPainter, QPen
 
 from . import config as guya_config
 from . import profiler
+from . import runtime
 from . import wizard as wz
 from .wizard import (
     BG, BG2, CARD, BORDER, ACCENT, ACCENT2, ACCENT_TEXT, GREEN, RED,
@@ -111,6 +112,10 @@ class ControlPanel(QWidget):
         self.widget_proc = None
         self.setup_proc = None
         self._on_since = None
+        self._cmd_seq = 0
+        self._live = None          # latest runtime state from the widget
+        self._live_sig = None      # signature to avoid rebuilding controls every tick
+        self._pending_until = 0.0  # freeze optimistic control values briefly after a command
         self._load_state()
         self.setWindowTitle("Guya")
         self.resize(540, 780)
@@ -120,7 +125,7 @@ class ControlPanel(QWidget):
             f"QWidget {{ color: {TEXT}; }}")
         self._build()
         # live sync with the actual widget process
-        self._sync = QTimer(self); self._sync.timeout.connect(self._tick); self._sync.start(1000)
+        self._sync = QTimer(self); self._sync.timeout.connect(self._tick); self._sync.start(400)
         # "Turn on + open panel"
         QTimer.singleShot(150, self.start_widget)
 
@@ -196,6 +201,12 @@ class ControlPanel(QWidget):
         root.addWidget(self.uptime_lbl)
         root.addSpacing(6)
 
+        # Live controls (synced with the running widget)
+        self.controls_box = QFrame(); self.controls_box.setStyleSheet("background:transparent;")
+        self.controls_col = QVBoxLayout(self.controls_box)
+        self.controls_col.setContentsMargins(0, 0, 0, 0); self.controls_col.setSpacing(9)
+        root.addWidget(self.controls_box)
+
         # Settings
         head = QLabel("SETTINGS"); head.setFont(QFont(UI_FONT, 10, QFont.Weight.Bold))
         head.setStyleSheet(f"color: {DIM}; letter-spacing: 1px;")
@@ -247,8 +258,6 @@ class ControlPanel(QWidget):
         if self.mode in ("online", "dual"):
             rows.append(("☁️", "Online API key", "Set ✓" if self.api_key else "Not set",
                          self._open_api_modal))
-        disp_lang = "Persian + English" if self.mode == "dual" else LANG_NAME.get(self.lang, self.lang)
-        rows.append(("🌐", "Language", disp_lang, None if self.mode == "dual" else self._open_lang_modal))
         rows.append(("⌨️", "Push-to-talk key", "Right Option (⌥)" if IS_MAC else self.label,
                      None if IS_MAC else self._open_key_modal))
         for icon, label, value, fn in rows:
@@ -283,6 +292,7 @@ class ControlPanel(QWidget):
     def start_widget(self):
         if self._running():
             return
+        runtime.clear(); self._cmd_seq = 0; self._live = None; self._live_sig = None
         self.widget_proc = QProcess(self)
         self.widget_proc.setProgram(sys.executable)
         self.widget_proc.setArguments(["-m", "guya", "--widget"])
@@ -319,6 +329,113 @@ class ControlPanel(QWidget):
             self.status_lbl.setText("Guya is off")
             self.status_lbl.setStyleSheet(f"color: {TEXT2};")
             self.uptime_lbl.setText("")
+
+        # Live state from the running widget (heartbeat within 2s). After a
+        # command we freeze the optimistic values briefly so they don't flicker.
+        st = runtime.read_state()
+        fresh = bool(st) and (time.time() - st.get("ts", 0) < 2.0)
+        if not (on and fresh):
+            self._live = None
+        elif time.monotonic() >= self._pending_until:
+            self._live = st
+        live_sig = None
+        if self._live:
+            live_sig = (self._live.get("enabled"), self._live.get("backend"),
+                        self._live.get("language"), self._live.get("hybrid"))
+        sig = (on, live_sig)
+        if sig != self._live_sig:
+            self._live_sig = sig
+            self._rebuild_controls()
+
+    # ---------- live controls (mirror the widget; two-way sync) ----------
+
+    def _send_cmd(self, **fields):
+        self._cmd_seq += 1
+        runtime.write_cmd({"seq": self._cmd_seq, **fields})
+        if self._live is not None:          # optimistic: reflect immediately
+            self._live.update(fields)
+            self._pending_until = time.monotonic() + 1.2
+            self._live_sig = None
+            self._rebuild_controls()
+
+    def _rebuild_controls(self):
+        while self.controls_col.count():
+            it = self.controls_col.takeAt(0)
+            if it.widget():
+                it.widget().deleteLater()
+        live = self._live
+        if not live:
+            return
+        head = QLabel("LIVE  (synced with the widget)")
+        head.setFont(QFont(UI_FONT, 10, QFont.Weight.Bold))
+        head.setStyleSheet(f"color: {DIM}; letter-spacing: 1px;")
+        self.controls_col.addWidget(head)
+
+        # Active (on/off while the widget is up — pause/resume listening)
+        enabled = bool(live.get("enabled"))
+        pill = self._toggle_pill(enabled, lambda: self._send_cmd(enabled=not enabled))
+        self.controls_col.addWidget(self._ctrl_row("⚡", "Active", pill))
+
+        # Backend switch (only when both offline+online are loaded = dual)
+        if live.get("hybrid"):
+            be = live.get("backend", "offline")
+            seg = self._segmented([("offline", "OFFLINE"), ("online", "ONLINE")], be,
+                                  lambda v: self._send_cmd(backend=v))
+            self.controls_col.addWidget(self._ctrl_row("🔀", "Backend now", seg))
+
+        # Language switch (locked while a hybrid widget is on OFFLINE)
+        locked = bool(live.get("hybrid") and live.get("backend") == "offline")
+        lang = live.get("language", "en")
+        seg = self._segmented([("en", "EN"), ("fa", "FA"), ("dual", "Both")], lang,
+                              lambda v: self._send_cmd(language=v), enabled=not locked)
+        self.controls_col.addWidget(self._ctrl_row("🌐", "Language now", seg,
+                                    note="locked on OFFLINE" if locked else ""))
+
+    def _ctrl_row(self, icon, label, right, note=""):
+        f = QFrame()
+        f.setStyleSheet(f"QFrame {{ background: {_grad('#16241f', '#141b18')};"
+                        f"border: 1px solid {ACCENT2}; border-radius: 15px; }}"
+                        f"QLabel {{ border: none; background: transparent; }}")
+        _shadow(f, blur=14, dy=3, alpha=70)
+        h = QHBoxLayout(f); h.setContentsMargins(16, 11, 14, 11); h.setSpacing(12)
+        ic = QLabel(icon); ic.setFont(QFont(UI_FONT, 15)); ic.setFixedWidth(26); h.addWidget(ic)
+        lb = QLabel(label + (f"   ({note})" if note else ""))
+        lb.setFont(QFont(UI_FONT, 12, QFont.Weight.DemiBold)); lb.setStyleSheet(f"color: {TEXT};")
+        h.addWidget(lb); h.addStretch(); h.addWidget(right)
+        return f
+
+    def _toggle_pill(self, on, on_click):
+        b = QPushButton("ON" if on else "OFF"); b.setCursor(Qt.CursorShape.PointingHandCursor)
+        b.setFixedSize(66, 32); b.setFont(QFont(UI_FONT, 11, QFont.Weight.Bold))
+        if on:
+            b.setStyleSheet(f"QPushButton {{ background: {GREEN}; color: #06210f;"
+                            f"border: none; border-radius: 16px; }}")
+        else:
+            b.setStyleSheet(f"QPushButton {{ background: #2a2f36; color: {TEXT2};"
+                            f"border: none; border-radius: 16px; }}")
+        b.clicked.connect(on_click)
+        return b
+
+    def _segmented(self, options, current, on_select, enabled=True):
+        f = QFrame()
+        f.setStyleSheet(f"QFrame {{ background: rgba(0,0,0,0.25); border: 1px solid {BORDER};"
+                        f"border-radius: 13px; }}")
+        h = QHBoxLayout(f); h.setContentsMargins(3, 3, 3, 3); h.setSpacing(3)
+        for val, lab in options:
+            seg = QPushButton(lab); seg.setCursor(Qt.CursorShape.PointingHandCursor)
+            seg.setFixedHeight(26); seg.setMinimumWidth(46)
+            seg.setFont(QFont(UI_FONT, 10, QFont.Weight.Bold))
+            seg.setEnabled(enabled)
+            if val == current:
+                seg.setStyleSheet(f"QPushButton {{ background: {ACCENT}; color: {ACCENT_TEXT};"
+                                  f"border: none; border-radius: 10px; padding: 0 10px; }}")
+            else:
+                seg.setStyleSheet(f"QPushButton {{ background: transparent; color: {TEXT2};"
+                                  f"border: none; border-radius: 10px; padding: 0 10px; }}"
+                                  f"QPushButton:hover {{ color: {TEXT}; }}")
+            seg.clicked.connect(lambda _=False, v=val: on_select(v))
+            h.addWidget(seg)
+        return f
 
     # ---------- in-place setting modals ----------
 
@@ -471,10 +588,35 @@ class ControlPanel(QWidget):
         self._run_console("Updating Guya…", argv)
 
     def _open_logs(self):
-        logdir = os.path.join(os.path.expanduser("~"), ".guya", "logs")
-        os.makedirs(logdir, exist_ok=True)
-        opener = "open" if sys.platform == "darwin" else ("explorer" if sys.platform == "win32" else "xdg-open")
-        QProcess.startDetached(opener, [logdir])
+        logpath = os.path.join(os.path.expanduser("~"), ".guya", "logs", "guya.log")
+        dlg = QDialog(self); dlg.setWindowTitle("Guya — Logs"); dlg.resize(720, 480)
+        dlg.setStyleSheet(f"background: {BG}; color: {TEXT};")
+        v = QVBoxLayout(dlg)
+        top = QHBoxLayout()
+        top.addWidget(QLabel("Recent log")); top.addStretch()
+        v.addLayout(top)
+        out = QPlainTextEdit(); out.setReadOnly(True)
+        out.setStyleSheet(f"background: #0a0d10; color: {TEXT2}; border: 1px solid {BORDER};"
+                          f"border-radius: 10px; font-family: monospace; font-size: 11px;")
+        v.addWidget(out)
+
+        def refresh():
+            try:
+                with open(logpath, "r", encoding="utf-8", errors="replace") as f:
+                    lines = f.readlines()[-400:]
+                out.setPlainText("".join(lines))
+            except Exception as e:
+                out.setPlainText(f"(no log yet: {e})")
+            out.verticalScrollBar().setValue(out.verticalScrollBar().maximum())
+
+        refresh()
+        rbtn = QPushButton("Refresh"); rbtn.clicked.connect(refresh)
+        rbtn.setStyleSheet(self._ghost("").styleSheet()); rbtn.setMinimumHeight(38)
+        rbtn.setCursor(Qt.CursorShape.PointingHandCursor); rbtn.setText("Refresh")
+        top.addWidget(rbtn)
+        # auto-refresh while open
+        t = QTimer(dlg); t.timeout.connect(refresh); t.start(1500)
+        dlg.exec(); t.stop()
 
     def _uninstall(self):
         box = QMessageBox(self); box.setWindowTitle("Uninstall Guya")

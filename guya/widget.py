@@ -59,9 +59,11 @@ faulthandler.enable()
 try:
     from . import config as guya_config
     from . import cloud_engine
+    from . import runtime as guya_runtime
 except ImportError:
     import config as guya_config
     import cloud_engine
+    import runtime as guya_runtime
 
 CFG = guya_config.load_config()
 
@@ -1586,6 +1588,7 @@ def main():
             self._is_recording = False
             self._is_processing = False
             self._is_enabled = False
+            self._last_cmd_seq = 0          # Control Panel command sync
             self._anim_tick = 0
             self._drag_pos = None
             self._press_pos = None
@@ -1699,6 +1702,43 @@ def main():
             self._anim_timer = QTimer(self)
             self._anim_timer.timeout.connect(self._on_animation_tick)
             self._anim_timer.start(1000 // ANIMATION_FPS)
+            # Live two-way sync with the Control Panel.
+            guya_runtime.clear()
+            self._rt_timer = QTimer(self)
+            self._rt_timer.timeout.connect(self._runtime_sync)
+            self._rt_timer.start(400)
+
+        def _runtime_sync(self):
+            """Publish live state for the Control Panel, and apply its commands."""
+            try:
+                guya_runtime.write_state({
+                    "pid": os.getpid(), "ts": time.time(),
+                    "enabled": self._is_enabled, "backend": self._backend,
+                    "language": self._language, "hybrid": self._hybrid,
+                    "offline_language": self._offline_language,
+                    "state": self._state,
+                })
+                cmd = guya_runtime.read_cmd()
+                seq = cmd.get("seq", 0)
+                if seq > self._last_cmd_seq:
+                    self._last_cmd_seq = seq
+                    if "enabled" in cmd and bool(cmd["enabled"]) != self._is_enabled:
+                        self._toggle_enabled()
+                    if "backend" in cmd and self._hybrid:
+                        self._set_backend(cmd["backend"])
+                    if "language" in cmd:
+                        self._apply_language(cmd["language"])
+            except Exception as e:
+                log.debug(f"runtime sync: {e}")
+
+        def _apply_language(self, lang):
+            """Set a specific language live (respects the offline lock)."""
+            if self._hybrid and self._backend == "offline":
+                return
+            if lang in ("fa", "en", "dual") and lang != self._language:
+                self._language = lang
+                log.info(f"Language set to {self._language_label()} (panel)")
+                self.update()
 
         def _on_animation_tick(self):
             self._anim_tick += 1
