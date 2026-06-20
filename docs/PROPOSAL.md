@@ -4,9 +4,10 @@
 
 | | |
 |---|---|
-| **Student** | Mohammadreza ___ |
+| **Student** | MohammadReza Ganji |
+| **Student ID** | 220701091 |
 | **Institution** | University of Tehran, Department of Computer Engineering |
-| **Supervisor** | Prof. Aghababa |
+| **Supervisor** | Dr. Hossein Aghababa, Ph.D. (Electrical & Electronics Engineering) |
 | **Date** | June 2026 |
 | **Repository** | github.com/faceesmart/guya |
 

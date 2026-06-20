@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Guya — Final Project Proposal</title>
+<style>
+  :root { --accent:#5b4bdb; --ink:#1a1a22; --muted:#5a5a6e; --line:#e3e3ec; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    color: var(--ink); line-height: 1.5; font-size: 11pt;
+    max-width: 760px; margin: 0 auto; padding: 36px 40px;
+  }
+  h1 {
+    font-size: 21pt; line-height: 1.25; margin: 0 0 4px; color: var(--ink);
+    font-weight: 800;
+  }
+  .subtitle { color: var(--muted); font-size: 11.5pt; margin: 0 0 18px; font-weight: 600; }
+  h2 {
+    font-size: 13.5pt; color: var(--accent); margin: 22px 0 8px;
+    padding-bottom: 5px; border-bottom: 2px solid var(--line); font-weight: 800;
+  }
+  p { margin: 8px 0; }
+  ul, ol { margin: 8px 0 8px 4px; padding-left: 20px; }
+  li { margin: 4px 0; }
+  strong { color: var(--ink); }
+  a { color: var(--accent); text-decoration: none; }
+  .meta {
+    width: 100%; border-collapse: collapse; margin: 4px 0 8px;
+    font-size: 10.5pt;
+  }
+  .meta td { padding: 4px 8px; border: none; vertical-align: top; }
+  .meta td.k { color: var(--muted); width: 130px; font-weight: 600; }
+  table.data {
+    width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 10pt;
+  }
+  table.data th {
+    background: #f3f1fb; color: var(--accent); text-align: left;
+    padding: 7px 9px; border: 1px solid var(--line); font-weight: 700;
+  }
+  table.data td { padding: 7px 9px; border: 1px solid var(--line); vertical-align: top; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 18px 0; }
+  .foot { color: var(--muted); font-size: 9.5pt; font-style: italic; margin-top: 14px; }
+  @media print { body { padding: 0; } }
+</style>
+</head>
+<body>
+
+<h1>Guya — Device-Aware Persian &amp; English<br>Speech-to-Text for Accessibility</h1>
+<p class="subtitle">B.Sc. Final-Year Project Proposal — Computer Engineering</p>
+
+<table class="meta">
+  <tr><td class="k">Student</td><td>MohammadReza Ganji</td></tr>
+  <tr><td class="k">Student ID</td><td>220701091</td></tr>
+  <tr><td class="k">Institution</td><td>University of Tehran, Department of Computer Engineering</td></tr>
+  <tr><td class="k">Supervisor</td><td>Dr. Hossein Aghababa, Ph.D. (Electrical &amp; Electronics Engineering)</td></tr>
+  <tr><td class="k">Date</td><td>June 2026</td></tr>
+  <tr><td class="k">Repository</td><td><a href="https://github.com/faceesmart/guya">github.com/faceesmart/guya</a></td></tr>
+</table>
+
+<h2>1. Overview</h2>
+<p><strong>Guya</strong> (گویا — Persian for <em>"articulate / speaking"</em>) is a desktop
+speech-to-text (STT) assistant that lets a user dictate text into any application by
+holding a key and speaking, in <strong>Persian or English</strong>. It is aimed at people for
+whom typing long passages on a keyboard is slow, tiring, or difficult.</p>
+<p>Its distinguishing idea is that it is <strong>device-aware</strong>: on first run it measures
+the user's computer and automatically selects the speech model that gives the best
+accuracy the machine can run responsively — falling back to a <strong>free online model</strong>
+when the device is too weak. This makes a high-quality assistive tool usable on the
+low-end hardware that disadvantaged users often have, not only on powerful machines.</p>
+<p>A working prototype (offline, online, and a hybrid "switch-on-the-fly" mode) has
+already been implemented and tested; the remaining work centers on <strong>simple, accessible
+installation and UX</strong>, and on a <strong>real evaluation with target users</strong>.</p>
+
+<h2>2. Problem &amp; Motivation</h2>
+<p>Keyboard text entry is a daily barrier for many people with disabilities. For users who
+can speak but find sustained typing effortful, voice dictation can dramatically reduce
+friction. However, existing solutions fall short for this population in three ways:</p>
+<ol>
+  <li><strong>Persian is under-served.</strong> Most consumer dictation tools target English; open
+  Persian STT quality is uneven, and informal/colloquial Persian is rarely handled well.</li>
+  <li><strong>Good models need strong hardware.</strong> The most accurate offline speech models
+  require a GPU or a powerful CPU — hardware many users do not have. Tools rarely adapt
+  to the device.</li>
+  <li><strong>Setup and interfaces are not accessible.</strong> Installation and configuration often
+  assume technical skill, and interfaces are not designed for users with cognitive
+  disabilities or for a caregiver setting the tool up on their behalf.</li>
+</ol>
+<p>This project is also <strong>personally motivated</strong>: the author's own brother is disabled — he
+can speak and use a keyboard, but writing long text is a constant source of friction.
+Guya is designed to solve that concrete, real problem.</p>
+
+<h2>3. Objectives</h2>
+<ol>
+  <li>A reliable push-to-talk <strong>Persian/English dictation</strong> tool that types into any application.</li>
+  <li>A <strong>device-aware model-selection engine</strong> that benchmarks the user's machine and
+  recommends the best feasible model, with a <strong>free online fallback</strong> for weak devices.</li>
+  <li><strong>Accessible installation and UX</strong> — simple enough to be completed by the user or an
+  assistant in a few clear steps, and calm/low-friction to use daily.</li>
+  <li>An <strong>evaluation</strong> of accuracy, latency, and <strong>real-world usability with disabled users</strong>.</li>
+</ol>
+
+<h2>4. Proposed Approach &amp; System Architecture</h2>
+<p>Guya is built in Python with a Qt interface and the open-source <strong>Whisper</strong> family of
+models (via <em>faster-whisper</em> for local inference and a free cloud API for online use).
+It has four cooperating parts:</p>
+<ul>
+  <li><strong>Capability profiler &amp; benchmark.</strong> Reads the device (CPU/RAM/GPU) <em>and</em> measures
+  its real throughput by timing a small proxy model, then predicts the latency of each
+  candidate model on <em>this</em> machine.</li>
+  <li><strong>Model-selection engine.</strong> Chooses the most accurate model that meets a
+  <strong>per-language quality floor</strong> (Persian requires a stronger model than English) <strong>and</strong> a
+  latency budget; otherwise it recommends the <strong>online</strong> model. This yields three modes:
+  <strong>Offline</strong>, <strong>Online (free cloud)</strong>, and <strong>Dual</strong> (both, switchable while in use).</li>
+  <li><strong>Persian post-processing.</strong> A lightweight pipeline (Arabic→Persian character
+  normalization, colloquial-form preservation, a domain correction dictionary, and
+  hallucination filtering) that improves Persian output quality.</li>
+  <li><strong>Setup wizard &amp; floating widget.</strong> A bilingual (English/Persian, right-to-left)
+  guided setup, and a minimal always-on-top widget for push-to-talk dictation.</li>
+</ul>
+
+<h2>5. Key Contributions (Novelty)</h2>
+<ol>
+  <li><strong>Benchmark-driven, language-aware model selection.</strong> Rather than guessing from
+  hardware specs, Guya <em>measures</em> the device and selects per the user's language need —
+  automatically routing weak devices + Persian to the cloud. This is the core technical
+  contribution.</li>
+  <li><strong>Offline ↔ online adaptivity</strong> with a user-controlled switch, analyzing the
+  privacy/accuracy/latency trade-off.</li>
+  <li><strong>Persian (low-resource) handling</strong> through a targeted post-processing pipeline and
+  forced-language decoding.</li>
+  <li><strong>Accessibility-centered design and evaluation</strong> — including a usability study with
+  disabled users, which is rarely done at this level.</li>
+</ol>
+
+<h2>6. Evaluation Plan</h2>
+<ul>
+  <li><strong>Accuracy.</strong> Word Error Rate on a Persian (and English) test set, comparing offline
+  tiers vs. the cloud model — quantifying how much accuracy a weak-device user gains by
+  going online.</li>
+  <li><strong>Performance.</strong> Latency / real-time factor across device classes; validation of the
+  benchmark's latency predictions against measured reality.</li>
+  <li><strong>Usability (the key study).</strong> A small study with target users — including the author's
+  brother — measuring task completion time vs. typing, error rates, and a standardized
+  usability score (e.g., SUS), with qualitative feedback.</li>
+</ul>
+
+<h2>7. Scope</h2>
+<p><strong>In scope (V1):</strong> Persian/English dictation; device-aware offline/online/dual
+selection; simple accessible installation and UX; the evaluation above. Primary platform:
+<strong>Windows</strong> (cross-platform code; developed and tested on macOS).</p>
+<p><strong>Future work:</strong> hands-free / wake-word activation; voice-driven editing ("delete
+that", "new line"); adaptation to atypical/impaired speech; a full control panel.</p>
+
+<h2>8. Timeline (≈ 8 weeks)</h2>
+<table class="data">
+  <tr><th>Phase</th><th>Weeks</th><th>Deliverable</th></tr>
+  <tr><td>Proposal &amp; scope approval</td><td>1</td><td>This document</td></tr>
+  <tr><td>Finalize V1 core</td><td>1</td><td>Stable offline/online/dual prototype</td></tr>
+  <tr><td>Accessible installation (one-click installer)</td><td>2</td><td>No-terminal setup</td></tr>
+  <tr><td>Accessible UX pass ("Easy mode" + polish)</td><td>2</td><td>Caregiver-friendly setup &amp; calm UI</td></tr>
+  <tr><td>Evaluation (accuracy, latency, user study)</td><td>1.5</td><td>Results &amp; analysis</td></tr>
+  <tr><td>Thesis write-up &amp; demo</td><td>ongoing</td><td>Final report + demo video</td></tr>
+</table>
+
+<h2>9. Expected Outcomes</h2>
+<p>A working, openly-available assistive dictation tool that adapts to the user's hardware
+and language, is simple enough for disabled users (or a caregiver) to install and use, and
+is <strong>validated with real target users</strong> — together with a written analysis of the
+accuracy/latency/privacy trade-offs of device-aware offline-vs-online speech recognition
+for a low-resource language.</p>
+
+<hr>
+<p class="foot">Tools &amp; open-source components: Python, PyQt6, OpenAI Whisper (via
+faster-whisper), and a free cloud Whisper API. Source code is openly available at the
+repository above.</p>
+
+</body>
+</html>
