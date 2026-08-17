@@ -1,147 +1,132 @@
-# Guya — Device-Aware Persian & English Speech-to-Text for Accessibility
+# Guya - Persian-English Voice Dictation and Limited Desktop Assistance for Accessibility
 
-**B.Sc. Final-Year Project Proposal — Computer Engineering**
+**B.Sc. Final-Year Project Proposal - Computer Engineering**
 
 | | |
 |---|---|
 | **Student** | MohammadReza Ganji |
 | **Student ID** | 220701091 |
-| **Institution** | University of Tehran, Department of Computer Engineering |
-| **Supervisor** | Dr. Hossein Aghababa, Ph.D. (Electrical & Electronics Engineering) |
-| **Date** | June 2026 |
-| **Repository** | github.com/faceesmart/guya |
-
----
+| **Institution** | University of Tehran, Farabi Campus, Faculty of Engineering |
+| **Supervisor** | Dr. Hossein Aghababa |
+| **Project term** | Eighth semester (second semester of the fourth year) |
+| **Credits completed** | 133 |
+| **Date** | July 2026 |
 
 ## 1. Overview
 
-**Guya** (گویا — Persian for *"articulate / speaking"*) is a desktop speech-to-text
-(STT) assistant that lets a user dictate text into any application by holding a
-key and speaking, in **Persian or English**. It is aimed at people for whom
-typing long passages on a keyboard is slow, tiring, or difficult.
+Guya is an accessibility-focused desktop application for people with physical
+or motor disabilities who can speak but find sustained typing and some routine
+computer actions difficult. It combines two independent push-to-talk modes:
 
-Its distinguishing idea is that it is **device-aware**: on first run it measures
-the user's computer and automatically selects the speech model that gives the
-best accuracy the machine can run responsively — falling back to a **free online
-model** when the device is too weak. This makes a high-quality assistive tool
-usable on the *low-end hardware that disadvantaged users often have*, not only on
-powerful machines.
+1. Persian and English Voice-to-Text that writes into the active application.
+2. A limited Persian and English Voice Assistant for a defined set of safe
+   desktop actions.
 
-A working prototype (offline, online, and a hybrid "switch-on-the-fly" mode) has
-already been implemented and tested; the remaining work centers on **simple,
-accessible installation and UX**, and on a **real evaluation with target users**.
+The two modes use separate hotkeys so that dictation cannot be mistaken for a
+computer command. Guya is a university MVP and is not intended to be a general
+AI assistant or a production-ready commercial accessibility product.
 
-## 2. Problem & Motivation
+## 2. Problem and motivation
 
-Keyboard text entry is a daily barrier for many people with disabilities. For
-users who can speak but find sustained typing effortful, voice dictation can
-dramatically reduce friction. However, existing solutions fall short for this
-population in three ways:
+For users with physical or motor disabilities, long-form typing and repeated
+keyboard or mouse operations can be a daily barrier. Existing tools may provide
+dictation, but Persian support, accessible setup, device requirements and simple
+voice-driven desktop actions are not handled consistently in one application.
 
-1. **Persian is under-served.** Most consumer dictation tools target English;
-   open Persian STT quality is uneven, and informal/colloquial Persian is rarely
-   handled well.
-2. **Good models need strong hardware.** The most accurate offline speech models
-   require a GPU or a powerful CPU — hardware many users do not have. Tools
-   rarely adapt to the device.
-3. **Setup and interfaces are not accessible.** Installation and configuration
-   often assume technical skill, and interfaces are not designed for users with
-   cognitive disabilities or for a caregiver setting the tool up on their behalf.
-
-This project is also **personally motivated**: the author's own brother is
-disabled — he can speak and use a keyboard, but writing long text is a constant
-source of friction. Guya is designed to solve that concrete, real problem.
+Guya is motivated by a real target user: the student's brother can speak but
+finds long typing difficult. The project therefore focuses on reducing sustained
+typing and a small number of repetitive desktop interactions rather than adding
+open-ended automation.
 
 ## 3. Objectives
 
-1. A reliable push-to-talk **Persian/English dictation** tool that types into any
+1. Provide reliable Persian and English push-to-talk dictation in the active
    application.
-2. A **device-aware model-selection engine** that benchmarks the user's machine
-   and recommends the best feasible model, with a **free online fallback** for
-   weak devices.
-3. **Accessible installation and UX** — simple enough to be completed by the user
-   or an assistant in a few clear steps, and calm/low-friction to use daily.
-4. An **evaluation** of accuracy, latency, and **real-world usability with
-   disabled users**.
+2. Provide a separate bilingual assistant for limited actions such as creating,
+   finding, opening and renaming files or folders; opening applications; saving
+   or closing the active window; and performing a safe web search.
+3. Keep actions predictable through rule-based command detection, confirmation
+   for renaming, visible choices for ambiguous results and restricted filesystem
+   access.
+4. Support offline, online and dual recognition modes, with device profiling and
+   a model recommendation during setup.
+5. Evaluate recognition quality, response time, command-task success, safety and
+   usability with representative users, including a target user.
 
-## 4. Proposed Approach & System Architecture
+## 4. Proposed system
 
-Guya is built in Python with a Qt interface and the open-source **Whisper**
-family of models (via `faster-whisper` for local inference and a free cloud API
-for online use). It has four cooperating parts:
+Guya is implemented in Python with a Qt desktop interface and Whisper-based
+speech recognition. Its main components are:
 
-- **Capability profiler & benchmark.** Reads the device (CPU/RAM/GPU) *and*
-  measures its real throughput by timing a small proxy model. From this it
-  predicts the latency of each candidate model on *this* machine.
-- **Model-selection engine.** Chooses the most accurate model that meets a
-  **per-language quality floor** (Persian requires a stronger model than
-  English) **and** a latency budget; otherwise it recommends the **online**
-  model. This yields three operating modes: **Offline**, **Online (free cloud)**,
-  and **Dual** (both, switchable while in use).
-- **Persian post-processing.** A lightweight pipeline (Arabic→Persian character
-  normalization, colloquial-form preservation, a domain correction dictionary,
-  and hallucination filtering) that improves Persian output quality.
-- **Setup wizard & floating widget.** A bilingual (English/Persian, right-to-left)
-  guided setup, and a minimal always-on-top widget for push-to-talk dictation.
+- **Interaction layer:** separate dictation and assistant hotkeys, microphone
+  capture, a floating state widget and spoken/visual feedback.
+- **Speech-recognition layer:** Persian and English transcription using offline,
+  online or dual modes selected according to the device and user preference.
+- **Command-understanding layer:** bilingual normalization and a deterministic,
+  rule-based parser for the supported command set.
+- **Safety and action layer:** platform-specific actions, confirmation and
+  disambiguation, remembered recent-file context, non-overwriting rename and
+  filesystem access limited to configured user folders.
+- **Accessible control layer:** setup wizard, control panel, help, permissions
+  guidance and readable diagnostic logs.
 
-## 5. Key Contributions (Novelty)
+## 5. Scope of the MVP
 
-1. **Benchmark-driven, language-aware model selection.** Rather than guessing
-   from hardware specs, Guya *measures* the device and selects per the user's
-   language need — automatically routing weak devices + Persian to the cloud.
-   This is the core technical contribution.
-2. **Offline ↔ online adaptivity** with a user-controlled switch, analyzing the
-   privacy/accuracy/latency trade-off.
-3. **Persian (low-resource) handling** through a targeted post-processing
-   pipeline and forced-language decoding.
-4. **Accessibility-centered design and evaluation** — including a usability study
-   with disabled users, which is rarely done at this level.
+### Included
 
-## 6. Evaluation Plan
+- Persian and English dictation with a dedicated hotkey.
+- A separate assistant hotkey and a limited bilingual command set.
+- Creation, search, opening and safe renaming of files and folders.
+- Opening supported applications; saving or closing the active window.
+- A limited sequence that opens a browser and performs a web search.
+- Clickable or spoken selection when several file results match.
+- Offline, online and dual recognition modes with device profiling.
+- macOS and Windows launch/install paths, with validation on the selected demo
+  machines.
+- Automated tests, structured spoken evaluation and target-user feedback.
 
-- **Accuracy.** Word Error Rate on a Persian (and English) test set, comparing
-  offline tiers vs. the cloud model — quantifying how much accuracy a weak-device
-  user gains by going online.
-- **Performance.** Latency / real-time factor across device classes; validation
-  of the benchmark's latency predictions against measured reality.
-- **Usability (the key study).** A small study with target users — including the
-  author's brother — measuring task completion time vs. typing, error rates, and
-  a standardized usability score (e.g., SUS), with qualitative feedback.
+### Excluded
 
-## 7. Scope
+- General Gemini/ChatGPT-style conversation or reasoning.
+- Arbitrary shell commands or unrestricted computer control.
+- File deletion, silent overwrite or bypassing confirmation.
+- Automatic clicking of unknown websites or arbitrary browser automation.
+- Wake-word/background listening or support for every application and accent.
+- App-store distribution or commercial production readiness.
 
-**In scope (V1):** Persian/English dictation; device-aware offline/online/dual
-selection; simple accessible installation and UX; the evaluation above. Primary
-platform: **Windows** (cross-platform code; developed and tested on macOS).
+## 6. Evaluation plan
 
-**Future work:** hands-free / wake-word activation; voice-driven editing
-("delete that", "new line"); adaptation to atypical/impaired speech; a full
-control panel.
+- **Dictation:** representative Persian and English sentences, transcription
+  accuracy, understandable output and response time.
+- **Assistant:** first-attempt task-completion rate for every supported command,
+  including ambiguous filenames, confirmation, save and close behavior.
+- **Safety:** verify that Guya does not close itself, overwrite or delete files,
+  act outside allowed folders or run unsupported actions.
+- **Usability:** structured tasks and short feedback from several participants;
+  when possible, include at least one person who genuinely finds sustained
+  typing difficult.
+- **Daily use:** a short bug diary recording the exact spoken phrase, expected
+  result, actual result and matching log time.
 
-## 8. Timeline (≈ 4 weeks remaining)
+## 7. Expected outputs
 
-A working prototype is already complete, so most of the build is done; the
-remaining effort is on accessible installation/UX and evaluation.
+- A runnable Guya MVP and installer/launcher path for macOS and Windows.
+- Bilingual Voice-to-Text and limited Voice Assistant modes with separate keys.
+- Setup wizard, control panel, floating status widget, spoken feedback, help and
+  diagnostic logs.
+- Automated test results, structured user-evaluation results and documented
+  limitations.
+- Final technical report and a repeatable demonstration/video.
 
-| Phase | Status | Deliverable |
-|---|---|---|
-| Proposal & scope approval | ✓ Done | This document |
-| V1 core (offline / online / dual) | ✓ Done | Working prototype |
-| Accessible installation (one-click installer) | Week 1 | No-terminal setup |
-| Accessible UX pass ("Easy mode" + polish) | Week 2 | Caregiver-friendly setup & calm UI |
-| Evaluation (accuracy, latency, user study) | Weeks 3–4 | Results & analysis |
-| Thesis write-up & demo | Ongoing | Final report + demo video |
+## 8. Current status and remaining work
 
-## 9. Expected Outcomes
+The V1 feature set is implemented and has passed the current spoken acceptance
+tests on macOS. Feature development is now frozen. The remaining work is:
 
-A working, openly-available assistive dictation tool that adapts to the user's
-hardware and language, is simple enough for disabled users (or a caregiver) to
-install and use, and is **validated with real target users** — together with a
-written analysis of the accuracy/latency/privacy trade-offs of device-aware
-offline-vs-online speech recognition for a low-resource language.
+1. Run the final structured and daily-use evaluation.
+2. Validate installation and primary tasks on the target Windows computer.
+3. Test with representative users and fix only confirmed blockers or bugs.
+4. Analyze the results and complete the final report and demonstration.
 
----
-
-*Tools & open-source components: Python, PyQt6, OpenAI Whisper (via
-faster-whisper), and a free cloud Whisper API. Source code is openly available at
-the repository above.*
+The intended result is a stable, explainable and evaluated undergraduate
+prototype that addresses a concrete accessibility need.

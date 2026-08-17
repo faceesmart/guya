@@ -10,8 +10,8 @@ backed by macOS APIs:
   - Permissions:      AXIsProcessTrusted (Accessibility)
   - GPU check:        no-op (M1 has no CUDA; faster-whisper has no MPS yet)
 
-Hotkey: Right Option (⌥). A modifier key so press/release alone doesn't
-type anything — no event suppression needed.
+Hotkeys: Right Option (⌥) for dictation and Right Command (⌘) for the
+assistant. Modifier keys do not type stray characters when pressed alone.
 """
 
 import logging
@@ -49,11 +49,17 @@ except ImportError as e:
     log.warning(f"AppKit not available: {e}. Install with: pip install pyobjc-framework-Cocoa")
 
 try:
-    from ApplicationServices import AXIsProcessTrusted, AXIsProcessTrustedWithOptions
+    from ApplicationServices import (
+        AXIsProcessTrusted,
+        AXIsProcessTrustedWithOptions,
+        kAXTrustedCheckOptionPrompt,
+    )
     from CoreFoundation import CFDictionaryCreate, kCFTypeDictionaryKeyCallBacks, kCFTypeDictionaryValueCallBacks
     _AX_OK = True
 except ImportError as e:
     AXIsProcessTrusted = None
+    AXIsProcessTrustedWithOptions = None
+    kAXTrustedCheckOptionPrompt = None
     _AX_OK = False
     log.warning(f"ApplicationServices not available: {e}.")
 
@@ -66,6 +72,18 @@ except ImportError as e:
 # produces no character, so no suppression is needed and no stray characters
 # leak into the target app while held.
 HOTKEY_NAME = "Right Option (⌥)"
+ASSISTANT_HOTKEY_NAME = "Right Command (⌘)"
+
+# Stable hardware virtual-key codes used by macOS. Comparing the vk as well as
+# pynput's enum makes detection resilient across pynput/PyObjC versions.
+_VK_RIGHT_OPTION = 61
+_VK_RIGHT_COMMAND = 54
+_VK_RIGHT_CONTROL = 62  # keep the old MVP key working on full keyboards
+
+
+def _key_vk(key):
+    value = getattr(key, "value", key)
+    return getattr(value, "vk", getattr(key, "vk", None))
 
 
 def _is_hotkey(key) -> bool:
@@ -73,7 +91,17 @@ def _is_hotkey(key) -> bool:
     if _pynput_kb is None:
         return False
     # On macOS pynput exposes Key.alt_r for right option.
-    return key == _pynput_kb.Key.alt_r
+    return key == _pynput_kb.Key.alt_r or _key_vk(key) == _VK_RIGHT_OPTION
+
+
+def _is_assistant_hotkey(key) -> bool:
+    """Return True for the assistant push-to-talk key."""
+    if _pynput_kb is None:
+        return False
+    return (
+        key in (_pynput_kb.Key.cmd_r, _pynput_kb.Key.ctrl_r)
+        or _key_vk(key) in (_VK_RIGHT_COMMAND, _VK_RIGHT_CONTROL)
+    )
 
 
 # ============================================================
@@ -216,40 +244,63 @@ class KeyboardHookThread(threading.Thread):
     on this thread. The widget then marshals to the Qt main thread.
     """
 
-    def __init__(self, on_press, on_release, is_enabled_func):
+    def __init__(
+        self,
+        on_press,
+        on_release,
+        is_enabled_func,
+        on_assistant_press=None,
+        on_assistant_release=None,
+        assistant_enabled_func=None,
+    ):
         super().__init__(daemon=True)
         self.on_press = on_press
         self.on_release = on_release
         self.is_enabled_func = is_enabled_func
+        self.on_assistant_press = on_assistant_press
+        self.on_assistant_release = on_assistant_release
+        self.assistant_enabled_func = assistant_enabled_func or is_enabled_func
         self._listener = None
-        self._key_held = False
+        self._held_mode = None
         # Captured frontmost app at hotkey press — read by widget on _start_recording
         self.captured_hwnd = None
 
     def _on_press(self, key):
         try:
-            if not _is_hotkey(key):
+            mode = None
+            callback = None
+            if _is_hotkey(key) and self.is_enabled_func():
+                mode, callback = "dictation", self.on_press
+            elif (
+                _is_assistant_hotkey(key)
+                and self.on_assistant_press is not None
+                and self.assistant_enabled_func()
+            ):
+                mode, callback = "assistant", self.on_assistant_press
+            if mode is None:
                 return
-            if not self.is_enabled_func():
-                return
-            if self._key_held:
+            if self._held_mode is not None:
                 return  # ignore key repeat
-            self._key_held = True
+            self._held_mode = mode
             # Capture frontmost app NOW, before Qt focus changes
             self.captured_hwnd = get_foreground_window()
-            log.info(f"Hook captured target app={self.captured_hwnd}")
-            self.on_press()
+            log.info(f"Hook captured mode={mode} target app={self.captured_hwnd}")
+            callback()
         except Exception as e:
             log.error(f"Hook on_press error: {e}")
 
     def _on_release(self, key):
         try:
-            if not _is_hotkey(key):
+            mode = "dictation" if _is_hotkey(key) else (
+                "assistant" if _is_assistant_hotkey(key) else None
+            )
+            if mode is None or self._held_mode != mode:
                 return
-            if not self._key_held:
-                return
-            self._key_held = False
-            self.on_release()
+            self._held_mode = None
+            if mode == "assistant" and self.on_assistant_release is not None:
+                self.on_assistant_release()
+            else:
+                self.on_release()
         except Exception as e:
             log.error(f"Hook on_release error: {e}")
 
@@ -257,7 +308,10 @@ class KeyboardHookThread(threading.Thread):
         if _pynput_kb is None:
             log.error("pynput unavailable — keyboard hook disabled")
             return
-        log.info(f"Keyboard hook starting (key: {HOTKEY_NAME})")
+        log.info(
+            f"Keyboard hook starting (dictation: {HOTKEY_NAME}; "
+            f"assistant: {ASSISTANT_HOTKEY_NAME})"
+        )
         # suppress=False: we don't want to swallow keys globally.
         # Right Option alone produces no character, so suppression is unnecessary.
         try:
@@ -301,7 +355,14 @@ def is_accessibility_granted() -> bool:
 
 
 def prompt_accessibility_grant():
-    """Open System Settings to the Accessibility pane so the user can grant access."""
+    """Ask macOS for Accessibility access and open Settings as a fallback."""
+    if _AX_OK and AXIsProcessTrustedWithOptions is not None:
+        try:
+            return bool(AXIsProcessTrustedWithOptions({
+                kAXTrustedCheckOptionPrompt: True,
+            }))
+        except Exception as e:
+            log.warning(f"Accessibility prompt failed: {e}")
     try:
         subprocess.Popen([
             "open",
@@ -309,6 +370,7 @@ def prompt_accessibility_grant():
         ])
     except Exception as e:
         log.warning(f"Failed to open Accessibility settings: {e}")
+    return False
 
 
 def check_admin() -> bool:
@@ -321,6 +383,7 @@ def check_admin() -> bool:
         log.warning("Accessibility permission: NOT GRANTED")
         log.warning("Global hotkey and paste will NOT work without it.")
         log.warning("Grant access: System Settings → Privacy & Security → Accessibility")
+        prompt_accessibility_grant()
     return ok
 
 

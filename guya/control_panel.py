@@ -23,7 +23,7 @@ from PyQt6.QtWidgets import (
     QApplication, QScrollArea, QMessageBox, QDialog, QPlainTextEdit, QLineEdit,
     QStackedWidget,
 )
-from PyQt6.QtCore import Qt, QProcess, QTimer, pyqtSignal, QRectF
+from PyQt6.QtCore import Qt, QLockFile, QProcess, QTimer, pyqtSignal, QRectF
 from PyQt6.QtGui import QFont, QColor, QPainter, QPen
 
 from . import config as guya_config
@@ -142,6 +142,11 @@ class ControlPanel(QWidget):
         self.lang = c.get("language", "en")
         self.vk = c["hotkey"]["vk"]
         self.label = c["hotkey"]["label"]
+        assistant = c.get("assistant", {})
+        assistant_hotkey = assistant.get("hotkey", {})
+        self.assistant_enabled = bool(assistant.get("enabled", True))
+        self.assistant_vk = assistant_hotkey.get("vk", 119)
+        self.assistant_label = assistant_hotkey.get("label", "F8")
 
     def _write_config(self):
         c = guya_config.load_config()
@@ -164,6 +169,10 @@ class ControlPanel(QWidget):
             c["language"] = self.lang
         c["hotkey"]["vk"] = self.vk; c["hotkey"]["name"] = self.label
         c["hotkey"]["label"] = self.label
+        c["assistant"]["enabled"] = self.assistant_enabled
+        c["assistant"]["hotkey"]["vk"] = self.assistant_vk
+        c["assistant"]["hotkey"]["name"] = self.assistant_label
+        c["assistant"]["hotkey"]["label"] = self.assistant_label
         guya_config.save_config(c)
 
     def _apply(self):
@@ -246,6 +255,82 @@ class ControlPanel(QWidget):
         sl.addLayout(m2)
         self.tabs.addWidget(spage)
 
+        # --- Help tab: short bilingual onboarding and supported command shapes ---
+        hpage = QWidget(); hpage.setStyleSheet("background:transparent;")
+        hl = QVBoxLayout(hpage); hl.setContentsMargins(0, 10, 0, 0)
+        help_area = QScrollArea(); help_area.setWidgetResizable(True)
+        help_area.setFrameShape(QFrame.Shape.NoFrame)
+        help_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        help_area.setStyleSheet(
+            "QScrollArea{background:transparent;border:none;}"
+            "QScrollBar:vertical{background:transparent;width:8px;}"
+            f"QScrollBar::handle:vertical{{background:{BORDER};border-radius:4px;}}"
+            "QScrollBar::add-line,QScrollBar::sub-line{height:0;}"
+        )
+        help_inner = QWidget(); help_inner.setStyleSheet("background:transparent;")
+        help_col = QVBoxLayout(help_inner)
+        help_col.setContentsMargins(0, 0, 8, 0); help_col.setSpacing(9)
+
+        intro = QLabel("How to use Guya  ·  راهنمای استفاده از گویا")
+        intro.setFont(QFont(UI_FONT, 15, QFont.Weight.Bold))
+        intro.setStyleSheet(f"color: {ACCENT};")
+        intro.setAccessibleName("How to use Guya")
+        help_col.addWidget(intro)
+        summary = QLabel(
+            "Hold the key, speak naturally, then release it. Guya only performs "
+            "the limited actions shown below.\n"
+            "کلید را نگه دارید، دستور را بگویید و سپس کلید را رها کنید."
+        )
+        summary.setWordWrap(True); summary.setFont(QFont(UI_FONT, 10))
+        summary.setStyleSheet(f"color: {TEXT2}; padding: 0 2px 4px 2px;")
+        help_col.addWidget(summary)
+
+        help_col.addWidget(self._help_card(
+            "⌨️  Two keys / دو کلید",
+            "Right Option (⌥): dictation into the active document.\n"
+            "Right Command (⌘): assistant commands. Press it while Guya is speaking "
+            "to interrupt and continue.\n\n"
+            "⌥ برای تبدیل صدا به متن  ·  ⌘ برای فرمان‌های دستیار",
+        ))
+        help_col.addWidget(self._help_card(
+            "✨  Common commands / فرمان‌های اصلی",
+            "Open Calculator  ·  ماشین حساب رو باز کن\n"
+            "Create a Word file named report  ·  یه فایل ورد به اسم گزارش بساز\n"
+            "Open report docs  ·  فایل گزارش رو باز کن\n"
+            "Rename it to final report  ·  اسمش رو بذار گزارش نهایی\n"
+            "Save it  ·  فایل فعلی رو ذخیره کن\n"
+            "Close it  ·  پنجره فعلی رو ببند",
+        ))
+        help_col.addWidget(self._help_card(
+            "🌐  Browser / مرورگر",
+            "First focus Chrome or Safari, then say: Scroll down (or Page down), "
+            "Scroll up (or Page up), "
+            "Go back, Go forward, Go to the top, or Go to the bottom.\n"
+            "Open a site in the current tab: Go to YouTube  ·  Visit github.com\n\n"
+            "ابتدا مرورگر را فعال کنید، سپس بگویید: صفحه رو پایین ببر، "
+            "صفحه رو ببر پایین، صفحه رو بالا ببر، برو عقب، برو جلو، "
+            "برو اول صفحه یا برو آخر صفحه.\n"
+            "باز کردن مستقیم سایت: برو به سایت یوتیوب",
+        ))
+        help_col.addWidget(self._help_card(
+            "🧭  Choices and confirmations / انتخاب و تأیید",
+            "After Create, say Yes or No when Guya asks whether to open it.\n"
+            "For similar filenames, click a result or say first, second, third, or cancel.\n\n"
+            "بعد از ساخت فایل، برای باز شدن بگویید بله یا نه. برای نتایج مشابه، "
+            "روی گزینه بزنید یا بگویید اول، دوم، سوم یا لغو.",
+        ))
+        help_col.addWidget(self._help_card(
+            "🛡️  V1 safety limit / محدودیت ایمنی",
+            "Guya searches only Desktop, Documents and Downloads. Delete, shell "
+            "commands, uploads, reading web pages, clicking results and downloads "
+            "are not supported.\n"
+            "گویا حذف فایل، اجرای دستور سیستمی، خواندن صفحه وب، کلیک روی نتیجه‌ها "
+            "یا دانلود را انجام نمی‌دهد.",
+        ))
+        help_col.addStretch()
+        help_area.setWidget(help_inner); hl.addWidget(help_area)
+        self.tabs.addWidget(hpage)
+
         root.addWidget(self.tabs, 1)
         self._select_tab(0)
 
@@ -255,13 +340,30 @@ class ControlPanel(QWidget):
                            f"border-radius: 13px; }}")
         h = QHBoxLayout(wrap); h.setContentsMargins(4, 4, 4, 4); h.setSpacing(4)
         self._tab_buttons = []
-        for i, name in enumerate(("Controls", "Settings")):
+        for i, name in enumerate(("Controls", "Settings", "Help")):
             b = QPushButton(name); b.setCursor(Qt.CursorShape.PointingHandCursor)
             b.setFixedHeight(30); b.setMinimumWidth(124)
             b.setFont(QFont(UI_FONT, 11, QFont.Weight.DemiBold))
             b.clicked.connect(lambda _=False, idx=i: self._select_tab(idx))
             self._tab_buttons.append(b); h.addWidget(b)
         return wrap
+
+    def _help_card(self, title, body):
+        frame = QFrame()
+        frame.setStyleSheet(
+            f"QFrame {{ background: {_grad('#1a1a23', '#15151d')};"
+            f"border: 1px solid {BORDER}; border-radius: 14px; }}"
+            "QLabel { border: none; background: transparent; }"
+        )
+        col = QVBoxLayout(frame); col.setContentsMargins(15, 12, 15, 12)
+        col.setSpacing(6)
+        heading = QLabel(title); heading.setFont(QFont(UI_FONT, 11, QFont.Weight.Bold))
+        heading.setStyleSheet(f"color: {TEXT};")
+        text = QLabel(body); text.setWordWrap(True); text.setFont(QFont(UI_FONT, 10))
+        text.setStyleSheet(f"color: {TEXT2};")
+        text.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        col.addWidget(heading); col.addWidget(text)
+        return frame
 
     def _select_tab(self, i):
         self.tabs.setCurrentIndex(i)
@@ -275,25 +377,33 @@ class ControlPanel(QWidget):
                                 f"QPushButton:hover {{ color: {TEXT}; }}")
 
     def _access_banner(self):
+        self._permission_target = "Accessibility"
         f = QFrame()
         f.setStyleSheet(f"QFrame {{ background: rgba(251,113,133,0.12); border: 1px solid {RED};"
                         f"border-radius: 13px; }} QLabel {{ border: none; background: transparent; }}")
         h = QHBoxLayout(f); h.setContentsMargins(14, 10, 12, 10); h.setSpacing(10)
         ic = QLabel("⚠"); ic.setFont(QFont(UI_FONT, 15)); h.addWidget(ic)
-        lb = QLabel("Guya needs Accessibility permission to detect your key.")
-        lb.setFont(QFont(UI_FONT, 10)); lb.setWordWrap(True); lb.setStyleSheet(f"color: {TEXT};")
-        h.addWidget(lb, 1)
+        self.permission_text = QLabel("Guya needs permission to detect your key.")
+        self.permission_text.setFont(QFont(UI_FONT, 10))
+        self.permission_text.setWordWrap(True)
+        self.permission_text.setStyleSheet(f"color: {TEXT};")
+        h.addWidget(self.permission_text, 1)
         btn = QPushButton("Open Settings"); btn.setCursor(Qt.CursorShape.PointingHandCursor)
         btn.setMinimumHeight(34); btn.setFont(QFont(UI_FONT, 10, QFont.Weight.DemiBold))
         btn.setStyleSheet(f"QPushButton {{ background: {RED}; color: #2a0a12; border: none;"
                           f"border-radius: 10px; padding: 0 12px; }}")
-        btn.clicked.connect(self._open_accessibility)
+        btn.clicked.connect(self._open_permission_settings)
         h.addWidget(btn)
         return f
 
-    def _open_accessibility(self):
+    def _open_permission_settings(self):
+        pane = (
+            "Privacy_Microphone"
+            if self._permission_target == "Microphone"
+            else "Privacy_Accessibility"
+        )
         QProcess.startDetached(
-            "open", ["x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"])
+            "open", [f"x-apple.systempreferences:com.apple.preference.security?{pane}"])
 
     def _ghost(self, text):
         b = QPushButton(text); b.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -316,8 +426,10 @@ class ControlPanel(QWidget):
         if self.mode in ("online", "dual"):
             rows.append(("☁️", "Online API key", "Set ✓" if self.api_key else "Not set",
                          self._open_api_modal))
-        rows.append(("⌨️", "Push-to-talk key", "Right Option (⌥)" if IS_MAC else self.label,
+        rows.append(("⌨️", "Dictation key", "Right Option (⌥)" if IS_MAC else self.label,
                      None if IS_MAC else self._open_key_modal))
+        rows.append(("✨", "Assistant key", "Right Command (⌘)" if IS_MAC else self.assistant_label,
+                     None if IS_MAC else self._open_assistant_key_modal))
         for icon, label, value, fn in rows:
             self.settings_col.addWidget(self._setting_row(icon, label, value, fn))
         self.settings_col.addStretch()
@@ -396,13 +508,33 @@ class ControlPanel(QWidget):
             self._live = None
         elif time.monotonic() >= self._pending_until:
             self._live = st
-        # Accessibility warning when the widget can't see the key
+        # Permission warning when the widget cannot see keys or hear audio.
         trusted = (self._live or {}).get("trusted", True)
-        self.access_banner.setVisible(bool(self._live) and not trusted)
+        microphone_ok = (self._live or {}).get("microphone_ok", True)
+        permission_missing = bool(self._live) and (not trusted or not microphone_ok)
+        if permission_missing:
+            if not trusted:
+                self._permission_target = "Accessibility"
+                self.permission_text.setText(
+                    "Guya needs Accessibility permission to detect the two hotkeys. "
+                    "Grant it, then restart Guya."
+                )
+            else:
+                self._permission_target = "Microphone"
+                self.permission_text.setText(
+                    "Guya needs Microphone permission to hear your voice. "
+                    "Grant it, then restart Guya."
+                )
+        self.access_banner.setVisible(permission_missing)
         live_sig = None
         if self._live:
-            live_sig = (self._live.get("enabled"), self._live.get("backend"),
-                        self._live.get("language"), self._live.get("hybrid"))
+            live_sig = (
+                self._live.get("enabled"),
+                self._live.get("backend"),
+                self._live.get("language"),
+                self._live.get("hybrid"),
+                self._live.get("assistant_enabled"),
+            )
         sig = (on, live_sig)
         if sig != self._live_sig:
             self._live_sig = sig
@@ -441,6 +573,19 @@ class ControlPanel(QWidget):
         enabled = bool(live.get("enabled"))
         pill = self._toggle_pill(enabled, lambda: self._send_cmd(enabled=not enabled))
         self.controls_col.addWidget(self._ctrl_row("⚡", "Active", pill))
+
+        assistant_enabled = bool(live.get("assistant_enabled", True))
+        assistant_pill = self._toggle_pill(
+            assistant_enabled,
+            lambda: self._send_cmd(assistant_enabled=not assistant_enabled),
+        )
+        self.controls_col.addWidget(
+            self._ctrl_row(
+                "✨",
+                f"Assistant ({live.get('assistant_hotkey', 'F8')})",
+                assistant_pill,
+            )
+        )
 
         # Backend switch (only when both offline+online are loaded = dual)
         if live.get("hybrid"):
@@ -561,9 +706,37 @@ class ControlPanel(QWidget):
                               f"font-size: 13pt; }}")
             cap.captured.connect(lambda vk, lab: choose((vk, lab)))
             col.addWidget(cap)
-        dlg = PickerDialog(self, "Push-to-talk key", build); dlg.resize(480, 240)
+        dlg = PickerDialog(self, "Dictation key", build); dlg.resize(480, 240)
         if dlg.exec() and dlg.value:
+            if dlg.value[0] == self.assistant_vk:
+                QMessageBox.warning(
+                    self,
+                    "Guya",
+                    "Dictation and assistant must use different keys.",
+                )
+                return
             self.vk, self.label = dlg.value; self._apply()
+
+    def _open_assistant_key_modal(self):
+        def build(col, choose):
+            cap = HotkeyCapture(EN.get("key_capture", "Click, then press a key"))
+            cap.setMinimumHeight(54)
+            cap.setStyleSheet(f"QPushButton {{ background: {CARD}; color: {TEXT};"
+                              f"border: 1px solid {BORDER}; border-radius: 12px; padding: 14px;"
+                              f"font-size: 13pt; }}")
+            cap.captured.connect(lambda vk, lab: choose((vk, lab)))
+            col.addWidget(cap)
+        dlg = PickerDialog(self, "Assistant key", build); dlg.resize(480, 240)
+        if dlg.exec() and dlg.value:
+            if dlg.value[0] == self.vk:
+                QMessageBox.warning(
+                    self,
+                    "Guya",
+                    "Dictation and assistant must use different keys.",
+                )
+                return
+            self.assistant_vk, self.assistant_label = dlg.value
+            self._apply()
 
     def _ask_api_key(self) -> bool:
         return self._open_api_modal(prereq=True)
@@ -666,20 +839,64 @@ class ControlPanel(QWidget):
                           f"border-radius: 10px; font-family: monospace; font-size: 11px;")
         v.addWidget(out)
 
+        scroll_state = {"follow_tail": True, "programmatic": False}
+
+        def remember_scroll(value):
+            if scroll_state["programmatic"]:
+                return
+            bar = out.verticalScrollBar()
+            scroll_state["follow_tail"] = value >= bar.maximum() - 2
+
+        out.verticalScrollBar().valueChanged.connect(remember_scroll)
+
         def refresh():
             try:
                 with open(logpath, "r", encoding="utf-8", errors="replace") as f:
                     lines = f.readlines()[-400:]
-                out.setPlainText("".join(lines))
+                content = "".join(lines)
             except Exception as e:
-                out.setPlainText(f"(no log yet: {e})")
-            out.verticalScrollBar().setValue(out.verticalScrollBar().maximum())
+                content = f"(no log yet: {e})"
+
+            # Avoid replacing identical text every 1.5 seconds. Replacing it
+            # resets QPlainTextEdit's scroll position even when no log changed.
+            if content == out.toPlainText():
+                return
+
+            bar = out.verticalScrollBar()
+            old_value = bar.value()
+            follow_tail = scroll_state["follow_tail"]
+            scroll_state["programmatic"] = True
+            try:
+                out.setPlainText(content)
+                bar = out.verticalScrollBar()
+                if follow_tail:
+                    bar.setValue(bar.maximum())
+                else:
+                    # The user is reviewing older entries: keep their current
+                    # position instead of forcing the view back to the bottom.
+                    bar.setValue(min(old_value, bar.maximum()))
+            finally:
+                scroll_state["programmatic"] = False
+                scroll_state["follow_tail"] = follow_tail
+
+        def jump_to_latest():
+            scroll_state["programmatic"] = True
+            try:
+                bar = out.verticalScrollBar()
+                bar.setValue(bar.maximum())
+            finally:
+                scroll_state["programmatic"] = False
+                scroll_state["follow_tail"] = True
 
         refresh()
         rbtn = QPushButton("Refresh"); rbtn.clicked.connect(refresh)
         rbtn.setStyleSheet(self._ghost("").styleSheet()); rbtn.setMinimumHeight(38)
         rbtn.setCursor(Qt.CursorShape.PointingHandCursor); rbtn.setText("Refresh")
         top.addWidget(rbtn)
+        latest_btn = QPushButton("Latest"); latest_btn.clicked.connect(jump_to_latest)
+        latest_btn.setStyleSheet(self._ghost("").styleSheet()); latest_btn.setMinimumHeight(38)
+        latest_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        top.addWidget(latest_btn)
         # auto-refresh while open
         t = QTimer(dlg); t.timeout.connect(refresh); t.start(1500)
         dlg.exec(); t.stop()
@@ -731,6 +948,17 @@ class ControlPanel(QWidget):
 
 def run():
     app = QApplication.instance() or QApplication(sys.argv)
+    os.makedirs(guya_config.CONFIG_DIR, exist_ok=True)
+    instance_lock = QLockFile(
+        os.path.join(guya_config.CONFIG_DIR, "control-panel.lock")
+    )
+    instance_lock.setStaleLockTime(10_000)
+    if not instance_lock.tryLock(100):
+        if not instance_lock.removeStaleLockFile() or not instance_lock.tryLock(100):
+            log.info("Guya is already running; ignoring duplicate launch.")
+            return
+    # Keep the QLockFile alive for the lifetime of the application.
+    app._guya_instance_lock = instance_lock
     app.setStyle("Fusion")
     wz._load_fonts()
     app.setFont(QFont(UI_FONT, 11))

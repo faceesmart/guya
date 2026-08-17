@@ -70,6 +70,21 @@ DEFAULT_CONFIG = {
         "label": "G",
     },
 
+    # Limited local assistant. It reuses speech-to-text but has its own key.
+    # Commands are parsed locally and may only touch these user folders.
+    "assistant": {
+        "enabled": True,
+        "hotkey": {
+            "vk": 119,                 # F8 on Windows
+            "name": "F8",
+            "label": "F8",
+        },
+        # Recognition follows the live FA / EN / DUAL widget badge.
+        "allowed_roots": ["~/Desktop", "~/Documents", "~/Downloads"],
+        "default_directory": "~/Documents",
+        "speak_feedback": True,
+    },
+
     # Widget appearance.
     "ui": {
         "style": "pill",              # "pill" (expand/collapse) | "minimal" (future 2nd UI)

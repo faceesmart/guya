@@ -75,13 +75,15 @@ if command -v brew >/dev/null 2>&1; then
     fi
 fi
 
-if [ ! -d venv ]; then
+RUNTIME_DIR="$HOME/.guya/runtime"
+RUNTIME_VENV="$RUNTIME_DIR/venv"
+mkdir -p "$RUNTIME_DIR"
+if [ ! -d "$RUNTIME_VENV" ]; then
     echo "  Creating the Guya environment…"
-    "$PYTHON_BIN" -m venv venv
+    "$PYTHON_BIN" -m venv "$RUNTIME_VENV"
 fi
-# shellcheck disable=SC1091
-source venv/bin/activate
-python -m pip install --upgrade pip wheel >/dev/null 2>&1
+VENV_PYTHON="$RUNTIME_VENV/bin/python"
+"$VENV_PYTHON" -m pip install --upgrade pip wheel >/dev/null 2>&1
 
 echo "  Installing components (this can take a few minutes)…"
 if command -v brew >/dev/null 2>&1; then
@@ -89,7 +91,7 @@ if command -v brew >/dev/null 2>&1; then
     export CFLAGS="-I${BREW_PREFIX}/include ${CFLAGS:-}"
     export LDFLAGS="-L${BREW_PREFIX}/lib ${LDFLAGS:-}"
 fi
-if python -m pip install -r requirements.txt; then
+if "$VENV_PYTHON" -m pip install -r requirements.txt; then
     echo "${GREEN}  ✓ Guya is set up.${OFF}"
 else
     echo "${RED}  Something went wrong installing components.${OFF}"
@@ -98,12 +100,24 @@ else
     read -r -n 1 -s
     exit 1
 fi
+
+echo "  Creating the Guya application…"
+APP_PATH="$("$VENV_PYTHON" -c 'from guya import launcher_gen; print(launcher_gen.create_launcher())' 2>/dev/null)"
+if [ -d "$APP_PATH" ]; then
+    echo "${GREEN}  ✓ Guya.app is ready.${OFF}"
+else
+    echo "${RED}  Could not create Guya.app; using the direct launcher.${OFF}"
+fi
 echo
 
 # ---------------------------------------------------------------
-# 3. Launch the setup wizard
+# 3. Launch Guya
 # ---------------------------------------------------------------
 echo "${BOLD}Step 3/3 — Opening Guya…${OFF}"
-echo "${DIM}  The setup wizard will appear in a moment. You can close this window after it opens.${OFF}"
+echo "${DIM}  macOS may ask for Microphone and Accessibility permission.${OFF}"
 echo
-exec python -m guya
+if [ -d "$APP_PATH" ]; then
+    open "$APP_PATH"
+    exit 0
+fi
+exec "$VENV_PYTHON" -m guya

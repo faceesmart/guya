@@ -34,10 +34,15 @@ fi
 
 # ---- venv ----
 echo "[2/3] Creating virtual environment..."
-[ -d venv ] || "$PYTHON_BIN" -m venv venv
-# shellcheck disable=SC1091
-source venv/bin/activate
-python -m pip install --upgrade pip wheel >/dev/null
+if [ "$(uname -s)" = "Darwin" ]; then
+    VENV_DIR="$HOME/.guya/runtime/venv"
+else
+    VENV_DIR="$PWD/venv"
+fi
+mkdir -p "$(dirname "$VENV_DIR")"
+[ -d "$VENV_DIR" ] || "$PYTHON_BIN" -m venv "$VENV_DIR"
+VENV_PYTHON="$VENV_DIR/bin/python"
+"$VENV_PYTHON" -m pip install --upgrade pip wheel >/dev/null
 
 # ---- deps ----
 echo "[3/3] Installing dependencies..."
@@ -46,8 +51,14 @@ if command -v brew >/dev/null 2>&1; then
     export CFLAGS="-I${BREW_PREFIX}/include ${CFLAGS:-}"
     export LDFLAGS="-L${BREW_PREFIX}/lib ${LDFLAGS:-}"
 fi
-python -m pip install -r requirements.txt
+"$VENV_PYTHON" -m pip install -r requirements.txt
+
+APP_PATH="$("$VENV_PYTHON" -c 'from guya import launcher_gen; print(launcher_gen.create_launcher())')"
 
 echo
-echo "Done. Run Guya with:  ./run.sh"
+if [ -d "$APP_PATH" ]; then
+    echo "Done. Run Guya with:  open \"$APP_PATH\""
+else
+    echo "Done. Run Guya with:  ./run.sh"
+fi
 echo "First run shows the setup wizard."

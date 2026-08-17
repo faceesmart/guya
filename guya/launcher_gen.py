@@ -14,6 +14,7 @@ matter where they're double-clicked from.
 import os
 import sys
 import logging
+import shutil
 
 log = logging.getLogger("Guya")
 
@@ -23,10 +24,49 @@ def project_root() -> str:
     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
+def _prepare_macos_runtime(root: str) -> str:
+    """Copy the runnable code and environment outside protected user folders.
+
+    Finder-launched apps are denied access to an adjacent venv when the project
+    lives on Desktop/Documents. Terminal launches hide this because Terminal
+    already has permission. A private runtime under ~/.guya avoids that launch
+    failure and also keeps logs/config/runtime in one user-owned location.
+    """
+    runtime = os.path.join(os.path.expanduser("~"), ".guya", "runtime")
+    os.makedirs(runtime, exist_ok=True)
+
+    source_package = os.path.realpath(os.path.join(root, "guya"))
+    runtime_package = os.path.realpath(os.path.join(runtime, "guya"))
+    if source_package != runtime_package:
+        shutil.copytree(
+            source_package,
+            runtime_package,
+            dirs_exist_ok=True,
+            ignore=shutil.ignore_patterns("__pycache__", "*.pyc", ".DS_Store"),
+        )
+
+    source_venv = os.path.join(root, "venv")
+    runtime_venv = os.path.join(runtime, "venv")
+    runtime_python = os.path.join(runtime_venv, "bin", "python")
+    if not os.path.isfile(runtime_python):
+        if not os.path.isfile(os.path.join(source_venv, "bin", "python")):
+            raise RuntimeError("Guya's Python environment is missing; run the installer first")
+        shutil.copytree(
+            source_venv,
+            runtime_venv,
+            symlinks=True,
+            dirs_exist_ok=True,
+            ignore=shutil.ignore_patterns("__pycache__", "*.pyc", ".DS_Store"),
+        )
+
+    return runtime
+
+
 def _create_macos_app(root: str) -> str:
     """Build a minimal Guya.app bundle that launches the widget with no
     Terminal window. Returns the .app path."""
-    py = os.path.join(root, "venv", "bin", "python")
+    runtime = _prepare_macos_runtime(root)
+    py = os.path.join(runtime, "venv", "bin", "python")
     app = os.path.join(root, "Guya.app")
     macos_dir = os.path.join(app, "Contents", "MacOS")
     res_dir = os.path.join(app, "Contents", "Resources")
@@ -38,8 +78,10 @@ def _create_macos_app(root: str) -> str:
     with open(stub, "w") as f:
         f.write(
             "#!/bin/bash\n"
-            f'cd "{root}"\n'
-            f'exec "{py}" -m guya\n'
+            f'cd "{runtime}"\n'
+            'mkdir -p "$HOME/.guya/logs"\n'
+            f'exec "{py}" -m guya '
+            '>>"$HOME/.guya/logs/launcher.log" 2>&1\n'
         )
     os.chmod(stub, 0o755)
 
@@ -57,11 +99,18 @@ def _create_macos_app(root: str) -> str:
             '  <key>CFBundleExecutable</key><string>Guya</string>\n'
             '  <key>CFBundleIdentifier</key><string>com.guya.app</string>\n'
             '  <key>CFBundlePackageType</key><string>APPL</string>\n'
-            '  <key>CFBundleShortVersionString</key><string>1.0</string>\n'
+            '  <key>CFBundleShortVersionString</key><string>1.1</string>\n'
+            '  <key>CFBundleVersion</key><string>2</string>\n'
             '  <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>\n'
             '  <key>NSHighResolutionCapable</key><true/>\n'
             '  <key>NSMicrophoneUsageDescription</key>'
             '<string>Guya turns your speech into text.</string>\n'
+            '  <key>NSDesktopFolderUsageDescription</key>'
+            '<string>Guya searches and manages only the files you request.</string>\n'
+            '  <key>NSDocumentsFolderUsageDescription</key>'
+            '<string>Guya creates documents and asks before opening them.</string>\n'
+            '  <key>NSDownloadsFolderUsageDescription</key>'
+            '<string>Guya searches downloads only when you ask.</string>\n'
             '</dict>\n</plist>\n'
         )
 

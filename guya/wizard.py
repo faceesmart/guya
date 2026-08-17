@@ -114,12 +114,14 @@ LANG = {
         "done_s1": "Click where you want to type — a chat box, a document, anywhere.",
         "done_s2": "Hold the  {k}  key and speak.",
         "done_s3": "Let go — your words appear.",
+        "done_s4": "For assistant commands, hold {k}, speak, then release.",
         "done_more": "A “Start Guya” shortcut was created so you can open it anytime.",
         "done_start": "Start Guya",
 
         "es_title": "Here's your setup",
         "es_sub": "We picked the best options for your computer. Change anything you like, then install.",
-        "es_mode": "How it runs", "es_model": "Model", "es_key": "Push-to-talk key",
+        "es_mode": "How it runs", "es_model": "Model", "es_key": "Dictation key",
+        "es_assistant_key": "Assistant key",
         "es_change": "Change", "es_pick": "Choose this", "es_install": "Install Guya",
         "es_mac_key": "Right Option (⌥)",
 
@@ -228,10 +230,12 @@ LANG = {
         "key_capture": "Click here, then press a key", "key_capturing": "Press any key now…",
         "key_chosen": "Key:  {k}",
         "key_hint": "Tip: pick a letter you rarely press mid-sentence (default: G).",
+        "assistant_key_note": "Assistant commands use a separate key: {k}.",
 
         "review_title": "Review", "review_sub": "Check your choices, then finish.",
         "sum_mode": "Mode", "sum_model": "Model", "sum_runs": "Runs",
-        "sum_language": "Language", "sum_key": "Hotkey",
+        "sum_language": "Language", "sum_key": "Dictation key",
+        "sum_assistant_key": "Assistant key",
         "sum_offline": "Offline (on your PC)", "sum_online": "Online (cloud)",
         "sum_dual": "Dual (switch on the widget)",
         "tip_cloud": "Online chosen — no download. Guya will create a launcher and start.",
@@ -267,12 +271,14 @@ LANG = {
         "done_s1": "روی جایی که می‌خواهید تایپ کنید کلیک کنید — یک چت‌باکس، یک سند، هرجا.",
         "done_s2": "کلید  {k}  را نگه دارید و صحبت کنید.",
         "done_s3": "رها کنید — کلماتتان ظاهر می‌شوند.",
+        "done_s4": "برای فرمان‌های دستیار، کلید {k} را نگه دارید، صحبت کنید و رها کنید.",
         "done_more": "یک میان‌بر «Start Guya» ساخته شد تا هر وقت خواستید بازش کنید.",
         "done_start": "شروع گویا",
 
         "es_title": "این هم تنظیمات شما",
         "es_sub": "بهترین گزینه‌ها را برای کامپیوتر شما انتخاب کردیم. هرچه خواستید تغییر دهید، سپس نصب کنید.",
-        "es_mode": "نحوهٔ اجرا", "es_model": "مدل", "es_key": "کلید فشار-برای-صحبت",
+        "es_mode": "نحوهٔ اجرا", "es_model": "مدل", "es_key": "کلید دیکته",
+        "es_assistant_key": "کلید دستیار",
         "es_change": "تغییر", "es_pick": "همین را انتخاب کن", "es_install": "نصب گویا",
         "es_mac_key": "Right Option (⌥)",
 
@@ -380,10 +386,12 @@ LANG = {
         "key_capture": "اینجا کلیک کنید، سپس یک کلید را فشار دهید", "key_capturing": "حالا یک کلید را فشار دهید…",
         "key_chosen": "کلید:  {k}",
         "key_hint": "نکته: حرفی را انتخاب کنید که وسط جمله کم فشار می‌دهید (پیش‌فرض: G).",
+        "assistant_key_note": "فرمان‌های دستیار کلید جداگانه دارند: {k}.",
 
         "review_title": "مرور", "review_sub": "انتخاب‌هایتان را بررسی و سپس تمام کنید.",
         "sum_mode": "حالت", "sum_model": "مدل", "sum_runs": "اجرا",
-        "sum_language": "زبان", "sum_key": "کلید",
+        "sum_language": "زبان", "sum_key": "کلید دیکته",
+        "sum_assistant_key": "کلید دستیار",
         "sum_offline": "آفلاین (روی کامپیوتر شما)", "sum_online": "آنلاین (ابری)",
         "sum_dual": "دوگانه (روی ویجت جابه‌جا شو)",
         "tip_cloud": "آنلاین انتخاب شد — بدون دانلود. گویا یک فایل اجرا می‌سازد و شروع می‌کند.",
@@ -444,7 +452,7 @@ from PyQt6.QtWidgets import (  # noqa: E402
 from PyQt6.QtCore import (  # noqa: E402
     Qt, QProcess, QProcessEnvironment, QTimer, pyqtSignal,
 )
-from PyQt6.QtGui import QFont, QColor, QPainter, QPen  # noqa: E402
+from PyQt6.QtGui import QFont, QColor, QPainter, QPen, QKeySequence  # noqa: E402
 
 
 def _shadow(widget, blur=24, dy=6, alpha=120):
@@ -1510,8 +1518,26 @@ class WizardWindow(QWidget):
             self.key_capture.captured.connect(self._on_key); lay.addWidget(self.key_capture)
             h = QLabel(); h.setFont(QFont(UI_FONT, 9)); h.setStyleSheet(f"color: {DIM};")
             self._t(h, "key_hint"); lay.addWidget(h)
+        assistant_note = QLabel(
+            self.tr("assistant_key_note", k=self._assistant_key_choice()[1])
+        )
+        assistant_note.setFont(QFont(UI_FONT, 10))
+        assistant_note.setWordWrap(True)
+        assistant_note.setStyleSheet(f"color: {ACCENT};")
+        lay.addWidget(assistant_note)
         lay.addStretch()
         return w
+
+    def _assistant_key_choice(self):
+        if IS_MAC:
+            return 0, "Right Command (⌘)"
+        cfg = guya_config.load_config()
+        hotkey = cfg.get("assistant", {}).get("hotkey", {})
+        vk = hotkey.get("vk", 119)
+        label = hotkey.get("label", "F8")
+        if vk == self.choices.get("hotkey_vk"):
+            return 120, "F9"
+        return vk, label
 
     def _on_key(self, vk, label):
         self.choices["hotkey_vk"] = vk; self.choices["hotkey_label"] = label
@@ -1556,6 +1582,7 @@ class WizardWindow(QWidget):
             rows.append(("🧠", "sum_model", "large-v3 (cloud)"))
         rows.append(("🗣", "sum_language", lang))
         rows.append(("⌨️", "sum_key", self.choices["hotkey_label"]))
+        rows.append(("✨", "sum_assistant_key", self._assistant_key_choice()[1]))
         for icon, lk, val in rows:
             r = QHBoxLayout(); r.setSpacing(12)
             ic = QLabel(icon); ic.setFont(QFont(UI_FONT, 15)); ic.setFixedWidth(28)
@@ -1657,9 +1684,11 @@ class WizardWindow(QWidget):
         head.setStyleSheet(f"color: {ACCENT};")
         self.done_layout.addWidget(head)
         key = self.choices["hotkey_label"]
+        assistant_key = self._assistant_key_choice()[1]
         steps = [("👆", self.tr("done_s1")),
                  ("🎙", self.tr("done_s2", k=key)),
-                 ("✨", self.tr("done_s3"))]
+                 ("✨", self.tr("done_s3")),
+                 ("🧭", self.tr("done_s4", k=assistant_key))]
         for icon, text in steps:
             r = QHBoxLayout(); r.setSpacing(12)
             ic = QLabel(icon); ic.setFont(QFont(UI_FONT, 16)); ic.setFixedWidth(30)
@@ -1733,6 +1762,12 @@ class WizardWindow(QWidget):
         else:
             self.easy_col.addWidget(self._easy_row("⌨️", self.tr("es_key"),
                                                    self.choices["hotkey_label"], self._open_key_picker))
+        self.easy_col.addWidget(self._easy_row(
+            "✨",
+            self.tr("es_assistant_key"),
+            self._assistant_key_choice()[1],
+            None,
+        ))
 
         self.easy_col.addStretch()
         self._update_easy_install()
@@ -1947,6 +1982,11 @@ class WizardWindow(QWidget):
         cfg["hotkey"]["vk"] = self.choices["hotkey_vk"]
         cfg["hotkey"]["label"] = self.choices["hotkey_label"]
         cfg["hotkey"]["name"] = self.choices["hotkey_label"]
+        assistant_vk, assistant_label = self._assistant_key_choice()
+        if not IS_MAC:
+            cfg["assistant"]["hotkey"]["vk"] = assistant_vk
+            cfg["assistant"]["hotkey"]["label"] = assistant_label
+            cfg["assistant"]["hotkey"]["name"] = assistant_label
         cfg["ui"]["style"] = self.choices["ui_style"]
 
         if self.bench_proc and self.bench_proc.state() != QProcess.ProcessState.NotRunning:
@@ -2039,8 +2079,38 @@ class HotkeyCapture(QPushButton):
 
     def keyPressEvent(self, e):
         if self._capturing:
-            vk = e.key()
-            label = (e.text().upper().strip() or e.text().strip() or str(vk))
+            qt_key = e.key()
+            vk = qt_key
+            if IS_WIN:
+                f1 = Qt.Key.Key_F1.value
+                f24 = Qt.Key.Key_F24.value
+                if f1 <= qt_key <= f24:
+                    vk = 0x70 + (qt_key - f1)
+                else:
+                    special = {
+                        Qt.Key.Key_Backspace.value: 0x08,
+                        Qt.Key.Key_Tab.value: 0x09,
+                        Qt.Key.Key_Return.value: 0x0D,
+                        Qt.Key.Key_Enter.value: 0x0D,
+                        Qt.Key.Key_Escape.value: 0x1B,
+                        Qt.Key.Key_Space.value: 0x20,
+                        Qt.Key.Key_PageUp.value: 0x21,
+                        Qt.Key.Key_PageDown.value: 0x22,
+                        Qt.Key.Key_End.value: 0x23,
+                        Qt.Key.Key_Home.value: 0x24,
+                        Qt.Key.Key_Left.value: 0x25,
+                        Qt.Key.Key_Up.value: 0x26,
+                        Qt.Key.Key_Right.value: 0x27,
+                        Qt.Key.Key_Down.value: 0x28,
+                        Qt.Key.Key_Insert.value: 0x2D,
+                        Qt.Key.Key_Delete.value: 0x2E,
+                    }
+                    vk = special.get(qt_key, qt_key)
+            label = (
+                QKeySequence(qt_key).toString()
+                or e.text().upper().strip()
+                or str(vk)
+            )
             self._capturing = False; self.releaseKeyboard()
             self.setText(f"{label}"); self.captured.emit(vk, label)
         else:

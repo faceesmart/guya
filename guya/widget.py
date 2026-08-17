@@ -13,6 +13,7 @@ is structured to ensure that order: main() loads model → imports Qt → create
 
 import sys
 import os
+import json
 import time
 import struct
 import threading
@@ -23,6 +24,7 @@ import logging
 import traceback
 import faulthandler
 from collections import Counter
+from logging.handlers import RotatingFileHandler
 import numpy as np
 import pyperclip
 import pyaudio
@@ -60,10 +62,12 @@ try:
     from . import config as guya_config
     from . import cloud_engine
     from . import runtime as guya_runtime
+    from .assistant import AssistantService
 except ImportError:
     import config as guya_config
     import cloud_engine
     import runtime as guya_runtime
+    from assistant import AssistantService
 
 CFG = guya_config.load_config()
 
@@ -87,7 +91,13 @@ logging.basicConfig(
     datefmt="%H:%M:%S",
     handlers=[
         logging.StreamHandler(sys.stdout),
-        logging.FileHandler(LOG_FILE, mode="w", encoding="utf-8"),
+        RotatingFileHandler(
+            LOG_FILE,
+            mode="a",
+            maxBytes=2 * 1024 * 1024,
+            backupCount=5,
+            encoding="utf-8",
+        ),
     ],
 )
 log = logging.getLogger("Guya")
@@ -108,6 +118,9 @@ DEVICE = CFG["model"]["device"]              # "auto" | "cuda" | "cpu"
 COMPUTE_TYPE = CFG["model"]["compute_type"]  # "auto" | "float16" | "int8" | ...
 MODEL_BACKEND = CFG["model"]["backend"]      # "faster-whisper" | "cloud"
 LANGUAGE = CFG["language"]
+ASSISTANT_CFG = CFG.get("assistant", {})
+ASSISTANT_ENABLED = bool(ASSISTANT_CFG.get("enabled", True))
+ASSISTANT_SPEAK_FEEDBACK = bool(ASSISTANT_CFG.get("speak_feedback", True))
 
 # Hybrid mode: an offline model AND a cloud key are both configured, so the
 # widget can switch between them at runtime.
@@ -157,6 +170,7 @@ if IS_MAC:
             check_gpu_lightweight as _check_cuda_lightweight,
             apply_nonactivating_style,
             HOTKEY_NAME,
+            ASSISTANT_HOTKEY_NAME,
         )
     except ImportError:
         from platform_macos import (
@@ -171,12 +185,16 @@ if IS_MAC:
             check_gpu_lightweight as _check_cuda_lightweight,
             apply_nonactivating_style,
             HOTKEY_NAME,
+            ASSISTANT_HOTKEY_NAME,
         )
     HOTKEY_LABEL = "⌥"  # right option symbol used in widget labels
+    ASSISTANT_HOTKEY_LABEL = "⌘"
 else:
     # Windows: hotkey comes from config (vk + label), default 'G'.
     HOTKEY_NAME = CFG["hotkey"]["name"]
     HOTKEY_LABEL = CFG["hotkey"]["label"]
+    ASSISTANT_HOTKEY_NAME = ASSISTANT_CFG["hotkey"]["name"]
+    ASSISTANT_HOTKEY_LABEL = ASSISTANT_CFG["hotkey"]["label"]
 
     def is_accessibility_granted():
         return True
@@ -184,6 +202,7 @@ else:
 # Hotkey virtual-key code (Windows). macOS uses Right Option regardless.
 if IS_WIN:
     VK_G = CFG["hotkey"]["vk"]
+    VK_ASSISTANT = ASSISTANT_CFG["hotkey"]["vk"]
 
 # ============================================================
 # WINDOWS API CONSTANTS & STRUCTURES (Windows only)
@@ -792,14 +811,25 @@ if IS_WIN:
         _GetAsyncKeyState.argtypes = [ctypes.c_int]
         _GetAsyncKeyState.restype = ctypes.c_short
 
-        def __init__(self, on_press, on_release, is_enabled_func):
+        def __init__(
+            self,
+            on_press,
+            on_release,
+            is_enabled_func,
+            on_assistant_press=None,
+            on_assistant_release=None,
+            assistant_enabled_func=None,
+        ):
             super().__init__(daemon=True)
             self.on_press = on_press
             self.on_release = on_release
             self.is_enabled_func = is_enabled_func
+            self.on_assistant_press = on_assistant_press
+            self.on_assistant_release = on_assistant_release
+            self.assistant_enabled_func = assistant_enabled_func or is_enabled_func
             self._hook = None
             self._hook_proc = None
-            self._g_held = False
+            self._held_mode = None
             self._thread_id = None
             self.captured_hwnd = 0
 
@@ -811,8 +841,13 @@ if IS_WIN:
                 try:
                     if nCode >= 0:
                         kb = ctypes.cast(lParam, ctypes.POINTER(KBDLLHOOKSTRUCT)).contents
-                        if kb.vkCode == VK_G:
-                            if self.is_enabled_func():
+                        if kb.vkCode in (VK_G, VK_ASSISTANT):
+                            mode = "dictation" if kb.vkCode == VK_G else "assistant"
+                            enabled = (
+                                self.is_enabled_func() if mode == "dictation"
+                                else self.assistant_enabled_func()
+                            )
+                            if enabled:
                                 ctrl = (self._GetAsyncKeyState(0x11) & 0x8000) != 0
                                 alt = (self._GetAsyncKeyState(0x12) & 0x8000) != 0
                                 shift = (self._GetAsyncKeyState(0x10) & 0x8000) != 0
@@ -823,16 +858,29 @@ if IS_WIN:
                                     return self._CallNextHookEx(self._hook, nCode, wParam, lParam)
 
                                 if wParam in (WM_KEYDOWN, WM_SYSKEYDOWN):
-                                    if not self._g_held:
-                                        self._g_held = True
+                                    if self._held_mode is None:
+                                        self._held_mode = mode
                                         self.captured_hwnd = user32.GetForegroundWindow()
-                                        log.info(f"Hook captured target hwnd={self.captured_hwnd}")
-                                        self.on_press()
+                                        log.info(
+                                            f"Hook captured mode={mode} "
+                                            f"target hwnd={self.captured_hwnd}"
+                                        )
+                                        callback = (
+                                            self.on_press if mode == "dictation"
+                                            else self.on_assistant_press
+                                        )
+                                        if callback is not None:
+                                            callback()
                                     return 1
                                 elif wParam in (WM_KEYUP, WM_SYSKEYUP):
-                                    if self._g_held:
-                                        self._g_held = False
-                                        self.on_release()
+                                    if self._held_mode == mode:
+                                        self._held_mode = None
+                                        callback = (
+                                            self.on_release if mode == "dictation"
+                                            else self.on_assistant_release
+                                        )
+                                        if callback is not None:
+                                            callback()
                                     return 1
                 except Exception as e:
                     log.error(f"Hook handler error: {e}")
@@ -879,7 +927,10 @@ if IS_WIN:
                 log.error("Try running as Administrator")
                 return
 
-            log.info("Keyboard hook installed successfully! (G key)")
+            log.info(
+                "Keyboard hook installed successfully! "
+                f"(dictation={HOTKEY_LABEL}, assistant={ASSISTANT_HOTKEY_LABEL})"
+            )
 
             msg = ctypes.wintypes.MSG()
             while self._GetMessageW(ctypes.byref(msg), None, 0, 0) != 0:
@@ -1409,13 +1460,21 @@ except Exception as e:
 # ============================================================
 
 def check_microphone():
-    """Check if microphone is accessible."""
+    """Open the input briefly so macOS requests permission on first launch."""
+    pa = None
+    stream = None
     try:
         pa = pyaudio.PyAudio()
         info = pa.get_default_input_device_info()
         mic_name = info.get("name", "Unknown")
+        stream = pa.open(
+            format=pyaudio.paInt16,
+            channels=1,
+            rate=SAMPLE_RATE,
+            input=True,
+            frames_per_buffer=CHUNK_SIZE,
+        )
         log.info(f"Microphone OK: {mic_name}")
-        pa.terminate()
         return True
     except Exception as e:
         log.error(f"Microphone error: {e}")
@@ -1425,6 +1484,18 @@ def check_microphone():
         else:
             log.error("Windows Settings -> Privacy -> Microphone -> Allow apps to access")
         return False
+    finally:
+        if stream is not None:
+            try:
+                stream.stop_stream()
+                stream.close()
+            except Exception:
+                pass
+        if pa is not None:
+            try:
+                pa.terminate()
+            except Exception:
+                pass
 
 
 if IS_WIN:
@@ -1488,7 +1559,7 @@ def main():
 
     # Pre-flight checks
     check_admin()
-    check_microphone()
+    microphone_ok = check_microphone()
 
     # =========================================================
     # STEP 1: Prepare the model BEFORE importing PyQt6
@@ -1517,7 +1588,14 @@ def main():
     # STEP 2: NOW import PyQt6 (safe because CUDA is initialized)
     # =========================================================
     log.info("Importing PyQt6...")
-    from PyQt6.QtWidgets import QApplication, QWidget, QMenu
+    from PyQt6.QtWidgets import (
+        QApplication,
+        QLabel,
+        QMenu,
+        QPushButton,
+        QVBoxLayout,
+        QWidget,
+    )
     from PyQt6.QtCore import (
         Qt, QObject, QTimer, QPoint, QPointF, QRect, QRectF, pyqtSignal, QThread
     )
@@ -1536,6 +1614,8 @@ def main():
         text_ready = pyqtSignal(str)
         partial_text = pyqtSignal(str)
         error = pyqtSignal(str)
+        hotkey_pressed = pyqtSignal(str)
+        hotkey_released = pyqtSignal(str)
 
     class TranscriptionThread(QThread):
         """Runs final Whisper transcription in a background QThread."""
@@ -1559,6 +1639,154 @@ def main():
             except Exception as e:
                 log.error(f"Transcription error: {e}")
                 self.error.emit(str(e))
+
+    class AssistantCommandThread(QThread):
+        """Run filesystem search/launch work without blocking widget painting."""
+        finished = pyqtSignal(object)
+        error = pyqtSignal(str)
+
+        def __init__(self, assistant, text):
+            super().__init__()
+            self.assistant = assistant
+            self.text = text
+
+        def run(self):
+            try:
+                self.finished.emit(self.assistant.handle(self.text))
+            except Exception as e:
+                log.error(f"Assistant command error: {e}")
+                self.error.emit(str(e))
+
+    class SearchResultsPopup(QWidget):
+        """Non-activating, voice-first list of ambiguous file results."""
+
+        option_selected = pyqtSignal(int)
+        cancel_requested = pyqtSignal()
+
+        def __init__(self):
+            super().__init__()
+            flags = (
+                Qt.WindowType.FramelessWindowHint
+                | Qt.WindowType.WindowStaysOnTopHint
+                | Qt.WindowType.WindowDoesNotAcceptFocus
+            )
+            if not IS_MAC:
+                flags |= Qt.WindowType.Tool
+            self.setWindowFlags(flags)
+            self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
+            self.setObjectName("searchResultsPopup")
+            self.setAccessibleName("Guya file choices")
+            self.setStyleSheet(
+                """
+                QWidget#searchResultsPopup {
+                    background: #15191f;
+                    border: 1px solid #38414d;
+                    border-radius: 14px;
+                }
+                QLabel {
+                    color: #f1f5f9;
+                    background: transparent;
+                    border: none;
+                }
+                QLabel#choiceTitle {
+                    color: #8fd3ff;
+                    font-weight: 700;
+                    font-size: 13px;
+                }
+                QPushButton#choiceItem {
+                    color: #f1f5f9;
+                    background: #20262e;
+                    border: 1px solid #323b46;
+                    border-radius: 9px;
+                    padding: 8px 10px;
+                    font-size: 12px;
+                    text-align: left;
+                }
+                QPushButton#choiceItem:hover {
+                    border-color: #2dd4bf;
+                    background: #26333a;
+                }
+                QPushButton#choiceCancel {
+                    color: #cbd5e1;
+                    background: transparent;
+                    border: 1px solid #38414d;
+                    border-radius: 8px;
+                    padding: 6px;
+                }
+                QLabel#choiceHint {
+                    color: #aab4c0;
+                    font-size: 11px;
+                }
+                """
+            )
+            self._layout = QVBoxLayout(self)
+            self._layout.setContentsMargins(12, 12, 12, 12)
+            self._layout.setSpacing(7)
+
+        def show_results(self, paths, language, anchor):
+            while self._layout.count():
+                item = self._layout.takeAt(0)
+                widget = item.widget()
+                if widget is not None:
+                    widget.deleteLater()
+
+            title = QLabel(
+                "یک فایل را انتخاب کنید"
+                if language == "fa"
+                else "Choose a file"
+            )
+            title.setObjectName("choiceTitle")
+            title.setAccessibleName(title.text())
+            self._layout.addWidget(title)
+
+            for number, path in enumerate(paths[:3], 1):
+                location = path.parent.name or str(path.parent)
+                text = f"{number}.  {path.name}\n     {location}"
+                button = QPushButton(text)
+                button.setObjectName("choiceItem")
+                button.setCursor(Qt.CursorShape.PointingHandCursor)
+                button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+                button.setAccessibleName(
+                    f"Option {number}: {path.name}, in {location}"
+                )
+                button.clicked.connect(
+                    lambda _checked=False, index=number - 1:
+                    self.option_selected.emit(index)
+                )
+                self._layout.addWidget(button)
+
+            hint = QLabel(
+                "روی گزینه بزنید یا بگویید اول، دوم، سوم یا لغو"
+                if language == "fa"
+                else "Click an option, or say first, second, third, or cancel"
+            )
+            hint.setObjectName("choiceHint")
+            hint.setWordWrap(True)
+            hint.setAccessibleName(hint.text())
+            self._layout.addWidget(hint)
+
+            cancel = QPushButton("لغو" if language == "fa" else "Cancel")
+            cancel.setObjectName("choiceCancel")
+            cancel.setCursor(Qt.CursorShape.PointingHandCursor)
+            cancel.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+            cancel.setAccessibleName(cancel.text())
+            cancel.clicked.connect(self.cancel_requested.emit)
+            self._layout.addWidget(cancel)
+
+            width = 420
+            height = 116 + min(len(paths), 3) * 57
+            self.setFixedSize(width, height)
+            screen = QApplication.primaryScreen()
+            available = screen.availableGeometry() if screen else anchor
+            x = anchor.center().x() - width // 2
+            y = anchor.bottom() + 10
+            x = max(available.left() + 8, min(x, available.right() - width - 8))
+            if y + height > available.bottom() - 8:
+                y = anchor.top() - height - 10
+            self.move(x, max(available.top() + 8, y))
+            self.show()
+            self.raise_()
+            apply_nonactivating_style(self)
 
     class VoiceWidget(QWidget):
         """Minimal floating widget: collapses to a small circle, expands to a pill.
@@ -1590,9 +1818,26 @@ def main():
             self._recording_thread = None
             self._realtime_transcriber = None
             self._transcription_thread = None
+            self._assistant_thread = None
+            self._results_popup = SearchResultsPopup()
+            self._results_popup.option_selected.connect(
+                self._on_result_option_clicked
+            )
+            self._results_popup.cancel_requested.connect(
+                lambda: self._submit_result_choice("cancel")
+            )
             self._is_recording = False
             self._is_processing = False
+            self._active_recording_mode = None
+            self._processing_mode = "dictation"
             self._is_enabled = True         # ready to record as soon as it loads
+            self._assistant_enabled = ASSISTANT_ENABLED
+            self._last_audio_duration = 0.0
+            self._transcription_started_at = None
+            self._transcription_elapsed = 0.0
+            self._assistant_command_started_at = None
+            self._last_assistant_text = ""
+            self._last_assistant_language = self._language
             self._last_cmd_seq = 0          # Control Panel command sync
             self._anim_tick = 0
             self._drag_pos = None
@@ -1612,16 +1857,24 @@ def main():
             # We type into this window. 0 = no target saved.
             self._target_hwnd = 0
 
+            # Local deterministic assistant. Paths are constrained by config.
+            self._assistant = AssistantService(
+                roots=ASSISTANT_CFG.get("allowed_roots"),
+                default_directory=ASSISTANT_CFG.get("default_directory"),
+            )
+
             # Signal bridge
             self._bridge = SignalBridge()
             self._bridge.status_changed.connect(self._set_state)
             self._bridge.text_ready.connect(self._on_text_ready)
             self._bridge.partial_text.connect(self._on_partial_text)
             self._bridge.error.connect(self._on_error)
+            self._bridge.hotkey_pressed.connect(self._handle_hotkey_press)
+            self._bridge.hotkey_released.connect(self._handle_hotkey_release)
 
             if self._model is not None:
                 self._state = "idle"
-                self._label_text = f"Hold {HOTKEY_LABEL} to speak"
+                self._label_text = self._idle_label()
                 log.info(f"Model pre-loaded; backend={self._backend} hybrid={self._hybrid}")
             else:
                 self._state = "loading"
@@ -1721,6 +1974,9 @@ def main():
                     "enabled": self._is_enabled, "backend": self._backend,
                     "language": self._language, "hybrid": self._hybrid,
                     "offline_language": self._offline_language,
+                    "assistant_enabled": self._assistant_enabled,
+                    "assistant_hotkey": ASSISTANT_HOTKEY_LABEL,
+                    "microphone_ok": microphone_ok,
                     "state": self._state, "trusted": bool(is_accessibility_granted()),
                 })
                 cmd = guya_runtime.read_cmd()
@@ -1729,6 +1985,8 @@ def main():
                     self._last_cmd_seq = seq
                     if "enabled" in cmd and bool(cmd["enabled"]) != self._is_enabled:
                         self._toggle_enabled()
+                    if "assistant_enabled" in cmd:
+                        self._set_assistant_enabled(bool(cmd["assistant_enabled"]))
                     if "backend" in cmd and self._hybrid:
                         self._set_backend(cmd["backend"])
                     if "language" in cmd:
@@ -1758,22 +2016,74 @@ def main():
 
         def _start_keyboard_hook(self):
             self._g_pressed = False
+            self._assistant_pressed = False
             self._hook_thread = KeyboardHookThread(
                 on_press=self._on_hotkey_press,
                 on_release=self._on_hotkey_release,
                 is_enabled_func=lambda: self._is_enabled,
+                on_assistant_press=self._on_assistant_hotkey_press,
+                on_assistant_release=self._on_assistant_hotkey_release,
+                assistant_enabled_func=lambda: self._is_enabled and self._assistant_enabled,
             )
             self._hook_thread.start()
 
         def _on_hotkey_press(self):
-            if not self._g_pressed:
-                self._g_pressed = True
-                QTimer.singleShot(0, self._start_recording)
+            # pynput invokes this on its listener thread. A Qt signal safely
+            # queues the work on the main UI thread, where recording may start.
+            self._bridge.hotkey_pressed.emit("dictation")
 
         def _on_hotkey_release(self):
-            if self._g_pressed:
+            self._bridge.hotkey_released.emit("dictation")
+
+        def _on_assistant_hotkey_press(self):
+            self._bridge.hotkey_pressed.emit("assistant")
+
+        def _on_assistant_hotkey_release(self):
+            self._bridge.hotkey_released.emit("assistant")
+
+        def _handle_hotkey_press(self, mode):
+            if mode == "assistant":
+                if self._assistant_pressed:
+                    return
+                self._assistant_pressed = True
+                # Pressing the assistant key acts like a natural "barge in":
+                # stop current feedback and immediately listen for the next
+                # command instead of making the user wait for the full reply.
+                self._assistant.stop_speaking()
+            else:
+                if self._g_pressed:
+                    return
+                self._g_pressed = True
+            self._start_recording(mode)
+
+        def _on_result_option_clicked(self, index: int):
+            words = ("first", "second", "third")
+            if 0 <= index < len(words):
+                self._submit_result_choice(words[index])
+
+        def _submit_result_choice(self, choice: str):
+            if self._is_recording or self._is_processing:
+                return
+            if not self._assistant.context.pending_options:
+                self._results_popup.hide()
+                return
+            log.info("Assistant visual result choice: %s", choice)
+            self._assistant.stop_speaking()
+            self._results_popup.hide()
+            self._is_processing = True
+            self._set_state("processing")
+            self._start_assistant_command(choice)
+
+        def _handle_hotkey_release(self, mode):
+            if mode == "assistant":
+                if not self._assistant_pressed:
+                    return
+                self._assistant_pressed = False
+            else:
+                if not self._g_pressed:
+                    return
                 self._g_pressed = False
-                QTimer.singleShot(0, self._stop_recording)
+            self._stop_recording(mode)
 
         # ---- ON/OFF Toggle ----
 
@@ -1783,11 +2093,24 @@ def main():
             self._is_enabled = not self._is_enabled
             log.info(f"Toggle: {'ON' if self._is_enabled else 'OFF'}")
             if self._is_enabled:
-                self._label_text = f"Hold {HOTKEY_LABEL} to speak"
+                self._label_text = self._idle_label()
             else:
                 if self._is_recording:
                     self._stop_recording()
                 self._label_text = "OFF"
+            self.update()
+
+        def _set_assistant_enabled(self, enabled):
+            if enabled == self._assistant_enabled:
+                return
+            self._assistant_enabled = enabled
+            if not enabled and self._active_recording_mode == "assistant":
+                self._stop_recording("assistant")
+            if not enabled:
+                self._results_popup.hide()
+            if self._state == "idle":
+                self._label_text = self._idle_label()
+            log.info(f"Assistant: {'ON' if enabled else 'OFF'}")
             self.update()
 
         # Right-side cluster, laid out right→left:
@@ -1849,16 +2172,19 @@ def main():
 
         # ---- Recording ----
 
-        def _start_recording(self):
+        def _start_recording(self, mode="dictation"):
             if not self._is_enabled:
+                return
+            if mode == "assistant" and not self._assistant_enabled:
                 return
             if self._state not in ("idle", "done"):
                 return
             if self._is_processing:
                 return
 
-            log.info("Recording started (G pressed)")
+            log.info(f"Recording started ({mode})")
             self._is_recording = True
+            self._active_recording_mode = mode
             self._last_partial_text = ""
             self._recording_start_time = time.time()
 
@@ -1894,11 +2220,16 @@ def main():
             # Real-time partial transcription only for the OFFLINE backend.
             # For cloud we don't fire an API request every 2s — we transcribe
             # once on release (saves requests, rate limit, and latency).
-            if self._model is not None and not isinstance(self._model, CloudModel):
+            if (
+                mode != "assistant"
+                and self._model is not None
+                and not isinstance(self._model, CloudModel)
+            ):
+                transcribe_language = self._language
                 self._realtime_transcriber = RealtimeTranscriber(
                     model=self._model,
                     recording_thread=self._recording_thread,
-                    language=self._language,
+                    language=transcribe_language,
                     on_partial=lambda text: self._bridge.partial_text.emit(text),
                     on_error=lambda err: log.warning(f"RT error: {err}"),
                 )
@@ -1906,11 +2237,15 @@ def main():
 
             self._set_state("listening")
 
-        def _stop_recording(self):
+        def _stop_recording(self, expected_mode=None):
             if not self._is_recording:
                 return
-            log.info("Recording stopped (G released)")
+            if expected_mode and expected_mode != self._active_recording_mode:
+                return
+            mode = self._active_recording_mode or "dictation"
+            log.info(f"Recording stopped ({mode})")
             self._is_recording = False
+            self._active_recording_mode = None
 
             if self._realtime_transcriber:
                 self._realtime_transcriber.stop()
@@ -1928,9 +2263,10 @@ def main():
                     return
 
                 duration = len(audio_data) / SAMPLE_RATE
+                self._last_audio_duration = duration
                 log.info(f"Audio captured: {duration:.1f}s")
 
-                self._start_transcription(audio_data)
+                self._start_transcription(audio_data, mode=mode)
 
         # ---- Real-time partial text ----
 
@@ -1947,28 +2283,41 @@ def main():
 
         # ---- Final Transcription ----
 
-        def _start_transcription(self, audio_data):
+        def _start_transcription(self, audio_data, mode="dictation"):
             if self._model is None:
                 self._set_state("idle")
                 return
 
             self._is_processing = True
+            self._processing_mode = mode
             self._set_state("processing")
 
+            # Assistant recognition follows the language badge. FA and EN force
+            # Whisper to the chosen language; DUAL keeps automatic detection.
             lang = self._language
+            self._last_assistant_language = lang
+            self._transcription_started_at = time.time()
             self._transcription_thread = TranscriptionThread(self._model, audio_data, lang)
             self._transcription_thread.finished.connect(self._on_transcription_done)
             self._transcription_thread.error.connect(self._on_transcription_error)
             self._transcription_thread.start()
 
         def _on_transcription_done(self, text: str):
-            self._is_processing = False
+            if self._transcription_started_at is not None:
+                self._transcription_elapsed = time.time() - self._transcription_started_at
+                self._transcription_started_at = None
             if not text:
+                self._is_processing = False
                 log.info("No text from final transcription")
                 self._set_state("idle")
                 return
 
             log.info(f"Final text: {text[:80]}")
+            if self._processing_mode == "assistant":
+                self._start_assistant_command(text)
+                return
+
+            self._is_processing = False
             self._set_state("done")
             # Small delay to let the "Done" state show, then paste final text
             QTimer.singleShot(TYPE_DELAY, lambda: self._type_final_text(text))
@@ -1978,6 +2327,79 @@ def main():
             log.error(f"Transcription error: {error_msg}")
             self._label_text = f"Error: {error_msg[:35]}"
             self._set_state("idle")
+
+        def _start_assistant_command(self, text: str):
+            log.info(f"Assistant heard: {text[:120]}")
+            self._last_assistant_text = text
+            self._assistant_command_started_at = time.time()
+            self._assistant.set_target_app(self._target_hwnd)
+            self._label_text = "Understanding command…"
+            self.update()
+            self._assistant_thread = AssistantCommandThread(self._assistant, text)
+            self._assistant_thread.finished.connect(self._on_assistant_done)
+            self._assistant_thread.error.connect(self._on_assistant_error)
+            self._assistant_thread.start()
+
+        def _on_assistant_done(self, response):
+            self._is_processing = False
+            self._state = "done"
+            self._label_text = response.message
+            self._expand()
+            self.update()
+            if response.options:
+                self._results_popup.show_results(
+                    response.options,
+                    response.language,
+                    self.geometry(),
+                )
+            else:
+                self._results_popup.hide()
+            log.info(
+                f"Assistant result: status={response.status} "
+                f"message={response.message}"
+            )
+            command_elapsed = (
+                time.time() - self._assistant_command_started_at
+                if self._assistant_command_started_at is not None
+                else 0.0
+            )
+            self._assistant_command_started_at = None
+            command = response.command
+            trace = {
+                "transcript": self._last_assistant_text,
+                "stt_language": self._last_assistant_language,
+                "response_language": response.language,
+                "intent": command.intent if command else None,
+                "slots": command.slots if command else {},
+                "steps": [
+                    {"intent": step.intent, "slots": step.slots}
+                    for step in (command.steps if command else [])
+                ],
+                "status": response.status,
+                "message": response.message,
+                "path": str(response.path) if response.path else None,
+                "options": [str(path) for path in response.options],
+                "target_app": self._target_hwnd,
+                "audio_seconds": round(self._last_audio_duration, 3),
+                "transcription_ms": round(self._transcription_elapsed * 1000),
+                "command_ms": round(command_elapsed * 1000),
+            }
+            log.info(
+                "Assistant evaluation: %s",
+                json.dumps(trace, ensure_ascii=False),
+            )
+            if ASSISTANT_SPEAK_FEEDBACK:
+                self._assistant.speak(response.message, response.language)
+            QTimer.singleShot(max(DONE_STATE_DURATION, 3000), self._return_to_idle)
+
+        def _on_assistant_error(self, error_msg: str):
+            self._is_processing = False
+            log.error(f"Assistant error: {error_msg}")
+            self._results_popup.hide()
+            self._state = "done"
+            self._label_text = "Assistant error"
+            self.update()
+            QTimer.singleShot(DONE_STATE_DURATION, self._return_to_idle)
 
         def _type_final_text(self, text: str):
             target = self._target_hwnd
@@ -2015,11 +2437,15 @@ def main():
                 self._expand()
             elif state == "idle":
                 if self._is_enabled:
-                    self._label_text = f"Hold {HOTKEY_LABEL} to speak"
+                    self._label_text = self._idle_label()
                 else:
                     self._label_text = "OFF"
             elif state == "listening":
-                self._label_text = "\u25cf Listening\u2026"
+                self._label_text = (
+                    "\u25cf Assistant listening\u2026"
+                    if self._active_recording_mode == "assistant"
+                    else "\u25cf Dictation listening\u2026"
+                )
                 self._expand()
             elif state == "processing":
                 self._label_text = "Processing\u2026"
@@ -2031,6 +2457,14 @@ def main():
         def _return_to_idle(self):
             if self._state == "done":
                 self._set_state("idle")
+
+        def _idle_label(self):
+            if self._assistant_enabled:
+                return (
+                    f"{HOTKEY_LABEL} Dictate  ·  "
+                    f"{ASSISTANT_HOTKEY_LABEL} Assist"
+                )
+            return f"Hold {HOTKEY_LABEL} to speak"
 
         # ---- Language ----
 
@@ -2096,6 +2530,7 @@ def main():
             log.info("Quitting...")
             if hasattr(self, '_hook_thread'):
                 self._hook_thread.stop()
+            self._results_popup.close()
             self.close()
             QApplication.quit()
 
@@ -2103,6 +2538,7 @@ def main():
             log.info("Widget close event received")
             if hasattr(self, '_hook_thread'):
                 self._hook_thread.stop()
+            self._results_popup.close()
             event.accept()
             QApplication.quit()
 

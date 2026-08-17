@@ -1,0 +1,92 @@
+{
+  "create_word_document": [
+    "create a word document",
+    "create a new word file",
+    "make me a word file",
+    "make a new word document",
+    "open word and create a document",
+    "create a word file named guya",
+    "make a word document and name it guya"
+  ],
+  "create_folder": [
+    "create a folder",
+    "make a new folder",
+    "create a folder named projects",
+    "make me a folder called university"
+  ],
+  "create_text_file": [
+    "create a text file",
+    "make a new text file",
+    "create a file named notes"
+  ],
+  "open_app": [
+    "open word",
+    "open calculator",
+    "launch textedit",
+    "start notepad",
+    "open finder",
+    "open file explorer",
+    "open safari"
+  ],
+  "open_file": [
+    "open the file",
+    "open my file",
+    "open the file named report",
+    "open guya document",
+    "open it"
+  ],
+  "open_folder": [
+    "open the folder",
+    "open my documents folder",
+    "open the folder named university"
+  ],
+  "search": [
+    "search for the file report",
+    "find my guya file",
+    "look for the university folder",
+    "search for project",
+    "find report"
+  ],
+  "rename": [
+    "rename it",
+    "change its name",
+    "rename it to jamshid",
+    "change its name to jamshid",
+    "rename it from ghasem to jamshid",
+    "change the file name from report to final report"
+  ],
+  "save_current": [
+    "save the current file",
+    "save this document",
+    "save it"
+  ],
+  "close_current": [
+    "close the current window",
+    "close this file",
+    "close calculator"
+  ],
+  "browser_navigation": [
+    "scroll down",
+    "scroll the page down",
+    "page down",
+    "scroll up",
+    "scroll the page up",
+    "page up",
+    "go to the top of the page",
+    "go to the bottom of the page",
+    "go back",
+    "go forward"
+  ],
+  "open_website": [
+    "go to youtube",
+    "open the website wikipedia",
+    "visit github.com"
+  ],
+  "sequence": [
+    "open chrome then search for youtube",
+    "open chrome then go to youtube",
+    "save the current file and close the current window"
+  ],
+  "confirm": ["yes", "confirm", "do it", "okay", "proceed"],
+  "cancel": ["no", "cancel", "stop", "never mind", "do not do it"]
+}

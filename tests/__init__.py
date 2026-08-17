@@ -1,0 +1,1 @@
+"""Guya automated tests."""
