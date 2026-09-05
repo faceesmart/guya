@@ -52,9 +52,35 @@ class CommandParser:
     TEXT_FILE_WORDS = ("text file", "txt file", "فایل متنی", "تکست فایل")
     FILE_WORDS = ("file", "document", "فایل", "سند")
 
+    # "new" is deliberately NOT a create verb: "open the new folder" is an
+    # open request, and creation must never happen because of an adjective.
     CREATE_VERBS = (
-        "create", "make", "build", "new", "بساز", "درست کن", "ایجاد کن",
+        "create", "make", "build",
+        "بساز", "بسازی", "درست کن", "درست کنی", "ایجاد کن", "ایجاد کنی",
     )
+    # Deletion is outside V1 on purpose. It is recognised only so that the
+    # assistant can say so clearly instead of "I did not understand".
+    DELETE_VERBS = (
+        "delete", "remove", "erase", "trash",
+        "پاک کن", "پاکش کن", "حذف کن", "حذفش کن", "بریز دور",
+    )
+    # Words that carry no meaning for a command. They are stripped from the
+    # edges of an utterance before the strict grammars run, so that
+    # "let's scroll down", "again, scroll down" or «یه کم برو پایین» resolve.
+    FILLERS = {
+        "en": (
+            "please", "just", "now", "again", "okay", "ok", "so", "well", "hey",
+            "guya", "can you", "could you", "would you", "will you", "let's",
+            "let s", "lets", "i want to", "i want you to", "i d like to",
+            "i would like to", "i", "a bit", "a little", "a little bit",
+            "for me", "thanks", "thank you", "the page", "of the page",
+        ),
+        "fa": (
+            "لطفا", "لطفاً", "یه کم", "یکم", "کمی", "یه ذره", "یه خورده", "دوباره",
+            "باز", "الان", "حالا", "میشه", "می شه", "می‌شه", "برام", "برای من",
+            "گویا", "بی زحمت", "لطف کن", "ممنون", "مرسی", "خب", "دیگه", "تر",
+        ),
+    }
     OPEN_VERBS = (
         "open", "reopen", "launch", "start",
         "باز کن", "بازش کن", "دوباره باز کن", "دوباره بازش کن", "اجرا کن",
@@ -68,7 +94,8 @@ class CommandParser:
         "سیو کن", "سیوش کن",
     )
     SEARCH_VERBS = (
-        "search", "find", "look for", "جستجو", "سرچ", "پیدا کن", "بگرد",
+        "search", "find", "look for", "where is", "where s", "where are",
+        "جستجو", "سرچ", "پیدا کن", "بگرد", "کجاست", "کجا هست", "کجاس",
     )
     RENAME_VERBS = (
         "rename", "change its name", "change the name",
@@ -80,10 +107,15 @@ class CommandParser:
 
     WEBSITE_NAMES = {
         "google", "youtube", "you tube", "wikipedia", "wiki pedia",
-        "github", "git hub", "gmail", "openai", "open ai",
+        "github", "git hub", "gmail", "openai", "open ai", "chatgpt", "chat gpt",
         "university of tehran", "tehran university",
-        "گوگل", "یوتیوب", "ویکی پدیا", "ویکیپدیا", "گیت هاب",
-        "جی میل", "دانشگاه تهران",
+        "instagram", "twitter", "facebook", "linkedin", "telegram", "whatsapp",
+        "aparat", "digikala", "divar", "stackoverflow", "stack overflow",
+        "گوگل", "یوتیوب", "ویکی پدیا", "ویکیپدیا", "گیت هاب", "گیتهاب",
+        "جی میل", "جیمیل", "دانشگاه تهران", "چت جی پی تی",
+        "اینستاگرام", "اینستا", "توییتر", "فیسبوک", "فیس بوک", "لینکدین",
+        "تلگرام", "واتساپ", "واتس اپ", "آپارات", "اپارات", "دیجی کالا",
+        "دیجیکالا", "دیوار", "استک اورفلو",
     }
 
     def __init__(self):
@@ -100,12 +132,35 @@ class CommandParser:
     def is_confirmation(self, text: str) -> bool:
         lang = detect_language(text)
         value = normalize(text)
-        return value in self._confirm[lang]
+        return value in self._confirm[lang] or self._strip_fillers(value, lang) in self._confirm[lang]
 
     def is_cancellation(self, text: str) -> bool:
         lang = detect_language(text)
         value = normalize(text)
-        return value in self._cancel[lang]
+        return value in self._cancel[lang] or self._strip_fillers(value, lang) in self._cancel[lang]
+
+    @classmethod
+    def _strip_fillers(cls, value: str, language: str) -> str:
+        """Remove filler words from the edges of a normalised utterance.
+
+        Only the edges are touched, and only whole words, so a filename in the
+        middle of a command is never altered.
+        """
+        fillers = [normalize(f) for f in cls.FILLERS.get(language, ())]
+        fillers.sort(key=len, reverse=True)
+        changed = True
+        while changed and value:
+            changed = False
+            for filler in fillers:
+                if value == filler:
+                    return ""
+                if value.startswith(filler + " "):
+                    value = value[len(filler) + 1:]
+                    changed = True
+                if value.endswith(" " + filler):
+                    value = value[: -len(filler) - 1]
+                    changed = True
+        return value.strip()
 
     @staticmethod
     def selection_index(text: str) -> Optional[int]:
@@ -142,9 +197,10 @@ class CommandParser:
         if not value:
             return ParsedCommand("unknown", language=language, original_text=text)
 
-        if value in self._confirm[language]:
+        stripped = self._strip_fillers(value, language)
+        if value in self._confirm[language] or stripped in self._confirm[language]:
             return ParsedCommand("confirm", language=language, original_text=text)
-        if value in self._cancel[language]:
+        if value in self._cancel[language] or stripped in self._cancel[language]:
             return ParsedCommand("cancel", language=language, original_text=text)
 
         parts = self._sequence_parts(value, language)
@@ -152,7 +208,7 @@ class CommandParser:
             if len(parts) > 3:
                 return ParsedCommand("unknown", language=language, original_text=text)
             steps = [
-                self._parse_single(part, language, original_text=part)
+                self._parse_single(part, language, original_text=part, raw_text=text)
                 for part in parts
             ]
             if all(step.intent != "unknown" for step in steps):
@@ -188,22 +244,36 @@ class CommandParser:
         value: str,
         language: str,
         original_text: str,
+        raw_text: str = "",
     ) -> ParsedCommand:
         base = {"language": language, "original_text": original_text}
+        raw_text = raw_text or original_text
+        stripped = self._strip_fillers(value, language)
+        wants_creation = self._wants_creation(value, language)
+
+        # Deleting is not supported in V1. Say so explicitly rather than
+        # letting the fuzzy fallback turn "delete the report" into a search.
+        if self._has_any(value, self.DELETE_VERBS):
+            return ParsedCommand("delete_unsupported", **base)
+
+        # A bare application name ("calculator", «ماشین حساب») is an open request.
+        bare_app = self._exact_app_name(stripped)
+        if bare_app:
+            return ParsedCommand("open_app", slots={"app": bare_app}, **base)
 
         # Creation phrases may contain "name it", so detect them before rename.
-        if self._has_any(value, self.CREATE_WORD_WORDS) and self._has_any(value, self.CREATE_VERBS):
+        if self._has_any(value, self.CREATE_WORD_WORDS) and wants_creation:
             name = self._create_name(value, language)
             return ParsedCommand(
                 "create_word_document", slots=self._slot("name", name), **base
             )
-        if self._has_any(value, self.FOLDER_WORDS) and self._has_any(value, self.CREATE_VERBS):
+        if self._has_any(value, self.FOLDER_WORDS) and wants_creation:
             name = self._create_name(value, language)
             return ParsedCommand("create_folder", slots=self._slot("name", name), **base)
-        if self._has_any(value, self.TEXT_FILE_WORDS) and self._has_any(value, self.CREATE_VERBS):
+        if self._has_any(value, self.TEXT_FILE_WORDS) and wants_creation:
             name = self._create_name(value, language)
             return ParsedCommand("create_text_file", slots=self._slot("name", name), **base)
-        if self._has_any(value, self.FILE_WORDS) and self._has_any(value, self.CREATE_VERBS):
+        if self._has_any(value, self.FILE_WORDS) and wants_creation:
             name = self._create_name(value, language)
             return ParsedCommand("create_text_file", slots=self._slot("name", name), **base)
         if self._looks_like_rename(value, language):
@@ -215,7 +285,7 @@ class CommandParser:
         if self._has_any(value, self.CLOSE_VERBS):
             return ParsedCommand("close_current", **base)
 
-        browser_action = self._browser_navigation_action(value, language)
+        browser_action = self._browser_navigation_action(stripped or value, language)
         if browser_action:
             return ParsedCommand(
                 "browser_navigation",
@@ -223,7 +293,7 @@ class CommandParser:
                 **base,
             )
 
-        website = self._website_target(value, language)
+        website = self._website_target(stripped or value, language, raw_text)
         if website:
             slots = {"target": website}
             app = self._app_name(value)
@@ -233,9 +303,14 @@ class CommandParser:
 
         # Prefer opening a named application when both "find" and "open" occur,
         # e.g. a slightly noisy transcript: "find and open calculate for me".
+        # Exception: "open the word file report" names a FILE, not the Word app.
         app = self._app_name(value)
         if app and self._has_any(value, self.OPEN_VERBS):
-            return ParsedCommand("open_app", slots={"app": app}, **base)
+            names_a_file = app in ("word", "pages") and self._has_any(
+                value, self.FILE_WORDS + self.FOLDER_WORDS
+            )
+            if not names_a_file:
+                return ParsedCommand("open_app", slots={"app": app}, **base)
 
         combined_query = self._find_and_open_query(value, language)
         if combined_query:
@@ -251,6 +326,10 @@ class CommandParser:
             )
 
         if self._has_any(value, self.SEARCH_VERBS):
+            web = self._web_search_query(value, language)
+            if web:
+                query, app = web
+                return ParsedCommand("web_search", slots={"query": query, "app": app}, **base)
             query = self._search_query(value, language)
             return ParsedCommand("search", slots=self._slot("query", query), **base)
 
@@ -262,13 +341,36 @@ class CommandParser:
             return ParsedCommand("open_file", slots=self._slot("query", query), **base)
 
         # The phrase packs also catch short natural variants that omit a verb.
-        corpus_intent = self._closest_corpus_intent(value, language)
+        # When they do, still extract the slot the intent needs.
+        corpus_intent = self._closest_corpus_intent(stripped or value, language)
         if corpus_intent:
             if corpus_intent == "open_app":
                 app = self._app_name(value)
                 if not app:
                     return ParsedCommand("unknown", **base)
                 return ParsedCommand("open_app", slots={"app": app}, **base)
+            if corpus_intent == "browser_navigation":
+                action = self._navigation_keywords(stripped or value, language)
+                if not action:
+                    return ParsedCommand("unknown", **base)
+                return ParsedCommand("browser_navigation", slots={"action": action}, **base)
+            if corpus_intent in ("create_word_document", "create_folder", "create_text_file"):
+                return ParsedCommand(
+                    corpus_intent, slots=self._slot("name", self._create_name(value, language)), **base
+                )
+            if corpus_intent == "search":
+                return ParsedCommand(
+                    corpus_intent, slots=self._slot("query", self._search_query(value, language)), **base
+                )
+            if corpus_intent in ("open_file", "open_folder"):
+                kind = "folder" if corpus_intent == "open_folder" else "file"
+                return ParsedCommand(
+                    corpus_intent, slots=self._slot("query", self._open_query(value, language, kind=kind)), **base
+                )
+            if corpus_intent == "rename":
+                return ParsedCommand(corpus_intent, slots=self._rename_slots(value, language), **base)
+            if corpus_intent == "sequence":
+                return ParsedCommand("unknown", **base)
             return ParsedCommand(corpus_intent, **base)
         return ParsedCommand("unknown", **base)
 
@@ -286,6 +388,20 @@ class CommandParser:
                 r"|\s+and\s+(?=(?:save|close|search|go|visit)\b)"
             )
         return [part.strip() for part in re.split(pattern, value) if part.strip()]
+
+    def _wants_creation(self, value: str, language: str) -> bool:
+        """A create verb, or an English phrasing that clearly asks for a new
+        item ("I need a word file", "new word document named ...")."""
+        if self._has_any(value, self.CREATE_VERBS):
+            return True
+        if language == "en":
+            return bool(
+                re.search(
+                    r"^new\b|\b(?:need|want|give me|get me)\s+(?:a|an|another|new)\b",
+                    value,
+                )
+            )
+        return False
 
     @staticmethod
     def _has_any(value: str, candidates: Iterable[str]) -> bool:
@@ -308,6 +424,78 @@ class CommandParser:
         for canonical, aliases in self.APP_ALIASES.items():
             if self._has_any(value, aliases):
                 return canonical
+        return None
+
+    def _exact_app_name(self, value: str) -> Optional[str]:
+        """The whole utterance is an application name and nothing else."""
+        if not value:
+            return None
+        for canonical, aliases in self.APP_ALIASES.items():
+            if value in {normalize(alias) for alias in aliases}:
+                return canonical
+        return None
+
+    @staticmethod
+    def _navigation_keywords(value: str, language: str) -> Optional[str]:
+        """Loose browser-movement detection used after the strict grammar fails.
+
+        The utterance must be short, contain a movement word and a direction,
+        and contain nothing that names a file, folder or application, so a
+        command such as "open the next file" is never treated as navigation.
+        """
+        tokens = value.split()
+        if not tokens or len(tokens) > 7:
+            return None
+        if language == "fa":
+            blockers = ("فایل", "پوشه", "فولدر", "سند", "برنامه", "باز کن", "بساز", "پیدا", "سایت")
+            movers = ("برو", "بیا", "بیار", "ببر", "بکش", "اسکرول", "صفحه", "برگرد", "عقب", "جلو",
+                      "بالا", "پایین", "اول", "آخر", "ته", "ابتدا", "انتها", "قبل", "بعد")
+            if any(re.search(r"(?<!\w)" + re.escape(b) + r"(?!\w)", value) for b in blockers):
+                return None
+            if not any(re.search(r"(?<!\w)" + re.escape(m) + r"(?!\w)", value) for m in movers):
+                return None
+            has_page = bool(re.search(r"(?<!\w)صفحه(?!\w)", value))
+            if re.search(r"(?<!\w)(?:اول|ابتدا|ابتدای|بالای)(?!\w)", value) and has_page:
+                return "top"
+            if re.search(r"(?<!\w)(?:آخر|اخر|ته|انتها|انتهای|پایین)(?!\w)", value) and has_page \
+                    and re.search(r"(?<!\w)برو(?!\w)", value) \
+                    and not re.search(r"(?<!\w)(?:ببر|بیار|بکش)(?!\w)", value):
+                return "bottom"
+            if re.search(r"(?<!\w)(?:عقب|برگرد|قبل|قبلی)(?!\w)", value):
+                return "back"
+            if re.search(r"(?<!\w)(?:جلو|بعد|بعدی)(?!\w)", value):
+                return "forward"
+            if re.search(r"(?<!\w)(?:پایین|دان)(?!\w)", value):
+                return "scroll_down"
+            if re.search(r"(?<!\w)(?:بالا|آپ)(?!\w)", value):
+                return "scroll_up"
+            return None
+        blockers = ("file", "folder", "directory", "document", "app", "application",
+                    "open", "create", "make", "find", "search", "website", "site", "rename",
+                    "launch", "start", "close", "save")
+        movers = ("scroll", "page", "go", "move", "jump", "back", "forward", "down", "up",
+                  "top", "bottom", "previous", "next")
+        if any(re.search(r"(?<!\w)" + re.escape(b) + r"(?!\w)", value) for b in blockers):
+            return None
+        for aliases in CommandParser.APP_ALIASES.values():
+            if any(re.search(r"(?<!\w)" + re.escape(normalize(a)) + r"(?!\w)", value) for a in aliases):
+                return None
+        if not any(re.search(r"(?<!\w)" + re.escape(m) + r"(?!\w)", value) for m in movers):
+            return None
+        # "the end"/"the beginning" only count as page positions at the end of
+        # the utterance ("jump to the end"), never as a verb ("end it").
+        if re.search(r"(?<!\w)top(?!\w)", value) or re.search(r"(?<!\w)(?:the )?(?:beginning|start)$", value):
+            return "top"
+        if re.search(r"(?<!\w)bottom(?!\w)", value) or re.search(r"(?<!\w)(?:the )?end$", value):
+            return "bottom"
+        if re.search(r"(?<!\w)(?:back|previous)(?!\w)", value):
+            return "back"
+        if re.search(r"(?<!\w)(?:forward|next)(?!\w)", value):
+            return "forward"
+        if re.search(r"(?<!\w)down(?:wards)?(?!\w)", value):
+            return "scroll_down"
+        if re.search(r"(?<!\w)up(?:wards)?(?!\w)", value):
+            return "scroll_up"
         return None
 
     @staticmethod
@@ -387,9 +575,9 @@ class CommandParser:
         for action, candidates in patterns:
             if any(re.fullmatch(pattern, value) for pattern in candidates):
                 return action
-        return None
+        return CommandParser._navigation_keywords(value, language)
 
-    def _website_target(self, value: str, language: str) -> Optional[str]:
+    def _website_target(self, value: str, language: str, original_text: str = "") -> Optional[str]:
         """Extract only explicit website requests or known website names."""
         if language == "fa":
             explicit_patterns = (
@@ -403,6 +591,7 @@ class CommandParser:
         else:
             explicit_patterns = (
                 r"^(?:please )?(?:go to|visit)\s+(?:the\s+)?(?:website|site)\s+(.+)$",
+                r"^(?:please )?(?:go to|visit)\s+(?:the\s+)?(.+?)\s+(?:website|site)$",
                 r"^(?:please )?open\s+(?:the\s+)?(?:website|site)\s+(.+)$",
                 r"^(?:please )?open\s+(.+?)\s+(?:website|site)$",
             )
@@ -421,7 +610,8 @@ class CommandParser:
             if not match:
                 continue
             candidate = self._clean_website_target(match.group(1))
-            if candidate in self.WEBSITE_NAMES or self._looks_like_domain(candidate):
+            candidate = re.sub(r"^(?:the|my)\s+", "", candidate)
+            if candidate in self.WEBSITE_NAMES or self._looks_like_domain(candidate, original_text):
                 return candidate
         return None
 
@@ -441,24 +631,45 @@ class CommandParser:
         return result.strip()
 
     @staticmethod
-    def _looks_like_domain(value: str) -> bool:
-        tokens = value.split()
+    def _looks_like_domain(value: str, original_text: str = "") -> bool:
+        """True only for a domain the user actually SPOKE as one.
+
+        Normalisation turns "github.com" into "github com", which is also what
+        "open note app" or "open the me folder" look like. So the tokens must
+        end in a known TLD *and* the original transcript must contain them
+        joined by a literal dot or a spoken "dot"/«دات»/«نقطه».
+        """
+        tokens = [t for t in value.split() if t not in ("dot", "دات", "نقطه")]
         if len(tokens) < 2 or not all(re.fullmatch(r"[a-z0-9-]+", token) for token in tokens):
             return False
-        return tokens[-1] in {
+        if tokens[-1] not in {
             "com", "org", "net", "edu", "gov", "io", "co", "ir", "me",
-            "dev", "app", "ai",
-        }
+            "dev", "app", "ai", "info", "biz", "ac",
+        }:
+            return False
+        original = (original_text or "").lower()
+        dotted = ".".join(tokens)
+        spoken = r"\s+(?:dot|دات|نقطه)\s+".join(re.escape(t) for t in tokens)
+        return dotted in original or bool(re.search(spoken, original))
 
     def _looks_like_rename(self, value: str, language: str) -> bool:
         if self._has_any(value, self.RENAME_VERBS):
             return True
         if language == "en":
-            return bool(re.search(r"\brename\b|\bchange\b.*\bname\b", value))
+            return bool(
+                re.search(
+                    r"\brename\b|\bchange\b.*\bname\b"
+                    r"|^(?:the )?new name (?:should be|is|will be|must be)\b",
+                    value,
+                )
+            )
+        # «اسم»/«نام» must be a whole word (so «نامه» — letter — never matches)
+        # and the verb must be a real rename verb, never a bare «کن».
         return bool(
             re.search(
-                r"(?:اسم|نام).*(?:عوض|تغییر|بکن|کن|بذار|بزار)"
-                r"|(?:تغییر|عوض)\s+(?:اسم|نام)",
+                r"(?<!\w)(?:اسم|نام)(?:ش| فایل| پوشه)?(?!\w).*(?:عوض|تغییر|بکن|بذار|بزار)"
+                r"|(?<!\w)(?:تغییر|عوض)\s+(?:اسم|نام)"
+                r"|(?<!\w)اسم جدید(?:ش)?(?: رو| را)?\s+(?:بشه|باشه|بذار|بزار)",
                 value,
             )
         )
@@ -468,7 +679,8 @@ class CommandParser:
         if language == "en":
             return bool(
                 re.search(
-                    r"\bsave\s+(?:this|the current|current)?\s*(?:file|document)?\s+as\b",
+                    r"\bsave(?:\s+(?:this|the current|current|the|it|my))?"
+                    r"(?:\s+(?:file|document))?\s+as\b",
                     value,
                 )
                 or re.search(
@@ -500,7 +712,10 @@ class CommandParser:
                 r"(?:به اسم|به نام|با اسم)\s+(.+)$",
                 r"(?:اسمش|نامش)(?: رو| را)?\s*(?:بذار|بزار|بکن|کن)\s+(.+)$",
             )
-            suffix = r"\s+(?:بساز|درست کن|ایجاد کن|لطفا|لطفاً|برام)$"
+            suffix = (
+                r"\s+(?:بساز|بسازی|بسازید|درست کن|درست کنی|درست کنید|ایجاد کن|ایجاد کنی|"
+                r"ایجاد کنید|لطفا|لطفاً|برام|برای من)$"
+            )
         for pattern in patterns:
             match = re.search(pattern, value)
             if match:
@@ -510,7 +725,10 @@ class CommandParser:
 
     def _search_query(self, value: str, language: str) -> Optional[str]:
         if language == "en":
-            match = re.search(r"(?:search(?: for)?|look for|find)\s+(?:my |the )?(.+)$", value)
+            match = re.search(
+                r"(?:search(?: for)?|look for|find|where is|where s|where are)\s+(?:my |the )?(.+)$",
+                value,
+            )
             result = match.group(1) if match else ""
             result = re.sub(
                 r"\s+(?:on|in)\s+(?:my|this|the)\s+(?:computer|pc|mac)$",
@@ -521,7 +739,10 @@ class CommandParser:
         else:
             match = re.search(r"دنبال\s+(.+?)(?:\s+بگرد)?$", value)
             if not match:
-                match = re.search(r"(.+?)(?: رو| را)?\s+(?:پیدا کن|سرچ کن|جستجو کن)$", value)
+                match = re.search(
+                    r"(.+?)(?: رو| را)?(?:\s+(?:برام|برای من))?\s+(?:پیدا کن|سرچ کن|جستجو کن|کجاست|کجا هست|کجاس)$",
+                    value,
+                )
             result = match.group(1) if match else ""
             result = re.sub(
                 r"\s+(?:روی|تو|در)\s+(?:کامپیوتر|سیستم|مک)(?:م| من)?$",
@@ -530,6 +751,49 @@ class CommandParser:
             )
             result = re.sub(r"\s+(?:برام|برای من)$", "", result)
         return self._strip_type_words(clean_slot(result))
+
+    def _web_search_query(self, value: str, language: str):
+        """A search that names the web or a browser is a web search, not a
+        file search: "search for github on chrome", «تو گوگل دنبال هوا بگرد»."""
+        if language == "en":
+            match = re.search(
+                r"^(?:please )?(?:search|look|google)(?: for)?\s+(.+?)\s+"
+                r"(?:on|in|with|using)\s+(?:the\s+)?(?:web|internet|google|browser|chrome|safari)$",
+                value,
+            )
+            if not match:
+                match = re.search(
+                    r"^(?:please )?(?:search|look)(?: for)?\s+(?:the\s+)?(?:web|internet|google)\s+for\s+(.+)$",
+                    value,
+                )
+            if not match:
+                match = re.search(r"^(?:please )?google\s+(.+)$", value)
+            if not match:
+                return None
+            query = self._strip_type_words(clean_slot(match.group(1)))
+        else:
+            match = re.search(
+                r"^(?:لطفا )?(?:تو|توی|در|با)\s+(?:گوگل|اینترنت|وب|مرورگر|کروم|سافاری)\s+"
+                r"(?:دنبال\s+)?(.+?)(?: رو| را)?\s+(?:بگرد|سرچ کن|جستجو کن|پیدا کن)$",
+                value,
+            )
+            if not match:
+                match = re.search(
+                    r"^(?:لطفا )?(.+?)(?: رو| را)?\s+(?:تو|توی|در|با)\s+(?:گوگل|اینترنت|وب|مرورگر|کروم|سافاری)"
+                    r"\s+(?:بگرد|سرچ کن|جستجو کن|پیدا کن)$",
+                    value,
+                )
+            if not match:
+                match = re.search(r"^(?:لطفا )?(.+?)(?: رو| را)?\s+گوگل کن$", value)
+            if not match:
+                return None
+            query = self._strip_type_words(clean_slot(match.group(1)))
+        if not query:
+            return None
+        app = "chrome" if re.search(r"(?<!\w)(?:chrome|کروم)(?!\w)", value) else (
+            "safari" if re.search(r"(?<!\w)(?:safari|سافاری)(?!\w)", value) else "browser"
+        )
+        return query, app
 
     def _find_and_open_query(
         self,
@@ -593,8 +857,18 @@ class CommandParser:
                 r"(?:\s+it)?(?:\s+to|\s+as)\s+(.+)$",
                 value,
             )
+            if not single:
+                single = re.search(r"^(?:the )?new name (?:should be|is|will be|must be)\s+(.+)$", value)
             if single:
                 slots["new_name"] = clean_slot(single.group(1))
+            return slots
+
+        # «اسم جدیدش بشه گزارش نهایی»
+        new_only = re.search(
+            r"(?<!\w)اسم جدید(?:ش)?(?: رو| را)?\s+(?:بشه|باشه|بذار|بزار)\s+(.+)$", value
+        )
+        if new_only:
+            slots["new_name"] = clean_slot(new_only.group(1))
             return slots
 
         # "اسمش رو بکن جمشید جای قاسم" says the new name before the old one.
@@ -636,6 +910,7 @@ class CommandParser:
             candidate = re.sub(
                 r"\s+(?:به جای چیزی که الان هست|جای چیزی که الان هست)$", "", single.group(1)
             )
+            candidate = re.sub(r"^(?:به|رو|را)\s+", "", candidate)
             slots["new_name"] = clean_slot(candidate)
         return slots
 
@@ -644,7 +919,7 @@ class CommandParser:
         words = (
             "word document", "word file", "text file", "txt file", "document",
             "file", "folder", "directory", "سند ورد", "فایل ورد", "فایل متنی",
-            "تکست فایل", "فایل", "پوشه", "فولدر",
+            "تکست فایل", "فایل", "سند", "پوشه", "فولدر",
         )
         for word in words:
             result = re.sub(

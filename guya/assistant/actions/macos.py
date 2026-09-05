@@ -89,7 +89,13 @@ class MacOSActions(SafeDesktopActions):
     }
 
     def open_path(self, path: Path):
-        path = Path(path).expanduser().resolve()
+        try:
+            path = Path(path).expanduser().resolve()
+        except (OSError, RuntimeError):
+            return self._failure(
+                "That file or folder is not available.",
+                "این فایل یا پوشه در دسترس نیست.",
+            )
         if not self._is_allowed(path) or not path.exists():
             return self._failure(
                 "That file or folder is not available.",

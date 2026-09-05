@@ -87,6 +87,34 @@
     "open chrome then go to youtube",
     "save the current file and close the current window"
   ],
-  "confirm": ["yes", "confirm", "do it", "okay", "proceed"],
-  "cancel": ["no", "cancel", "stop", "never mind", "do not do it"]
+  "confirm": [
+    "yes",
+    "yeah",
+    "yep",
+    "yes please",
+    "sure",
+    "sure go ahead",
+    "go ahead",
+    "confirm",
+    "do it",
+    "okay",
+    "ok",
+    "proceed",
+    "alright",
+    "of course"
+  ],
+  "cancel": [
+    "no",
+    "nope",
+    "no thanks",
+    "no thank you",
+    "cancel",
+    "cancel that",
+    "stop",
+    "never mind",
+    "do not do it",
+    "don't do it",
+    "forget it",
+    "leave it"
+  ]
 }

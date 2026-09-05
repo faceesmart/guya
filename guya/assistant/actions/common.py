@@ -37,6 +37,16 @@ SKIPPED_DIRECTORY_SUFFIXES = (
     ".pkg",
     ".plugin",
 )
+# Folders that hold generated or third-party files, never the user's own
+# documents. Walking them wastes the candidate budget and produces noise such
+# as report.go / reporter.tsx next to a real report.docx.
+SKIPPED_DIRECTORY_NAMES = {
+    "node_modules", "venv", "env", "__pycache__", "Library", "vendor",
+    "site-packages", "dist", "build", "target", "Pods", "DerivedData",
+    "bower_components", "coverage", "out",
+}
+# Documents live near the top of a user's folders; deep trees are code.
+MAX_SEARCH_DEPTH = 6
 
 WEBSITE_ALIASES = {
     "google": "https://www.google.com",
@@ -205,13 +215,16 @@ class SafeDesktopActions:
             inspected = 0
             root_limit_reached = False
             try:
+                root_depth = len(Path(root).parts)
                 for current, dirs, files in os.walk(root):
+                    depth = len(Path(current).parts) - root_depth
+                    if depth >= MAX_SEARCH_DEPTH:
+                        dirs[:] = []
                     dirs[:] = [
                         directory
                         for directory in dirs
                         if not directory.startswith(".")
-                        and directory
-                        not in {"node_modules", "venv", "__pycache__", "Library"}
+                        and directory not in SKIPPED_DIRECTORY_NAMES
                         and not directory.casefold().endswith(
                             SKIPPED_DIRECTORY_SUFFIXES
                         )
@@ -284,7 +297,10 @@ class SafeDesktopActions:
         return self.open_path(path)
 
     def rename(self, path: Path, new_name: str) -> ActionOutcome:
-        path = Path(path).expanduser().resolve()
+        try:
+            path = Path(path).expanduser().resolve()
+        except (OSError, RuntimeError):
+            return self._invalid_name()
         if not self._is_allowed(path) or not path.exists():
             return self._failure(
                 "That item is outside Guya's allowed folders or no longer exists.",
@@ -353,7 +369,12 @@ class SafeDesktopActions:
         """Stop assistant feedback immediately, when supported."""
 
     def _is_allowed(self, path: Path) -> bool:
-        candidate = Path(path).expanduser().resolve()
+        try:
+            candidate = Path(path).expanduser().resolve()
+        except (OSError, RuntimeError):
+            # A symlink loop raises RuntimeError on Python 3.11; anything that
+            # cannot be resolved is treated as outside the boundary.
+            return False
         for root in self.roots:
             try:
                 candidate.relative_to(root)

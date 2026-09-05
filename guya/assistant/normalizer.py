@@ -213,11 +213,13 @@ def normalize_spoken_filename(text: str) -> str:
         while tokens and tokens[-1] in _TRAILING_TYPE_WORDS:
             tokens.pop()
 
+    # Only rewrite a suffix-like last token when something precedes it; an
+    # item literally named "docs" or "text" keeps its name.
     if len(tokens) >= 2 and tokens[-2:] == ["doc", "x"]:
         tokens[-2:] = ["docx"]
-    elif tokens and tokens[-1] in {"docs", "docks", "docx", "ورد"}:
+    elif len(tokens) >= 2 and tokens[-1] in {"docs", "docks", "docx", "ورد"}:
         tokens[-1] = "docx"
-    elif tokens and tokens[-1] in {"text", "تکست", "txt"}:
+    elif len(tokens) >= 2 and tokens[-1] in {"text", "تکست", "txt"}:
         tokens[-1] = "txt"
 
     return " ".join(tokens).strip()

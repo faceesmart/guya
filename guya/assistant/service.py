@@ -31,8 +31,23 @@ class AssistantService:
             platform=platform,
         )
 
+    # Intents that may replace a pending question. Saying a fresh command while
+    # the assistant waits for yes/no simply drops the question (nothing is
+    # renamed or opened) and runs the new command; the user is not forced to
+    # say "no" first. Answers that look like file choices stay with the
+    # selection handler.
+    _FRESH_COMMAND_INTENTS = frozenset({
+        "create_word_document", "create_text_file", "create_folder", "open_app",
+        "save_current", "close_current", "web_search", "open_website",
+        "browser_navigation", "search", "rename", "sequence", "delete_unsupported",
+        "save_as_unsupported", "open_file", "open_folder",
+    })
+
     def handle(self, text: str) -> AssistantResponse:
         language = detect_language(text)
+        if self.context.pending_expired():
+            log.info("Assistant pending question expired; clearing it")
+            self.context.clear_pending()
         if self.context.pending_options:
             return self._handle_pending_selection(text, language)
         if self.context.pending_command is not None:
@@ -59,6 +74,11 @@ class AssistantService:
                     "Cancelled. Nothing was changed.",
                     "لغو شد و تغییری انجام نشد.",
                 )
+            fresh = self.parser.parse(text)
+            if fresh.intent in self._FRESH_COMMAND_INTENTS:
+                log.info("Assistant pending question dropped for a new command: %s", fresh.intent)
+                self.context.clear_pending()
+                return self._dispatch(fresh, language)
             return self._response(
                 "needs_confirmation",
                 pending_language,
@@ -66,8 +86,18 @@ class AssistantService:
                 "برای تأیید بگویید بله و برای لغو بگویید نه.",
             )
 
-        command = self.parser.parse(text)
+        return self._dispatch(self.parser.parse(text), language)
+
+    def _dispatch(self, command: ParsedCommand, language: str) -> AssistantResponse:
         intent = command.intent
+        if intent == "delete_unsupported":
+            return self._response(
+                "error",
+                language,
+                "Guya never deletes or removes files. Please do that yourself in Finder or Explorer.",
+                "گویا هیچ فایلی را حذف نمی‌کند. لطفاً این کار را خودتان در Finder یا Explorer انجام دهید.",
+                command,
+            )
         if intent == "unknown":
             return self._response(
                 "error",
@@ -204,6 +234,21 @@ class AssistantService:
                 "دستور چندمرحله‌ای باید دو یا سه مرحله پشتیبانی‌شده داشته باشد.",
                 command,
             )
+
+        # Validate every step BEFORE running any, so a disallowed third step
+        # never leaves the first two already executed.
+        allowed_steps = ("open_app", "web_search", "open_website", "save_current", "close_current")
+        for step in command.steps:
+            if step.intent not in allowed_steps:
+                return self._response(
+                    "error",
+                    language,
+                    "That step is not allowed inside a sequence, so nothing was done. "
+                    "Sequences may only open apps or websites, search the web, save, or close.",
+                    "این مرحله در دستور چندمرحله‌ای مجاز نیست، بنابراین هیچ کاری انجام نشد. "
+                    "دستور چندمرحله‌ای فقط می‌تواند برنامه یا سایت باز کند، در وب جستجو کند، ذخیره یا ببندد.",
+                    command,
+                )
 
         completed = []
         last_path = None
@@ -472,6 +517,13 @@ class AssistantService:
                     index = best_index
 
         if index is None or not 0 <= index < len(options):
+            fresh = self.parser.parse(text)
+            if fresh.intent in self._FRESH_COMMAND_INTENTS and fresh.intent not in (
+                "open_file", "open_folder", "search",
+            ):
+                log.info("Assistant selection dropped for a new command: %s", fresh.intent)
+                self.context.clear_pending()
+                return self._dispatch(fresh, language)
             log.info(
                 "Assistant result selection unclear: heard=%r options=%s",
                 text,
@@ -560,6 +612,16 @@ class AssistantService:
                 language,
                 "The pending command was lost. Please try again.",
                 "دستور در انتظار از بین رفت. لطفاً دوباره تلاش کنید.",
+            )
+        if self.parser.is_confirmation(text):
+            # "yes" is an answer to a question we did not ask; never make it a filename.
+            return self._response(
+                "needs_input",
+                command.language,
+                "Please say the new name itself.",
+                "لطفاً خود نام جدید را بگویید.",
+                command,
+                target,
             )
         value = normalize(text)
         if language == "en":

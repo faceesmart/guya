@@ -246,41 +246,58 @@ class WindowsActions(SafeDesktopActions):
         except Exception:
             return False
 
-    @staticmethod
-    def _send_shortcut(key_code: int) -> bool:
+    def _send_shortcut(self, key_code: int) -> bool:
+        """Ctrl+<key> to the window captured at hotkey press.
+
+        A global keybd_event used to be sent to whatever was in front, so
+        Save/Close could land in the wrong window (or in Guya). Now the
+        captured HWND is refocused first and the key is refused if that fails.
+        """
         try:
-            user32 = ctypes.windll.user32
-            key_up = 0x0002
-            virtual_control = 0x11
-            user32.keybd_event(virtual_control, 0, 0, 0)
-            user32.keybd_event(key_code, 0, 0, 0)
-            user32.keybd_event(key_code, 0, key_up, 0)
-            user32.keybd_event(virtual_control, 0, key_up, 0)
-            return True
+            hwnd = int(self.target_app or 0)
+        except (TypeError, ValueError):
+            hwnd = 0
+        if hwnd <= 0:
+            return False
+        try:
+            if not ctypes.windll.user32.IsWindow(hwnd):
+                return False
         except Exception:
             return False
+        return self._send_key_to_window(hwnd, key_code, modifier=0x11)
 
     def speak(self, text: str, language: str = "en") -> None:
         if not text:
             return
+        # The text is passed on stdin, never on the command line: `-Command`
+        # treats everything after the script as more script, so `$args` was
+        # always empty and nothing was ever spoken.
+        lang = "fa" if language == "fa" else "en"
         script = (
             "Add-Type -AssemblyName System.Speech; "
             "$voice = New-Object System.Speech.Synthesis.SpeechSynthesizer; "
-            "if ($args[0] -eq 'fa') { "
+            f"if ('{lang}' -eq 'fa') {{ "
             "$candidate = $voice.GetInstalledVoices() | "
             "Where-Object { $_.VoiceInfo.Culture.Name -like 'fa*' } | "
             "Select-Object -First 1; "
             "if (-not $candidate) { exit 0 }; "
             "$voice.SelectVoice($candidate.VoiceInfo.Name) }; "
-            "$voice.Speak($args[1])"
+            "$msg = [Console]::In.ReadToEnd(); "
+            "$voice.Speak($msg)"
         )
         self.stop_speaking()
         try:
             self._speech_process = subprocess.Popen(
-                ["powershell", "-NoProfile", "-Command", script, language, text],
+                ["powershell", "-NoProfile", "-Command", script],
+                stdin=subprocess.PIPE,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
             )
+            try:
+                self._speech_process.stdin.write(text.encode("utf-8"))
+                self._speech_process.stdin.close()
+            except Exception:
+                pass
         except Exception:
             self._speech_process = None
 
