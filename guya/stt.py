@@ -6,8 +6,8 @@ This is the exact pipeline the desktop widget runs (widget.py imports it), so
 the evaluation harness can measure *Guya* rather than stock faster-whisper:
 
     audio  -> RMS normalisation
-           -> faster-whisper (beam 5, best-of 5, VAD, per-language prompt,
-              repetition penalty, no-speech threshold, temperature fallback)
+           -> faster-whisper (beam 5, VAD, per-language prompt,
+              no-speech threshold; temperature fallback in dual mode only)
            -> per-segment hallucination filter
            -> Persian post-processing (Arabic->Persian characters, diacritics,
               spacing, word corrections, colloquial preservation)
@@ -485,7 +485,13 @@ def transcribe_audio(model, audio_data, language, audio_duration=None, sample_ra
             min_speech_duration_ms=80,     # don't discard very short utterances
         ),
         initial_prompt=initial_prompt,
-        repetition_penalty=1.2,
+        # 1.0 = off. The 1.2 used until September 2026 made the decoder end
+        # sentences early rather than repeat "the"/"of": measured on FLEURS it
+        # cost `small` 9.6 points of English WER and even the shipped model
+        # 1.8 points of Persian (docs/REPORT.md, Section 6.3). Loop protection
+        # is the hallucination filter below and condition_on_previous_text=False
+        # for short recordings.
+        repetition_penalty=1.0,
         no_repeat_ngram_size=0,
         no_speech_threshold=0.5,           # a segment is dropped when no_speech_prob > this (0.6 default)
         condition_on_previous_text=use_condition_on_prev,

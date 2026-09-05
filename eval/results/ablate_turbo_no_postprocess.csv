@@ -1,0 +1,2 @@
+Model,Pipeline,Clips,EN-WER,FA-WER,EN-CER,FA-CER,EN-RTF,FA-RTF,RTF
+large-v3-turbo,guya-no_postprocess,60+60,4.1%,28.3%,2.0%,6.4%,0.41x,0.35x,0.37x

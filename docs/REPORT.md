@@ -158,7 +158,7 @@ The microphone is recorded at 16 kHz mono while the key is held. While recording
 
 ### 4.3 The speech-to-text pipeline (`guya/stt.py`)
 
-The model call is wrapped in a pipeline that was tuned during daily use: the audio's loudness is normalised; voice-activity detection trims silence; a per-language vocabulary prompt biases the decoder toward the user's usual words; a repetition penalty and a no-speech threshold guard against Whisper's habit of hallucinating text in silence; then, for Persian, three post-processing stages unify Arabic letter forms, fix a table of recurring misrecognitions, and turn formal verb forms back into the colloquial forms the user actually said.
+The model call is wrapped in a pipeline that was tuned during daily use: the audio's loudness is normalised; voice-activity detection trims silence; a per-language vocabulary prompt biases the decoder toward the user's usual words; a no-speech threshold and a filter for repeated words guard against Whisper's habit of hallucinating text in silence (a repetition penalty did too, until Section 6.3 measured what it cost); then, for Persian, three post-processing stages unify Arabic letter forms, fix a table of recurring misrecognitions, and turn formal verb forms back into the colloquial forms the user actually said.
 
 Extracting this into its own module was a change made for this report: it lets the evaluation harness run *exactly* the pipeline the widget runs, and switch each setting back to the library default one at a time. Section 6.3 shows why that mattered: some of these "improvements" were making things worse.
 
@@ -225,7 +225,7 @@ Python 3.11, PyQt6 for the interfaces, faster-whisper 1.2.1 on CTranslate2 4.8.1
 | `guya/assistant/normalizer.py` | ~280 | text and spoken-filename normalisation |
 | `guya/benchmark.py`, `profiler.py` | ~450 | device profile, benchmark, recommendation |
 | `eval/` | ~900 | accuracy, ablation, intent and log evaluators |
-| `tests/` | 104 tests | parser, normaliser, service, actions, platform, scorer |
+| `tests/` | 117 tests | parser, normaliser, service, actions, platform, scorer, regressions |
 
 The tests need no microphone, no model and no network, and run in a quarter of a second. Several of them assert the *absence* of side effects: that nothing was opened before "yes", that nothing was renamed on "no", that a delete request touched nothing.
 
@@ -312,14 +312,14 @@ Voice-activity detection costs a further three to four points of English with `s
 |---|---:|---:|---:|---:|
 | stock faster-whisper | 28.9% | 6.0% | 4.0% | 1.9% |
 | Guya pipeline, all settings | 29.2% | 6.3% | 4.1% | 2.0% |
-| minus the repetition penalty | {{ABL_TURBO_no_penalty}} |
-| minus voice-activity detection | {{ABL_TURBO_no_vad}} |
-| minus the vocabulary prompt | {{ABL_TURBO_no_prompt}} |
-| minus Persian post-processing | {{ABL_TURBO_no_postprocess}} |
+| minus the repetition penalty | 27.1% | 6.6% | 3.9% | 1.8% |
+| minus voice-activity detection | 29.7% | 7.2% | 4.4% | 2.0% |
+| minus the vocabulary prompt | 29.7% | 6.8% | 4.0% | 1.9% |
+| minus Persian post-processing | 28.3% | 6.4% | 4.1% | 2.0% |
 
 *Table 3. The same on the shipped model.*
 
-On the shipped model the whole pipeline is within a few words of stock, so the penalty's damage is specific to the smaller model, which is less certain of each token and therefore more easily talked out of continuing. The change made as a result: the repetition penalty is now off (1.0). Protection against Whisper's repetition loops rests on the hallucination filter, which drops a segment dominated by one repeated word, and on not conditioning on previous text for short recordings; both are kept. The other settings stay, because on the shipped model they cost nothing measurable and they exist for situations this test set does not contain (quiet microphones, domain vocabulary, colloquial Persian).
+On the shipped model the whole pipeline is within a few words of stock, so the penalty's damage is specific to the smaller model, which is less certain of each token and therefore more easily talked out of continuing; and even there, the row without the penalty is the best row in the table (27.1% Persian, 3.9% English), better than stock decoding. The change made as a result: the repetition penalty is now off (1.0). Protection against Whisper's repetition loops rests on the hallucination filter, which drops a segment dominated by one repeated word, and on not conditioning on previous text for short recordings; both are kept. The other settings stay, because on the shipped model they cost nothing measurable and they exist for situations this test set does not contain (quiet microphones, domain vocabulary, colloquial Persian).
 
 ### 6.4 Calibrating the device benchmark
 
@@ -334,9 +334,9 @@ The wizard predicts each model's speed from one measurement of `tiny`. Table 4 g
 | large-v3-turbo | 0.32 | 4.0 | 8.0 |
 | large-v3 | 0.66 | 8.4 | 28.0 |
 
-*Table 4. Measured cost ratios. `base` is slightly faster than `tiny` because `tiny` fails Whisper's quality checks more often and retries at higher temperatures.*
+*Table 4. Measured cost ratios. `base` is slightly faster than `tiny` because `tiny` fails Whisper's quality checks more often and retries at higher temperatures. The wizard's table now holds these measured values (Guya's own pipeline for `small` and `large-v3-turbo`, stock decoding for the rest) divided by the reference proxy measurement of 0.040, so a machine whose proxy result is twice the reference is predicted to run every model twice as slowly.*
 
-The guesses were too pessimistic by a factor of two to three, and the benchmark itself was worse: it timed `tiny` on synthetic noise, on which Whisper fails its compression-ratio check and retries at every temperature, so three runs on the same idle machine gave RTF 0.34, 0.48 and 0.69, and every one of them told this machine, which runs `large-v3-turbo` at 0.32, to use the online model for all three languages. The benchmark now times a bundled seven-second speech clip with temperature fallback off, takes the best of two runs, and gives {{BENCH_IDLE}} on this machine; with the ratios of Table 4 it predicts `large-v3-turbo` at {{BENCH_PRED_TURBO}}, and recommends it, which is correct. The recommendation rule was also changed from two latency tiers, which was non-monotonic (a slightly slower machine could be told to run a bigger model), to a single threshold of 1.0.
+The guesses were too pessimistic by a factor of two to three, and the benchmark itself was worse: it timed `tiny` on synthetic noise, on which Whisper fails its compression-ratio check and retries at every temperature, so three runs on the same idle machine gave RTF 0.34, 0.48 and 0.69, and every one of them told this machine, which runs `large-v3-turbo` at 0.32, to use the online model for all three languages. The benchmark now times a bundled seven-second speech clip with temperature fallback off, takes the best of two runs, and gives 0.040 (three runs: 0.0398, 0.040, 0.040) on this machine; with the ratios of Table 4 it predicts `large-v3-turbo` at 0.33, and recommends it, which is correct. The recommendation rule was also changed from two latency tiers, which was non-monotonic (a slightly slower machine could be told to run a bigger model), to a single threshold of 1.0.
 
 ### 6.5 Does the command parser generalise?
 
@@ -416,13 +416,16 @@ What remains is the part that needs other people: the session with the target us
 ## Appendix A. Reproducing the results
 
 ```bash
-./install.sh && ./venv/bin/python -m unittest discover -s tests -t .      # 104 tests
+./install.sh && ./venv/bin/python -m unittest discover -s tests -t .      # 117 tests
 python eval/import_fleurs.py                                              # data (once)
 python eval/accuracy.py --manifest eval/data/fleurs/manifest.jsonl \
     --models tiny,base,small,medium,large-v3-turbo,large-v3 --pipeline raw --out eval/results/fleurs_raw
 python eval/accuracy.py --manifest eval/data/fleurs/manifest.jsonl \
     --models small,large-v3-turbo --pipeline guya --out eval/results/fleurs_guya
-for a in no_penalty no_vad no_prompt no_postprocess no_speech_thr no_rms no_cond; do
+# Tables 2 and 3 were measured while production still had repetition_penalty=1.2;
+# with the current code, "all settings" is `--ablate penalty_1_2` and "minus the
+# penalty" is the plain `--pipeline guya` row.
+for a in penalty_1_2 no_vad no_prompt no_postprocess no_speech_thr no_rms no_cond; do
   python eval/accuracy.py --manifest eval/data/fleurs/manifest.jsonl --models small --pipeline guya --ablate $a \
       --out eval/results/ablate_small_$a; done
 python eval/intent_accuracy.py --failures

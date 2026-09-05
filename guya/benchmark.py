@@ -6,14 +6,15 @@ hardware specs (which are unreliable — a 16 GB Mac and a 16 GB GPU-less PC
 behave very differently), we MEASURE the device.
 
 Method:
-  1. Run a small proxy model (`base`) on a fixed synthetic audio clip on the
-     device's real backend (CUDA or CPU) and measure its real-time factor
+  1. Run a small proxy model (`tiny`) on a bundled seven-second speech clip on
+     the device's real backend (CUDA or CPU), temperature fallback off, and
+     measure its real-time factor
         RTF = processing_time / audio_duration       (lower = faster).
   2. Predict the RTF of each candidate model by scaling the proxy RTF with a
-     calibrated per-model compute-cost factor.
-  3. Recommend the largest (most accurate) model whose PREDICTED RTF stays
-     under a latency budget — so the user gets the best accuracy that still
-     feels responsive on *their* machine.
+     per-model factor MEASURED on a reference machine (see CALIBRATION).
+  3. Recommend the most accurate model that meets the language's accuracy
+     floor and whose PREDICTED RTF is at or under 1.0 — so the user gets the
+     best accuracy that still keeps up with speech on *their* machine.
 
 Run as a subprocess (`python -m guya.benchmark ...`) so it loads the model in a
 clean, Qt-free process — required on Windows where importing Qt before the
@@ -29,23 +30,30 @@ import logging
 log = logging.getLogger("Guya")
 
 # ============================================================
-# CALIBRATION
+# CALIBRATION (measured, not guessed)
 # ============================================================
-# Compute cost of each model RELATIVE TO `base` (= 1.0). These are calibrated
-# estimates from public faster-whisper benchmarks; a strength of this approach
-# (and a good capstone evaluation task) is refining them with real measurements
-# on the target machines. Roughly tracks parameter count, with `turbo` cheaper
-# than its size suggests because it has only 4 decoder layers.
-RELATIVE_COST = {
-    "tiny": 0.5,
-    "base": 1.0,
-    "small": 2.6,
-    "medium": 7.0,
-    "large-v3": 14.0,
-    # turbo has the full large encoder but only 4 decoder layers, so it is far
-    # cheaper than large-v3 and roughly between small and medium in total cost.
-    "large-v3-turbo": 4.0,
+# Real-time factor of every model on the reference machine (Apple M1 Pro,
+# 10 cores, 16 GB, CPU int8, idle), measured with eval/accuracy.py on the
+# FLEURS set (eval/results/fleurs_rtf_raw.json, fleurs_rtf_guya.json). Where
+# Guya's own pipeline was measured (small, large-v3-turbo) that number is used,
+# otherwise stock decoding. On the same machine `python -m guya.benchmark`
+# reports REFERENCE_PROXY_RTF, so a machine whose proxy result is twice that
+# is predicted to run every model twice as slowly.
+#
+# The previous table (tiny .5, base 1, small 2.6, medium 7, large-v3 14,
+# turbo 4, relative to base) was an estimate from public benchmarks and was
+# off by a factor of two to three; see docs/REPORT.md, Section 6.4.
+REFERENCE_PROXY_RTF = 0.040      # three idle runs: 0.0398, 0.040, 0.040
+MEASURED_RTF = {
+    "tiny": 0.08,
+    "base": 0.06,
+    "small": 0.22,
+    "medium": 0.40,
+    "large-v3-turbo": 0.33,
+    "large-v3": 0.66,
 }
+# Multiplier applied to the measured proxy RTF: predicted = rtf_base * factor.
+RELATIVE_COST = {m: round(v / REFERENCE_PROXY_RTF, 2) for m, v in MEASURED_RTF.items()}
 
 # Quality ordering (higher = more accurate). NOT the same as cost: large-v3-turbo
 # is more accurate than `medium` despite costing less, so we must rank by quality
@@ -69,9 +77,10 @@ COMFORTABLE_RTF = 1.0
 ACCEPTABLE_RTF = 2.0
 
 # Per-language quality floor: the minimum model (by ACCURACY_RANK) that gives
-# acceptable accuracy for that language. English is good even on `small`;
-# Persian degrades badly below `large-v3-turbo`, so Persian/bilingual users
-# must not be recommended anything weaker than turbo.
+# acceptable accuracy for that language. Measured on FLEURS (docs/REPORT.md,
+# Table 1): English is 6% WER on `small`; Persian is 57% on `small`, 40% on
+# `medium` and 29% on `large-v3-turbo`, so Persian/bilingual users must not be
+# recommended anything weaker than turbo.
 LANGUAGE_FLOOR_RANK = {
     "en": ACCURACY_RANK["small"],            # 3
     "fa": ACCURACY_RANK["large-v3-turbo"],   # 5
@@ -153,8 +162,14 @@ def run_proxy_benchmark(device: str, compute_type: str,
 # ============================================================
 
 def predict_rtf(rtf_base: float, model_size: str) -> float:
-    """Predict a model's RTF on this device from the proxy RTF."""
-    factor = RELATIVE_COST.get(model_size, RELATIVE_COST["medium"]) / RELATIVE_COST[PROXY_MODEL]
+    """Predict a model's RTF on this device from the proxy RTF.
+
+    rtf_base is what run_proxy_benchmark measured here; RELATIVE_COST scales it
+    by how much slower each model was than the same proxy on the reference
+    machine. On the reference machine itself the prediction reproduces the
+    measured table exactly.
+    """
+    factor = RELATIVE_COST.get(model_size, RELATIVE_COST["medium"])
     return rtf_base * factor
 
 

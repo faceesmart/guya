@@ -10,8 +10,8 @@ Two pipelines can be measured:
   --pipeline raw   stock faster-whisper: model.transcribe(audio, language, beam_size=5)
   --pipeline guya  the pipeline the desktop widget actually runs (guya/stt.py):
                    RMS normalisation, VAD, per-language vocabulary prompt,
-                   best-of/beam 5, repetition penalty, hallucination filter and
-                   Persian post-processing.
+                   beam 5, hallucination filter and Persian post-processing
+                   (the repetition penalty was removed after --ablate measured it).
 
 Manifest: a .jsonl file, one object per line:
     {"audio": "fa_ir/clip1.wav", "text": "the reference transcript", "lang": "fa"}
@@ -75,7 +75,10 @@ def make_raw(model):
 ABLATIONS = {
     "no_prompt":     {"overrides": {"initial_prompt": None}},
     "no_vad":        {"overrides": {"vad_filter": False}},
+    # production was 1.2 until the ablation below showed the cost; it is now
+    # 1.0, so this ablation is a no-op kept for reproducibility of Table 2/3
     "no_penalty":    {"overrides": {"repetition_penalty": 1.0}},
+    "penalty_1_2":   {"overrides": {"repetition_penalty": 1.2}},
     "no_speech_thr": {"overrides": {"no_speech_threshold": 0.6}},
     "no_postprocess": {"postprocess": False},
     "no_rms":        {"rms": False},
