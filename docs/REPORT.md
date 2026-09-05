@@ -59,7 +59,7 @@ The software is a university prototype, not a product. Section 3 states the boun
 
 Whisper (Radford et al., 2022) is an encoder–decoder transformer trained on 680,000 hours of multilingual audio. It recognises Persian without any extra training, which is what made this project feasible at all with no budget. It comes in sizes from `tiny` (39 M parameters) to `large-v3` (1.55 B). `large-v3-turbo` keeps the full large encoder but only four decoder layers, which makes it much faster than `large-v3` at similar accuracy.
 
-Guya uses faster-whisper, a re-implementation on the CTranslate2 inference engine. With 8-bit weights it runs the large models on a laptop CPU at a few times real time, which is what makes a fully local Persian system possible. The trade-off is that it is a CPU-bound workload: on the development machine (Apple M1 Pro, 16 GB) the biggest model is slower than real time, and this constraint shapes the whole design (Section 4.5).
+Guya uses faster-whisper, a re-implementation on the CTranslate2 inference engine. With 8-bit weights it runs even the large models on a laptop CPU at or under real time, which is what makes a fully local Persian system possible. The trade-off is that it is a CPU-bound workload whose speed varies by an order of magnitude between machines and between model sizes (Section 6.4), and on a weaker computer the model Persian needs may simply not keep up; that constraint shapes the whole design (Section 4.5).
 
 ### 2.2 Why Persian is harder
 
@@ -251,16 +251,199 @@ The self-target problem: after the user clicks the pill or a result button, Guya
 
 ## 6. Evaluation
 
-_(filled in Section 6 of this document from `eval/results/`; see below)_
+Every number in this chapter is produced by a script in `eval/` from data in the repository or downloadable by anyone; `eval/README.md` gives the exact commands. Speech results are corpus-level word error rate (WER) and character error rate (CER); real-time factor (RTF) is transcription time divided by audio length, measured on an otherwise idle Apple M1 Pro (10 cores, 16 GB) with 8-bit weights on the CPU, which is the machine Guya is used on daily.
+
+### 6.1 Data
+
+**Speech.** Google FLEURS is read speech from Wikipedia sentences, recorded by native speakers, with human transcripts, and it is the only Persian speech corpus that can be downloaded without an account, so anyone marking this report can re-run the evaluation. `eval/import_fleurs.py` samples 60 Persian and 60 English clips from the development split, one clip per sentence, with a fixed seed: 14.8 minutes of Persian (1,355 words) and 9.4 minutes of English (1,211 words). Persian sentences are long (median 21 words, 14 seconds), formal, and full of numbers and proper names; this is harder than the short colloquial commands Guya is built for, and the absolute Persian error rates should be read with that in mind. Ten clean English sentences from the macOS speech synthesiser were also kept as a smoke test; they are too easy to rank models and are not used below.
+
+**Commands.** `eval/data/intents.jsonl` holds 257 Persian and English command phrasings written to be natural rather than to match the parser, each labelled with the intended action and arguments. 38 of them coincide with a phrase in the parser's own example lists and are reported separately, so the headline number is on 219 phrasings the parser had never seen.
+
+**Real use.** Every assistant command Guya has handled writes one JSON record to the log. At the time of the audit the log held 41 commands from four sessions of my own use in July and August.
+
+### 6.2 Which model tier does Persian need?
+
+| Model | FA WER | FA CER | EN WER | EN CER | FA RTF | EN RTF |
+|---|---:|---:|---:|---:|---:|---:|
+| tiny | 92.5% | 37.7% | 13.4% | 6.1% | 0.11 | 0.03 |
+| base | 84.1% | 30.8% | 7.8% | 3.7% | 0.07 | 0.05 |
+| small | 56.6% | 16.7% | 6.0% | 2.6% | 0.18 | 0.14 |
+| medium | 39.6% | 9.8% | 5.0% | 2.2% | 0.42 | 0.36 |
+| large-v3-turbo | 28.9% | 6.0% | 4.0% | 1.9% | 0.29 | 0.35 |
+| large-v3 | 28.2% | 5.8% | 4.8% | 2.2% | 0.72 | 0.57 |
+
+*Table 1. Stock faster-whisper decoding (beam 5), FLEURS dev, 60 + 60 clips. RTF from a separate pass on an idle machine, 12 + 12 clips.*
+
+Three things follow from Table 1.
+
+English is a solved problem at `small`: 6% WER on read Wikipedia sentences, and the median clip has no errors at all. Persian is not. The three smallest models are unusable for Persian (every second word wrong or worse), `medium` is marginal, and only the two large models bring Persian under 30% WER. The gap between the languages is a factor of seven at the large end and a factor of nine at `small`. This is the measurement behind the wizard's per-language floor: English may run on `small`, Persian must not be offered anything below `large-v3-turbo`. That rule had been a hand-written constant in the code since the first prototype; it is now a measured one.
+
+`large-v3-turbo` is the right default. It matches `large-v3` on Persian (28.9% against 28.2%, a difference of nine words in 1,355), beats it on English, and runs in less than half the time (RTF 0.32 against 0.66). `large-v3` has no place on a CPU.
+
+Persian CER is much lower than Persian WER, 6% against 29% for the shipped model, because a large share of the word errors are spacing conventions rather than misheard words: «می‌کند» written as «می کند», «کنترل کننده‌های» as «کنترل کننده های». The scorer does not fold these, on purpose, since the user has to correct them by hand; but they are a different kind of error from the substitutions in the worst clips (technical vocabulary such as «ردیابی» → «رجابی», numbers, foreign names), and a Persian reader sees the text as mostly right. The per-clip spread is wide: with `large-v3-turbo`, six of the sixty Persian clips are at or under 10% WER and five are at or over 50%, and the median is 24.5%.
+
+### 6.3 Does Guya's own pipeline help or hurt?
+
+The widget does not call the model with stock settings. Over months of use it acquired loudness normalisation, a voice-activity detector tuned for quiet speech, a per-language vocabulary prompt, a repetition penalty of 1.2 against Whisper's habit of looping, a stricter no-speech threshold, and three stages of Persian post-processing. None of these had ever been measured. Extracting the pipeline into `guya/stt.py` made it possible to run the *exact* production code on the test set and then switch each setting back to the library default one at a time.
+
+| `small` | FA WER | FA CER | EN WER | EN CER |
+|---|---:|---:|---:|---:|
+| stock faster-whisper | 56.6% | 16.7% | 6.0% | 2.6% |
+| Guya pipeline, all settings | 63.2% | 21.6% | 15.6% | 11.0% |
+| minus the repetition penalty | 57.3% | 17.5% | 6.0% | 2.5% |
+| minus voice-activity detection | 62.3% | 21.3% | 12.2% | 7.0% |
+| minus the vocabulary prompt | 63.7% | 20.6% | 16.9% | 12.7% |
+| minus Persian post-processing | 62.4% | 20.6% | 15.6% | 11.0% |
+| minus the stricter no-speech threshold | 62.6% | 20.7% | 15.6% | 11.0% |
+| minus loudness normalisation | {{ABL_SMALL_no_rms}} |
+| minus conditioning on previous text | {{ABL_SMALL_no_cond}} |
+
+*Table 2. The production pipeline on `small`, and each setting returned to stock in turn.*
+
+The production pipeline made `small` two and a half times worse on English (6.0% → 15.6%) and noticeably worse on Persian, and Table 2 says why: almost all of it is the repetition penalty. Removing only that setting recovers stock accuracy on English exactly and nearly all of the Persian loss. Looking at the worst clips shows the mechanism. The penalty, which multiplies down the score of any token already produced, makes the decoder stop the sentence early rather than repeat a common word such as "the" or "of":
+
+- *ref:* Next, some saddles, particularly English saddles, have safety bars that allow a stirrup leather to fall off the saddle if pulled backwards by a falling rider.
+- *with penalty:* Next, some saddles particularly English saddles have safety bars that allow a stirrup leather
+- *without:* Next, some saddles, particularly English saddles, have safety bars that allow a stirrup leather to fall off the saddle if pulled backwards by a falling rider.
+
+Voice-activity detection costs a further three to four points of English with `small`, because splitting a sentence into segments loses context at every cut; the prompt, the post-processing and the no-speech threshold are within noise of each other. The Persian post-processing is expected to *add* errors on this test set, since it deliberately rewrites formal verb forms into the colloquial ones a speaker uses («می‌خواهم» → «میخوام») and FLEURS is formal text; the cost is under one point.
+
+| `large-v3-turbo` | FA WER | FA CER | EN WER | EN CER |
+|---|---:|---:|---:|---:|
+| stock faster-whisper | 28.9% | 6.0% | 4.0% | 1.9% |
+| Guya pipeline, all settings | 29.2% | 6.3% | 4.1% | 2.0% |
+| minus the repetition penalty | {{ABL_TURBO_no_penalty}} |
+| minus voice-activity detection | {{ABL_TURBO_no_vad}} |
+| minus the vocabulary prompt | {{ABL_TURBO_no_prompt}} |
+| minus Persian post-processing | {{ABL_TURBO_no_postprocess}} |
+
+*Table 3. The same on the shipped model.*
+
+On the shipped model the whole pipeline is within a few words of stock, so the penalty's damage is specific to the smaller model, which is less certain of each token and therefore more easily talked out of continuing. The change made as a result: the repetition penalty is now off (1.0). Protection against Whisper's repetition loops rests on the hallucination filter, which drops a segment dominated by one repeated word, and on not conditioning on previous text for short recordings; both are kept. The other settings stay, because on the shipped model they cost nothing measurable and they exist for situations this test set does not contain (quiet microphones, domain vocabulary, colloquial Persian).
+
+### 6.4 Calibrating the device benchmark
+
+The wizard predicts each model's speed from one measurement of `tiny`. Table 4 gives the measured cost of every model relative to `tiny` on the idle machine; these ratios replaced the guessed table in `benchmark.py`.
+
+| Model | RTF (idle) | ratio to `tiny` | previous guess |
+|---|---:|---:|---:|
+| tiny | 0.08 | 1.0 | 1.0 |
+| base | 0.06 | 0.8 | 2.0 |
+| small | 0.16 | 2.1 | 5.2 |
+| medium | 0.40 | 5.0 | 14.0 |
+| large-v3-turbo | 0.32 | 4.0 | 8.0 |
+| large-v3 | 0.66 | 8.4 | 28.0 |
+
+*Table 4. Measured cost ratios. `base` is slightly faster than `tiny` because `tiny` fails Whisper's quality checks more often and retries at higher temperatures.*
+
+The guesses were too pessimistic by a factor of two to three, and the benchmark itself was worse: it timed `tiny` on synthetic noise, on which Whisper fails its compression-ratio check and retries at every temperature, so three runs on the same idle machine gave RTF 0.34, 0.48 and 0.69, and every one of them told this machine, which runs `large-v3-turbo` at 0.32, to use the online model for all three languages. The benchmark now times a bundled seven-second speech clip with temperature fallback off, takes the best of two runs, and gives {{BENCH_IDLE}} on this machine; with the ratios of Table 4 it predicts `large-v3-turbo` at {{BENCH_PRED_TURBO}}, and recommends it, which is correct. The recommendation rule was also changed from two latency tiers, which was non-monotonic (a slightly slower machine could be told to run a bigger model), to a single threshold of 1.0.
+
+### 6.5 Does the command parser generalise?
+
+| Parser | phrasings | intent correct | intent and arguments | English | Persian | browser movement |
+|---|---:|---:|---:|---:|---:|---:|
+| before this work | 219 | 68.5% | 65.3% | 64.8% | 73.2% | 42.3% |
+| after | 219 | 99.5% | 99.5% | 99.2% | 100.0% | 98.6% |
+
+*Table 5. Held-out phrasings, `eval/intent_accuracy.py`. The 38 phrasings that coincide with the parser's own examples score 100% in both versions and are excluded.*
+
+The unit tests had always said the parser was fine, because they tested its example phrases against themselves. The held-out set said otherwise. The single biggest cause was filler words: "let's scroll down", "again, scroll down", «یه کم برو پایین» were all rejected outright, because browser movement was matched with a whole-utterance regular expression. Browser movement scored 42% before, 99% after stripping fillers from the edges of the utterance and adding a keyword fallback that only fires when nothing in the sentence names a file, folder or application. The remaining fixes were individually small and each came from a specific failing row: "new" was a creation verb, so "open the new folder" *created* a folder; "note app" looked like the domain `note.app`; the Persian word «نامه» (letter) contains «نام» (name), so "open the letter" was a rename; a bare "calculator" was nothing; "delete the report" became a file search through fuzzy matching, and is now refused with a sentence saying so. The one remaining miss is "I need a word file named budget please", which has no creation verb and is left as a known limit rather than guessed.
+
+Replaying the 13 real misunderstood transcripts from the usage log through the new parser, 11 now parse to the intended action; the other two are Persian transcripts that were misrecognised beyond repair («برگیار داکات»).
+
+### 6.6 Real use
+
+The 41 logged commands are a small and biased sample: they are my own, mostly in English, and mostly browser commands because that was the feature being tried at the time. They still say two things clearly.
+
+| Outcome (41 commands) | share |
+|---|---:|
+| action completed | 51% |
+| not understood | 27% |
+| understood but failed (wrong window in front, nothing found) | 15% |
+| assistant asked a question | 5% |
+| cancelled | 2% |
+
+Half of the failures were the parser, and Section 6.5 removes almost all of those. The other half were a specific interaction bug: after clicking the pill or a result button, Guya itself was the frontmost application, so the next command was addressed to Guya and refused; six of the 41 commands hit this, and the widget now falls back to the last real target.
+
+Latency is entirely the speech model. Median utterance 1.9 s; median recognition 2,762 ms; median parse-and-act 30 ms; 97% of the time between releasing the key and the reply is Whisper. The in-use real-time factor was 1.44, worse than the 0.32 measured in isolation, because the widget was re-transcribing the whole buffer every two seconds for the live partial text and the final pass had to wait behind it; the partial pass is now bounded to the last eight seconds. A device-aware recommender that recommends a model which then misses real time in use is the most useful negative result the project produced, and it is why the recommendation threshold is 1.0 rather than 2.0.
+
+### 6.7 What was not measured
+
+Nobody but me has used Guya yet. The task list and questionnaire for the session with my brother are in `docs/USER_STUDY.md`, and `eval/record.py` records his voice for the accuracy set, but the session had not happened when this report was written, so there is no usability score and no accuracy figure on the target user's speech. Windows has not been run. The dual (offline English plus online Persian) mode and the online model were not measured, because scoring them means uploading the test audio to a third party.
 
 ---
 
 ## 7. Discussion
 
-_(see below)_
+### 7.1 What the numbers say about the design
+
+The central design bet was that a fully local, zero-cost Persian dictation tool is possible on a normal laptop. Table 1 says yes, with a condition: it needs the largest turbo model and a machine that runs it at about a third of real time, and it delivers Persian text that is right in nine characters out of ten and needs spacing corrections. English is far easier and would run on any machine. That asymmetry is the reason the wizard exists at all, and Section 6.4 is the first time it has been driven by measurement instead of assumption.
+
+The second bet was a rule-based assistant. Section 6.5 is the honest picture: written against its own examples it looked perfect; against phrasings someone else would actually say it understood two commands in three; after a day of work driven by a test set, it understands almost all of them, and the safety argument of Section 4.6 still holds because nothing in the parser can produce an action that is not on the list. A language model would have handled the fillers on day one, but it could not have given the same guarantee, and it would not have been free.
+
+### 7.2 Measuring one's own tuning
+
+The most instructive result is Table 2. Every setting in the pipeline had a reason, and each had been added after a real problem in daily use. Together they made the small model markedly worse, and one of them, the repetition penalty, was silently truncating sentences. None of this was visible in use, because the shipped model happens to be robust to it and because a truncated dictation looks like a mumbled ending. It only became visible when the exact production code was run on a fixed test set with each setting switched off in turn. The lesson I take from it is not that the tuning was wrong; it is that tuning without a measurement is guessing, and the harness that makes the measurement cheap is worth more than any single setting.
+
+### 7.3 The Persian voice
+
+Guya speaks its English replies and shows its Persian ones. This is a constraint of the platform, not a choice I like: macOS has no Persian voice, and reading Persian with the one Arabic voice was, to a Persian ear, worse than nothing. The consequence was found during the audit rather than during use: the pill's label holds about thirty characters, so a Persian confirmation question was cut to its first three words, and the user was answering "yes" to a question they could not read. The reply bubble fixes the display; a free offline Persian voice (Piper through sherpa-onnx, tested on this machine at 0.06 RTF) is the natural next step, and a decision for the person who will listen to it.
+
+### 7.4 Limitations and threats to validity
+
+FLEURS is read, formal speech from one microphone setup; Guya's real input is short, colloquial, and from whatever microphone the user has. The absolute error rates in Table 1 are therefore not the error rates a user will see, in either direction: commands are shorter and easier, but home microphones and colloquial Persian are harder. The ranking of models and the size of the language gap are what the table supports.
+
+The held-out intent set was written by me, after reading the parser. I tried to write what people say rather than what the parser accepts, and the 68.5% starting point suggests I did not simply write to the code, but it is not an independent sample of real users' phrasings. The real log is that sample, and it is small.
+
+All timing figures are from one machine. The cost ratios in Table 4 will differ on a Windows laptop without a fast memory system, which is exactly why the wizard measures rather than assumes; but the measurement itself has only been validated on the one machine.
+
+The safety boundary has been tested by unit tests and by reading, not by an adversary. It is a small enough surface that reading is credible, but it is still a claim about a prototype.
 
 ---
 
 ## 8. Conclusion and future work
 
-_(see below)_
+Guya set out to give one person a way to write and to do small things on a computer by voice, in Persian and English, for free. The software does that, and this report has replaced most of what was believed about it with what was measured: which model Persian needs, what the machine can run, what the tuning does, what the parser understands, and where the time goes.
+
+Three findings would carry over to anyone building a similar tool. Persian needs the large turbo model and English does not, so a bilingual tool must choose per language. A repetition penalty, the standard remedy for Whisper's loops, truncates sentences on smaller models and should be measured before use. And a rule-based command parser is fine for a fixed command set provided it is tested on phrasings it was not written from, and provided filler words are handled before the grammar runs.
+
+What remains is the part that needs other people: the session with the target user, which will produce the only accuracy number that matters, his own voice, and the usability score; a run on the Windows machine the code was written for but never executed on; and the demonstration. After that, the obvious improvements are a Persian voice, a measured answer to whether the vocabulary prompt helps on colloquial speech (Table 2 only shows it does not hurt on formal speech), and a per-user correction table learned from the user's own corrections instead of a fixed one.
+
+---
+
+## Appendix A. Reproducing the results
+
+```bash
+./install.sh && ./venv/bin/python -m unittest discover -s tests -t .      # 104 tests
+python eval/import_fleurs.py                                              # data (once)
+python eval/accuracy.py --manifest eval/data/fleurs/manifest.jsonl \
+    --models tiny,base,small,medium,large-v3-turbo,large-v3 --pipeline raw --out eval/results/fleurs_raw
+python eval/accuracy.py --manifest eval/data/fleurs/manifest.jsonl \
+    --models small,large-v3-turbo --pipeline guya --out eval/results/fleurs_guya
+for a in no_penalty no_vad no_prompt no_postprocess no_speech_thr no_rms no_cond; do
+  python eval/accuracy.py --manifest eval/data/fleurs/manifest.jsonl --models small --pipeline guya --ablate $a \
+      --out eval/results/ablate_small_$a; done
+python eval/intent_accuracy.py --failures
+python eval/assistant_report.py --replay
+python eval/report_tables.py --write                                      # the tables above
+```
+
+## Appendix B. The command set
+
+| Intent | Examples (EN / FA) | Arguments |
+|---|---|---|
+| create_word_document | Create a Word file named report / یه فایل ورد به اسم گزارش بساز | name |
+| create_text_file | Make a text file called notes / یه فایل متنی به اسم یادداشت بساز | name |
+| create_folder | Create a folder named photos / یه پوشه به اسم عکس‌ها بساز | name |
+| open_app | Open the calculator / ماشین حساب رو باز کن | app (word, text editor, calculator, file manager, browser, chrome, safari, pages) |
+| open_file, open_folder | Open test six docs / فایل تست شش ورد رو باز کن; Open it again / دوباره بازش کن | query (optional; "it" uses the remembered file) |
+| search | Find my report file / گزارش رو پیدا کن; Where is my budget file / پوشه پروژه کجاست | query |
+| rename | Rename it to final report / اسمش رو بذار گزارش نهایی | old_name (optional), new_name; always confirmed |
+| save_current, close_current | Save it / ذخیره کن; Close the window / پنجره رو ببند | — |
+| open_website | Go to YouTube / برو به سایت یوتیوب; Visit github.com | target (known name or spoken domain) |
+| web_search | Search for GitHub on Chrome / تو گوگل دنبال هوا بگرد | query, app |
+| browser_navigation | Scroll down, Go to the top, Go back / یه کم برو پایین، برو اول صفحه، برگرد | action (scroll_down, scroll_up, top, bottom, back, forward) |
+| sequence | Open Chrome, then search for YouTube / کروم رو باز کن بعد یوتیوب رو جستجو کن | 2–3 steps from open_app, open_website, web_search, save, close |
+| confirm, cancel | Yes, sure, go ahead / بله، باشه; No, cancel / نه، لغو کن | — |
+| delete_unsupported | Delete the report / فایل گزارش رو پاک کن | refused with an explanation |
+| save_as_unsupported | Save this file as report on the Desktop | explained as unsupported |

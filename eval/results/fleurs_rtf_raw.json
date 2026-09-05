@@ -1,0 +1,1460 @@
+{
+ "langs": [
+  "en",
+  "fa"
+ ],
+ "results": [
+  {
+   "model": "tiny",
+   "pipeline": "raw",
+   "agg": {
+    "fa": {
+     "we": 268,
+     "wn": 304,
+     "ce": 425,
+     "cn": 1212,
+     "n": 12,
+     "audio": 194.46,
+     "compute": 21.313703790772706
+    },
+    "en": {
+     "we": 51,
+     "wn": 263,
+     "ce": 120,
+     "cn": 1313,
+     "n": 12,
+     "audio": 130.98000000000002,
+     "compute": 4.294382331077941
+    }
+   },
+   "details": [
+    {
+     "audio": "12890402516457960164.wav",
+     "lang": "fa",
+     "ref": "در اصل بودیسم تبتی خیلی ساده است، و شامل کندالینی یوگا،‌ مراقبه و مسیر عشق فراگیر می‌شود.",
+     "hyp": "در اصله بودیسمه تاببتی خیلی صدا از اشامله کندالی نیا یوگا مراقبه ومسیر اشک فرگیر میشاند",
+     "wer": 76.5,
+     "seconds": 14.7,
+     "compute": 0.528
+    },
+    {
+     "audio": "3206635087170235621.wav",
+     "lang": "fa",
+     "ref": "اکنون علم نشان می‌دهد که این اقتصاد کلان کربن، بیوسفر را از یکی از حالات پایدارش خارج کرده است، حالتی که تکامل انسان را در طی دو میلیون سال گذشته تأمین و پشتیبانی کرده است.",
+     "hyp": "اکنون ام نشام میده هتک این اختصاد کلان اکربون بیوز فررا ازیکی از حالات پایدارش حارج که دست  حالاتی که تقامل این سان رادر تکی دون میلیون سالگوز اشتی تیمین و پشتیبان اکر دست",
+     "wer": 74.3,
+     "seconds": 18.42,
+     "compute": 0.83
+    },
+    {
+     "audio": "14416255861754485742.wav",
+     "lang": "fa",
+     "ref": "ارزشش را دارد که نیم ساعت حوالی این روستای جذاب پرسه بزنید.",
+     "hyp": "ارز شاش ردارد کنیم سایت هبالی این رفطایه جزع پر سبزنید.",
+     "wer": 91.7,
+     "seconds": 7.56,
+     "compute": 0.499
+    },
+    {
+     "audio": "9173769016283886221.wav",
+     "lang": "fa",
+     "ref": "برخی جشنواره‌ها مکان‌های ویژه‌ای برای اردو زدن خانواده‌ها با فرزند خردسال، دارند.",
+     "hyp": "پر خیچا اشتبارها مکان های بیجای برای اورد زدن خانوادها پا فرزند خورد سال داراید",
+     "wer": 100.0,
+     "seconds": 10.92,
+     "compute": 0.463
+    },
+    {
+     "audio": "13714415504834507055.wav",
+     "lang": "fa",
+     "ref": "حوادث هوایی در ایران رایج است، این کشور دارای ناوگان پیری است که هم در عملیات‌‌‌های غیرنظامی و هم عملیات نظامی به شکل ضعیفی تعمیر و نگهداری می‌شود.",
+     "hyp": "هبادزه هبایدر ایران رائی جاست، این کشفر دورای نفقون پیریست، که همدر امالید حوی غیر نزامی، به هم امالید نزامی، بشکرزه ایفی، تعمید ونگیه تاریمی شباد.",
+     "wer": 89.3,
+     "seconds": 15.72,
+     "compute": 0.849
+    },
+    {
+     "audio": "5233442681445789389.wav",
+     "lang": "fa",
+     "ref": "سخنگوی «بوش» «گردون جاندرو» تعهد کره شمالی را «یک قدم عمده در جهت هدف دستیابی به خلع سلاح هسته‌ای قابل تأیید برای شبه جزیره کره» قلمداد کرد.",
+     "hyp": "سو خانگوی بوش گردون جنرو تا خود کوری شمالی را  یک قدم ام دیده جهد هدف دست یعبی بخل اصلاه هستی خابلی تائید برایش بجزری کوری علم داد کارت",
+     "wer": 81.5,
+     "seconds": 17.58,
+     "compute": 0.786
+    },
+    {
+     "audio": "16039268649614350638.wav",
+     "lang": "fa",
+     "ref": "دانشمندان می گویند که پرهای زینتی این حیوان در بالای به رنگ شاه بلوط قهوه ای و در پایین به رنگ کاروتنوئید بود.",
+     "hyp": "تو نشمان دون لگویان که پر حوزی نتحیین هیوان، تربالا براگشا، بلوت غحبی، هدار پایین براگی کارو تنویی، بلوت",
+     "wer": 95.7,
+     "seconds": 12.24,
+     "compute": 0.607
+    },
+    {
+     "audio": "5642184601461536465.wav",
+     "lang": "fa",
+     "ref": "این هشدار می دهد که هیچ کس نمی تواند تضمین کند که هرگونه اقدام در عراق در این مرحله، جنگ فرقه ای، خشونت رو به رشد و یا خیزش به سمت هرج و مرج را متوقف خواهد کرد.",
+     "hyp": "این هشدار می دهت که هیچ کست نمیتا منات هزمین کونت که هر کون ایک دم در ارق در ارق در ام مرهل جنگی فرقی خوشنیت رو بروشت  یعب بیاخیزیشه بیسانت هرجم ارشر مطاق افخالت کهارت",
+     "wer": 81.6,
+     "seconds": 18.66,
+     "compute": 0.883
+    },
+    {
+     "audio": "7280306912057077927.wav",
+     "lang": "fa",
+     "ref": "همچنان در کشورهای آمریکای مرکزی روی هشتاد درصد کالاهای ما از طریق وضع تعرفه، مالیات گرفته می‌شد. ما با شما رفتار می‌کنیم.",
+     "hyp": "هم چون در کش ورحای آم رکای مرکیزی روی حشتاد در سدکالا حای موستری روز ات هرفی مالیات گرف دمی شبت مو باشم رفتار می کنیم",
+     "wer": 100.0,
+     "seconds": 13.92,
+     "compute": 0.656
+    },
+    {
+     "audio": "6349654479829416050.wav",
+     "lang": "fa",
+     "ref": "غذای جاوه‌ای که امروزه به طور گسترده در سراسر مجمع الجزایر در دسترس است، حاوی طیفی از خوراک‌های چاشنی دار ساده است، طعم دهنده‌های غالب جاوه‌ای بادام زمینی، فلفل، شکر (به خصوص شکر نارگیل جاوه‌ای) و انواع ادویه‌های معطر است.",
+     "hyp": "رزای جاوی ایک ام رزی بتورگ استردیدر سرازر مجمع اولجزاویردردردردردردردردردردردردردسد  حوی تیفیز ہرا کای چشنیدارد صادرد  تم دند های غالبد جاوی ای وادم زمینی  فیلفل شکر  بخوصوش شکرن نارگی ل جاوی ای  و این وید وییادیه حوی مرترست",
+     "wer": 95.0,
+     "seconds": 32.04,
+     "compute": 10.816
+    },
+    {
+     "audio": "13330306151486253943.wav",
+     "lang": "fa",
+     "ref": "اسرائیل پس از امضای توافق‌نامه خواستار حضور نظامی مداوم در دره برای ده سال است، درحالیكه پارلمان موافق است چنین حضوری تنها برای پنج سال باشد.",
+     "hyp": "از رائل پس از امزائی تاب فرنامی خاص تر حضور نزامیی مضافم در در رائی برائی ده سالستر حالی که پر لمان مفرست  چین این حضوری تنها برائی پر این سال باشت",
+     "wer": 92.3,
+     "seconds": 16.02,
+     "compute": 0.714
+    },
+    {
+     "audio": "16906437297549914450.wav",
+     "lang": "fa",
+     "ref": "تمبر 1000‌ام او «کارهای بزرگ پادشاهان سوئدی» از دیوید کلوکر ارنشترال در سال 2000 بود که در کتاب رکوردهای جهانی گینس ثبت شده است.",
+     "hyp": "تم رهزارم او کارای بوزرگی پاطشا آنس ویدی هز دیبیت کلکر انشترال در سلدهزار بود",
+     "wer": 91.7,
+     "seconds": 16.68,
+     "compute": 3.682
+    },
+    {
+     "audio": "13851036903026386291.wav",
+     "lang": "en",
+     "ref": "Next, some saddles, particularly English saddles, have safety bars that allow a stirrup leather to fall off the saddle if pulled backwards by a falling rider.",
+     "hyp": "Next, some saddles, particularly English saddles, have safety bars that allow a syrup leather to fall off the saddle if pulled backwards by a falling rider.",
+     "wer": 3.8,
+     "seconds": 9.36,
+     "compute": 0.326
+    },
+    {
+     "audio": "9909934339673808373.wav",
+     "lang": "en",
+     "ref": "The original population hasn't changed at all, they still need the same adaptations as before.",
+     "hyp": "The original population hasn't changed at all, they still need the same adaptations as before.",
+     "wer": 0.0,
+     "seconds": 10.08,
+     "compute": 0.26
+    },
+    {
+     "audio": "2031944424456517788.wav",
+     "lang": "en",
+     "ref": "The U.N. also hopes to finalize a fund to help countries affected by global warming to cope with the impacts.",
+     "hyp": "The UN also helps to finalize the fund to help countries affected by global warming to cope with the impacts.",
+     "wer": 19.0,
+     "seconds": 7.08,
+     "compute": 0.274
+    },
+    {
+     "audio": "10146705666908229607.wav",
+     "lang": "en",
+     "ref": "The major religion in Moldova is Orthodox Christian.",
+     "hyp": "The major religion in Wildova is Orthodox Christian.",
+     "wer": 12.5,
+     "seconds": 4.92,
+     "compute": 0.201
+    },
+    {
+     "audio": "6840966447225121742.wav",
+     "lang": "en",
+     "ref": "Any amendments or requests though should be coursed through the travel agent first and not directly with the hotel.",
+     "hyp": "Any amendments or requests that should be course through the travel agent first and not directly with the hotel.",
+     "wer": 10.5,
+     "seconds": 10.2,
+     "compute": 0.263
+    },
+    {
+     "audio": "7333859905385431862.wav",
+     "lang": "en",
+     "ref": "If you visit the Arctic or Antarctic areas in the winter you will experience the polar night, which means that the sun doesn't rise above the horizon.",
+     "hyp": "If you visit the Arctic or an Arctic areas in the winter, you will experience the polar  night, which means the sun doesn't rise above the horizon.",
+     "wer": 10.7,
+     "seconds": 12.1,
+     "compute": 0.331
+    },
+    {
+     "audio": "11840539862172308240.wav",
+     "lang": "en",
+     "ref": "The satellite in space gets the call and then reflects it back down, almost instantly.",
+     "hyp": "The satellite in space gets to call and then reflects it back down almost instantly.",
+     "wer": 6.7,
+     "seconds": 5.52,
+     "compute": 0.231
+    },
+    {
+     "audio": "7777234891538102330.wav",
+     "lang": "en",
+     "ref": "As NSA, he assisted Carter in diplomatically handling world affairs, such as the Camp David Accords, 1978; normalizing US–China relations thought the late 1970s; the Iranian Revolution, which led to the Iran hostage crisis, 1979; and the Soviet invasion in Afghanistan, 1979.",
+     "hyp": "As NSA, he's this recorded and diplomatically handling world affairs, such as the Camp David  Awards in the 19th century, not analyzing U.S. China relations through the late 1970s,  the Iranian Revolution, which led to the Iran hostage crisis in the Soviet invasion  in Afghanistan in the 19th and 19th and 19th and 19th and 19th and 19th.",
+     "wer": 67.4,
+     "seconds": 29.1,
+     "compute": 0.891
+    },
+    {
+     "audio": "14187645011903893773.wav",
+     "lang": "en",
+     "ref": "Bush spokesman Gordon Johndroe called North Korea's pledge \"a major step towards the goal of achieving the verifiable denuclearization of the Korean peninsula.\"",
+     "hyp": "Bush spokesman Gordon John Droke called North Korea's pledge a major step towards the goal of achieving the verifiable denuclearization of the Korean peninsula.",
+     "wer": 8.3,
+     "seconds": 11.94,
+     "compute": 0.331
+    },
+    {
+     "audio": "12443760270511039663.wav",
+     "lang": "en",
+     "ref": "Science now indicates that this massive carbon economy has dislodged the biosphere from one of its stable states that has supported human evolution for the past two million years.",
+     "hyp": "Science now indicates that this massive carbon economy has just  a lot of the biosphere from one of its stable states that has supported  human evolution for the past two million years.",
+     "wer": 13.8,
+     "seconds": 13.08,
+     "compute": 0.476
+    },
+    {
+     "audio": "10305808618795196942.wav",
+     "lang": "en",
+     "ref": "Pronunciation is relatively easy in Italian since most words are pronounced exactly how they are written",
+     "hyp": "So now Seation is relatively easy in Italian since most wars are pronounced exactly how they are written.",
+     "wer": 25.0,
+     "seconds": 9.32,
+     "compute": 0.313
+    },
+    {
+     "audio": "13870674013435125016.wav",
+     "lang": "en",
+     "ref": "A course will normally cover all the issues discussed here in far greater detail, usually with practical experience.",
+     "hyp": "A course will normally cover all the issues discussed here in far greater detail, usually with practical experience.",
+     "wer": 0.0,
+     "seconds": 8.28,
+     "compute": 0.398
+    }
+   ]
+  },
+  {
+   "model": "base",
+   "pipeline": "raw",
+   "agg": {
+    "fa": {
+     "we": 250,
+     "wn": 304,
+     "ce": 311,
+     "cn": 1212,
+     "n": 12,
+     "audio": 194.46,
+     "compute": 13.992496166261844
+    },
+    "en": {
+     "we": 26,
+     "wn": 263,
+     "ce": 54,
+     "cn": 1313,
+     "n": 12,
+     "audio": 130.98000000000002,
+     "compute": 6.711846205056645
+    }
+   },
+   "details": [
+    {
+     "audio": "12890402516457960164.wav",
+     "lang": "fa",
+     "ref": "در اصل بودیسم تبتی خیلی ساده است، و شامل کندالینی یوگا،‌ مراقبه و مسیر عشق فراگیر می‌شود.",
+     "hyp": "در اسل بودیس میں تابتی خیل سد اس  اشامل کندالینی ایوگا مراقبه و مصر اشک فرگیر می شاوط",
+     "wer": 82.4,
+     "seconds": 14.7,
+     "compute": 0.829
+    },
+    {
+     "audio": "3206635087170235621.wav",
+     "lang": "fa",
+     "ref": "اکنون علم نشان می‌دهد که این اقتصاد کلان کربن، بیوسفر را از یکی از حالات پایدارش خارج کرده است، حالتی که تکامل انسان را در طی دو میلیون سال گذشته تأمین و پشتیبانی کرده است.",
+     "hyp": "اکنون ایل میشام میده هتکه این اختي ساده کلانه کربون بیو سفر را از یکی از حالاته پایدار اشخاریچ کر داست  حالتی که تقامل این سان راده ار تکه دو میلیون ساله گزشته تقمین و پوشدیبانی کر داست",
+     "wer": 77.1,
+     "seconds": 18.42,
+     "compute": 1.491
+    },
+    {
+     "audio": "14416255861754485742.wav",
+     "lang": "fa",
+     "ref": "ارزشش را دارد که نیم ساعت حوالی این روستای جذاب پرسه بزنید.",
+     "hyp": "از اشش را دارت کنیم سا اته والی این رفتوید جد سا برسی بزنیت",
+     "wer": 100.0,
+     "seconds": 7.56,
+     "compute": 0.661
+    },
+    {
+     "audio": "9173769016283886221.wav",
+     "lang": "fa",
+     "ref": "برخی جشنواره‌ها مکان‌های ویژه‌ای برای اردو زدن خانواده‌ها با فرزند خردسال، دارند.",
+     "hyp": "پر خیچ اشت و ره ها، مقانه های بی جی، پر آی اردو زدن خان و ده ها با فرزن دخور سال دارند.",
+     "wer": 158.3,
+     "seconds": 10.92,
+     "compute": 0.8
+    },
+    {
+     "audio": "13714415504834507055.wav",
+     "lang": "fa",
+     "ref": "حوادث هوایی در ایران رایج است، این کشور دارای ناوگان پیری است که هم در عملیات‌‌‌های غیرنظامی و هم عملیات نظامی به شکل ضعیفی تعمیر و نگهداری می‌شود.",
+     "hyp": "هواد از هوایدر ایران رایج از از این کشفر دارای نافگانه پیلیست  که همدر املیاد های خیر نظامی  په هم املیاد نظامی  به شکر زائیفی تامیر ونگه هتاری میشابات",
+     "wer": 78.6,
+     "seconds": 15.72,
+     "compute": 1.272
+    },
+    {
+     "audio": "5233442681445789389.wav",
+     "lang": "fa",
+     "ref": "سخنگوی «بوش» «گردون جاندرو» تعهد کره شمالی را «یک قدم عمده در جهت هدف دستیابی به خلع سلاح هسته‌ای قابل تأیید برای شبه جزیره کره» قلمداد کرد.",
+     "hyp": "سخنگوی بوش کردن جن رو تاخدق کوری شمالی را  یک قدم امدد ارجهده هدف دستیابی بخل اصلاه هستی ایغابل تائید برای شبی جزیری کوری قلمدات کرد",
+     "wer": 66.7,
+     "seconds": 17.58,
+     "compute": 1.136
+    },
+    {
+     "audio": "16039268649614350638.wav",
+     "lang": "fa",
+     "ref": "دانشمندان می گویند که پرهای زینتی این حیوان در بالای به رنگ شاه بلوط قهوه ای و در پایین به رنگ کاروتنوئید بود.",
+     "hyp": "تانشمن دن نگوین که پر های زیند فیین هیوان  در بالها پرنگ شاه پلوت غحویی  هدر پایین برنگ کاروطنییت بود",
+     "wer": 82.6,
+     "seconds": 12.24,
+     "compute": 0.912
+    },
+    {
+     "audio": "5642184601461536465.wav",
+     "lang": "fa",
+     "ref": "این هشدار می دهد که هیچ کس نمی تواند تضمین کند که هرگونه اقدام در عراق در این مرحله، جنگ فرقه ای، خشونت رو به رشد و یا خیزش به سمت هرج و مرج را متوقف خواهد کرد.",
+     "hyp": "این هوش در میدهت که هیچ کس نمی تامنت هزمین کنت که هرگونه اقدم در ارخ در این مرهله جنگ فرقیی خوشنت رو بروشت یا بایخ هیزشه بسامت هرجومر شرام اتاقف خواعت که ارد",
+     "wer": 65.8,
+     "seconds": 18.66,
+     "compute": 1.319
+    },
+    {
+     "audio": "7280306912057077927.wav",
+     "lang": "fa",
+     "ref": "همچنان در کشورهای آمریکای مرکزی روی هشتاد درصد کالاهای ما از طریق وضع تعرفه، مالیات گرفته می‌شد. ما با شما رفتار می‌کنیم.",
+     "hyp": "هم چون درکش ورحای امريکای مرکه زیروی هشتد ارسد کالا های ما از تاریغوز اتهارفه  مالیت گرفتی میشاود ما باشمار رفتار می کنیم",
+     "wer": 95.5,
+     "seconds": 13.92,
+     "compute": 1.062
+    },
+    {
+     "audio": "6349654479829416050.wav",
+     "lang": "fa",
+     "ref": "غذای جاوه‌ای که امروزه به طور گسترده در سراسر مجمع الجزایر در دسترس است، حاوی طیفی از خوراک‌های چاشنی دار ساده است، طعم دهنده‌های غالب جاوه‌ای بادام زمینی، فلفل، شکر (به خصوص شکر نارگیل جاوه‌ای) و انواع ادویه‌های معطر است.",
+     "hyp": "خزای جاویی که ام روزی بطور گسترده در سراسر مجم اول جزایر در در دسترسست  هاوی تیفی از خورا که ای چشنیدار سادست  تم دهنده های غالبی جاویی وادام زمینی  فلفل شکر  بخصوص شکر نارگیل جاویی  و اموی ادویو هایم اترست",
+     "wer": 75.0,
+     "seconds": 32.04,
+     "compute": 2.116
+    },
+    {
+     "audio": "13330306151486253943.wav",
+     "lang": "fa",
+     "ref": "اسرائیل پس از امضای توافق‌نامه خواستار حضور نظامی مداوم در دره برای ده سال است، درحالیكه پارلمان موافق است چنین حضوری تنها برای پنج سال باشد.",
+     "hyp": "از رائل پسز امزای تا افونامی خاصطر خزور نزامی مضافیم در در ری برای ده سالست در حالی که پرلمان موافگست چینن خزوری تنها برای پنس سال باشت.",
+     "wer": 84.6,
+     "seconds": 16.02,
+     "compute": 1.161
+    },
+    {
+     "audio": "16906437297549914450.wav",
+     "lang": "fa",
+     "ref": "تمبر 1000‌ام او «کارهای بزرگ پادشاهان سوئدی» از دیوید کلوکر ارنشترال در سال 2000 بود که در کتاب رکوردهای جهانی گینس ثبت شده است.",
+     "hyp": "تامره زارم او کار های بزور گی پاتشا آنس ویدی  از دیوید کلکر اینش ترال ترسالده حزار بود  کدر کتابه رکورت های جهانی گینس سب شدست",
+     "wer": 87.5,
+     "seconds": 16.68,
+     "compute": 1.232
+    },
+    {
+     "audio": "13851036903026386291.wav",
+     "lang": "en",
+     "ref": "Next, some saddles, particularly English saddles, have safety bars that allow a stirrup leather to fall off the saddle if pulled backwards by a falling rider.",
+     "hyp": "Next, some saddles, particularly English saddles, have safety words that allow a stir-up  leather to fall off the saddle if pulled backwards by a falling rider.",
+     "wer": 11.5,
+     "seconds": 9.36,
+     "compute": 0.708
+    },
+    {
+     "audio": "9909934339673808373.wav",
+     "lang": "en",
+     "ref": "The original population hasn't changed at all, they still need the same adaptations as before.",
+     "hyp": "The original population hasn't changed at all.  They still need the same adaptations as before.",
+     "wer": 0.0,
+     "seconds": 10.08,
+     "compute": 0.446
+    },
+    {
+     "audio": "2031944424456517788.wav",
+     "lang": "en",
+     "ref": "The U.N. also hopes to finalize a fund to help countries affected by global warming to cope with the impacts.",
+     "hyp": "The UN also hopes to finalize a front to help countries affected by global warming to cope with the impacts.",
+     "wer": 14.3,
+     "seconds": 7.08,
+     "compute": 0.457
+    },
+    {
+     "audio": "10146705666908229607.wav",
+     "lang": "en",
+     "ref": "The major religion in Moldova is Orthodox Christian.",
+     "hyp": "The major religion in Moldova is Orthodox Christian.",
+     "wer": 0.0,
+     "seconds": 4.92,
+     "compute": 0.364
+    },
+    {
+     "audio": "6840966447225121742.wav",
+     "lang": "en",
+     "ref": "Any amendments or requests though should be coursed through the travel agent first and not directly with the hotel.",
+     "hyp": "Any amendments or requests should be course through the Travel Agent first and not directly with the hotel.",
+     "wer": 10.5,
+     "seconds": 10.2,
+     "compute": 0.441
+    },
+    {
+     "audio": "7333859905385431862.wav",
+     "lang": "en",
+     "ref": "If you visit the Arctic or Antarctic areas in the winter you will experience the polar night, which means that the sun doesn't rise above the horizon.",
+     "hyp": "If you visit the Arctic or Antarctic areas in the winter, you will experience the  polar night which means the sun doesn't rise above the horizon.",
+     "wer": 3.6,
+     "seconds": 12.1,
+     "compute": 0.546
+    },
+    {
+     "audio": "11840539862172308240.wav",
+     "lang": "en",
+     "ref": "The satellite in space gets the call and then reflects it back down, almost instantly.",
+     "hyp": "The satellite in space gets the call and then reflects it back down almost instantly.",
+     "wer": 0.0,
+     "seconds": 5.52,
+     "compute": 0.408
+    },
+    {
+     "audio": "7777234891538102330.wav",
+     "lang": "en",
+     "ref": "As NSA, he assisted Carter in diplomatically handling world affairs, such as the Camp David Accords, 1978; normalizing US–China relations thought the late 1970s; the Iranian Revolution, which led to the Iran hostage crisis, 1979; and the Soviet invasion in Afghanistan, 1979.",
+     "hyp": "As NSA, he assisted Carter in diplomatically handling world affairs, such as the Camp David  Accords in 1978, normalizing U.S.-China relations through the late 1970s, the Iranian Revolution,  which led to the Iran hostage crisis in 1979, in the Soviet invasion in Afghanistan in",
+     "wer": 16.3,
+     "seconds": 29.1,
+     "compute": 1.297
+    },
+    {
+     "audio": "14187645011903893773.wav",
+     "lang": "en",
+     "ref": "Bush spokesman Gordon Johndroe called North Korea's pledge \"a major step towards the goal of achieving the verifiable denuclearization of the Korean peninsula.\"",
+     "hyp": "Bush spokesman Gordon Jandro called North Korea's pledge a major step towards the goal of achieving the verifiable denuclearization of the Korean peninsula.",
+     "wer": 4.2,
+     "seconds": 11.94,
+     "compute": 0.58
+    },
+    {
+     "audio": "12443760270511039663.wav",
+     "lang": "en",
+     "ref": "Science now indicates that this massive carbon economy has dislodged the biosphere from one of its stable states that has supported human evolution for the past two million years.",
+     "hyp": "Science now indicates that this massive carbon economy has just a lot of the biosphere from  one of its stable states that has supported human evolution for the past two million years.",
+     "wer": 13.8,
+     "seconds": 13.08,
+     "compute": 0.575
+    },
+    {
+     "audio": "10305808618795196942.wav",
+     "lang": "en",
+     "ref": "Pronunciation is relatively easy in Italian since most words are pronounced exactly how they are written",
+     "hyp": "Pronunciation is relatively easy in Italian since most wars are pronounced exactly how they are written.",
+     "wer": 6.2,
+     "seconds": 9.32,
+     "compute": 0.417
+    },
+    {
+     "audio": "13870674013435125016.wav",
+     "lang": "en",
+     "ref": "A course will normally cover all the issues discussed here in far greater detail, usually with practical experience.",
+     "hyp": "Of course, when the mulee cover all the issues discussed here in far greater detail, usually with practical experience.",
+     "wer": 22.2,
+     "seconds": 8.28,
+     "compute": 0.473
+    }
+   ]
+  },
+  {
+   "model": "small",
+   "pipeline": "raw",
+   "agg": {
+    "fa": {
+     "we": 177,
+     "wn": 304,
+     "ce": 189,
+     "cn": 1212,
+     "n": 12,
+     "audio": 194.46,
+     "compute": 34.50610420922749
+    },
+    "en": {
+     "we": 24,
+     "wn": 263,
+     "ce": 39,
+     "cn": 1313,
+     "n": 12,
+     "audio": 130.98000000000002,
+     "compute": 18.1352718337439
+    }
+   },
+   "details": [
+    {
+     "audio": "12890402516457960164.wav",
+     "lang": "fa",
+     "ref": "در اصل بودیسم تبتی خیلی ساده است، و شامل کندالینی یوگا،‌ مراقبه و مسیر عشق فراگیر می‌شود.",
+     "hyp": "در اصل بودیسم تبتی خیل ساده اصل و شامل کندالینی یوگا مراقبه و مصیر اشق فراجیر می شاید.",
+     "wer": 41.2,
+     "seconds": 14.7,
+     "compute": 2.151
+    },
+    {
+     "audio": "3206635087170235621.wav",
+     "lang": "fa",
+     "ref": "اکنون علم نشان می‌دهد که این اقتصاد کلان کربن، بیوسفر را از یکی از حالات پایدارش خارج کرده است، حالتی که تکامل انسان را در طی دو میلیون سال گذشته تأمین و پشتیبانی کرده است.",
+     "hyp": "اکنون ایلم نشام میده هد که این اختصاد کلان کربان بیوزفر را از یکی از حالات پایدار اشخارج کردست  حالتی که تکامل انسان را در تگید دو میلیون ساله گزشته تعمین و پشتبانی کردست",
+     "wer": 51.4,
+     "seconds": 18.42,
+     "compute": 3.305
+    },
+    {
+     "audio": "14416255861754485742.wav",
+     "lang": "fa",
+     "ref": "ارزشش را دارد که نیم ساعت حوالی این روستای جذاب پرسه بزنید.",
+     "hyp": "ارز شش را دارت کنیم ساعت هوالی این روستای جزا پرس بزنید",
+     "wer": 66.7,
+     "seconds": 7.56,
+     "compute": 1.726
+    },
+    {
+     "audio": "9173769016283886221.wav",
+     "lang": "fa",
+     "ref": "برخی جشنواره‌ها مکان‌های ویژه‌ای برای اردو زدن خانواده‌ها با فرزند خردسال، دارند.",
+     "hyp": "برخی جشت وارها مکانهای ویجهی برای اردوزدن خانوادها با فرزند خورد سال دارند",
+     "wer": 66.7,
+     "seconds": 10.92,
+     "compute": 1.907
+    },
+    {
+     "audio": "13714415504834507055.wav",
+     "lang": "fa",
+     "ref": "حوادث هوایی در ایران رایج است، این کشور دارای ناوگان پیری است که هم در عملیات‌‌‌های غیرنظامی و هم عملیات نظامی به شکل ضعیفی تعمیر و نگهداری می‌شود.",
+     "hyp": "هواده سه هوایی در ایران رایج هست. این کشفر دارای نافگان پیریست که هم در املیادهای غیر نظامی به هم املیاد نظامی بشکر زعیفی تعمیر و نگهتاری میشه بد.",
+     "wer": 64.3,
+     "seconds": 15.72,
+     "compute": 2.984
+    },
+    {
+     "audio": "5233442681445789389.wav",
+     "lang": "fa",
+     "ref": "سخنگوی «بوش» «گردون جاندرو» تعهد کره شمالی را «یک قدم عمده در جهت هدف دستیابی به خلع سلاح هسته‌ای قابل تأیید برای شبه جزیره کره» قلمداد کرد.",
+     "hyp": "سوخنگوی بوش, گردون جندرو, تحاد کوره شمالی را یک قدم اومده در جهد هدف دستیابی بخل اصلاحه قابل تهید برای شبه جزیره کوره قلم داد کرد.",
+     "wer": 51.9,
+     "seconds": 17.58,
+     "compute": 3.186
+    },
+    {
+     "audio": "16039268649614350638.wav",
+     "lang": "fa",
+     "ref": "دانشمندان می گویند که پرهای زینتی این حیوان در بالای به رنگ شاه بلوط قهوه ای و در پایین به رنگ کاروتنوئید بود.",
+     "hyp": "تانشمندان میگویین که پرحای زینتیه این هیوان در بالا برنگ شاہ بلوت غهویی و در پایین برنگ کاروطنوید بود.",
+     "wer": 69.6,
+     "seconds": 12.24,
+     "compute": 2.352
+    },
+    {
+     "audio": "5642184601461536465.wav",
+     "lang": "fa",
+     "ref": "این هشدار می دهد که هیچ کس نمی تواند تضمین کند که هرگونه اقدام در عراق در این مرحله، جنگ فرقه ای، خشونت رو به رشد و یا خیزش به سمت هرج و مرج را متوقف خواهد کرد.",
+     "hyp": "این هوشدار میده هد که هیچ کسی نمیتا منتزمین کند که هر گونه اقدام در عراق در این مرحله جنگ فرقی خوشنت رو بروشت یا بیا خیزش بسمت هرجو مرشرا متاقف خواهت کرد.",
+     "wer": 63.2,
+     "seconds": 18.66,
+     "compute": 3.189
+    },
+    {
+     "audio": "7280306912057077927.wav",
+     "lang": "fa",
+     "ref": "همچنان در کشورهای آمریکای مرکزی روی هشتاد درصد کالاهای ما از طریق وضع تعرفه، مالیات گرفته می‌شد. ما با شما رفتار می‌کنیم.",
+     "hyp": "همچن در کشفرهای امریکای مرکزی روی هشتاد در سد کالاهای ما از طریقه وز اتحرفه مالیات گرفته می شودت، ما با شما رفتار می کنیم.",
+     "wer": 54.5,
+     "seconds": 13.92,
+     "compute": 2.704
+    },
+    {
+     "audio": "6349654479829416050.wav",
+     "lang": "fa",
+     "ref": "غذای جاوه‌ای که امروزه به طور گسترده در سراسر مجمع الجزایر در دسترس است، حاوی طیفی از خوراک‌های چاشنی دار ساده است، طعم دهنده‌های غالب جاوه‌ای بادام زمینی، فلفل، شکر (به خصوص شکر نارگیل جاوه‌ای) و انواع ادویه‌های معطر است.",
+     "hyp": "غزای جاویی که ام روزه بطور گسترده در سراسر مجمعول جزایر در دسترست،  هاوی تیفیه از خوراقهای چشنیدار سادست،  تم دهنده های غالب جاویی و آدم زمینی،  فلفل، شکر، بخوصول شکر نارگیل جاویی و اموای ادوی های معترست.",
+     "wer": 70.0,
+     "seconds": 32.04,
+     "compute": 5.424
+    },
+    {
+     "audio": "13330306151486253943.wav",
+     "lang": "fa",
+     "ref": "اسرائیل پس از امضای توافق‌نامه خواستار حضور نظامی مداوم در دره برای ده سال است، درحالیكه پارلمان موافق است چنین حضوری تنها برای پنج سال باشد.",
+     "hyp": "اسرائیل پس از امضائی توافق نامه خاصتر حضور نظامی مداویم در دره برای ده سال است.  در حالی که پارلمان موافق است چن این حضوری تنها برای پنچ سال باشت.",
+     "wer": 46.2,
+     "seconds": 16.02,
+     "compute": 2.893
+    },
+    {
+     "audio": "16906437297549914450.wav",
+     "lang": "fa",
+     "ref": "تمبر 1000‌ام او «کارهای بزرگ پادشاهان سوئدی» از دیوید کلوکر ارنشترال در سال 2000 بود که در کتاب رکوردهای جهانی گینس ثبت شده است.",
+     "hyp": "تمره هزارام او کارهای بزرگ پاتشا آن سویدی از دیوید کولکر اینشترال در سال دو هزار بود که در کتاب رکورتهای جهانی گینس سب چده است.",
+     "wer": 50.0,
+     "seconds": 16.68,
+     "compute": 2.685
+    },
+    {
+     "audio": "13851036903026386291.wav",
+     "lang": "en",
+     "ref": "Next, some saddles, particularly English saddles, have safety bars that allow a stirrup leather to fall off the saddle if pulled backwards by a falling rider.",
+     "hyp": "Next, some saddles, particularly English saddles, have safety bars that allow us to stir up leather to fall off the saddle if pulled backwards by a falling rider.",
+     "wer": 15.4,
+     "seconds": 9.36,
+     "compute": 1.565
+    },
+    {
+     "audio": "9909934339673808373.wav",
+     "lang": "en",
+     "ref": "The original population hasn't changed at all, they still need the same adaptations as before.",
+     "hyp": "The original population hasn't changed at all.  They still need the same adaptations as before.",
+     "wer": 0.0,
+     "seconds": 10.08,
+     "compute": 1.239
+    },
+    {
+     "audio": "2031944424456517788.wav",
+     "lang": "en",
+     "ref": "The U.N. also hopes to finalize a fund to help countries affected by global warming to cope with the impacts.",
+     "hyp": "The UN also hopes to finalize the fund to help countries affected by global warming to cope with the impacts.",
+     "wer": 14.3,
+     "seconds": 7.08,
+     "compute": 1.297
+    },
+    {
+     "audio": "10146705666908229607.wav",
+     "lang": "en",
+     "ref": "The major religion in Moldova is Orthodox Christian.",
+     "hyp": "The major religion in Moldova is Orthodox Christian.",
+     "wer": 0.0,
+     "seconds": 4.92,
+     "compute": 1.073
+    },
+    {
+     "audio": "6840966447225121742.wav",
+     "lang": "en",
+     "ref": "Any amendments or requests though should be coursed through the travel agent first and not directly with the hotel.",
+     "hyp": "Any amendments or requests that should be coursed through the travel agent first and not directly with the hotel.",
+     "wer": 5.3,
+     "seconds": 10.2,
+     "compute": 1.264
+    },
+    {
+     "audio": "7333859905385431862.wav",
+     "lang": "en",
+     "ref": "If you visit the Arctic or Antarctic areas in the winter you will experience the polar night, which means that the sun doesn't rise above the horizon.",
+     "hyp": "If you visit the Arctic or Antarctic areas in the winter, you will experience the  polar night which means the Sun doesn't rise above the horizon.",
+     "wer": 3.6,
+     "seconds": 12.1,
+     "compute": 1.601
+    },
+    {
+     "audio": "11840539862172308240.wav",
+     "lang": "en",
+     "ref": "The satellite in space gets the call and then reflects it back down, almost instantly.",
+     "hyp": "The satellite in space gets the call and then reflects it back down almost instantly.",
+     "wer": 0.0,
+     "seconds": 5.52,
+     "compute": 1.224
+    },
+    {
+     "audio": "7777234891538102330.wav",
+     "lang": "en",
+     "ref": "As NSA, he assisted Carter in diplomatically handling world affairs, such as the Camp David Accords, 1978; normalizing US–China relations thought the late 1970s; the Iranian Revolution, which led to the Iran hostage crisis, 1979; and the Soviet invasion in Afghanistan, 1979.",
+     "hyp": "As NSA, he assisted Carter in diplomatically handling world affairs, such as the Camp David  Accord in 1978, normalizing U.S.-China relations through the late 1970s, the Iranian Revolution,  which led to the Iran hostage crisis in the Soviet invasion in Afghanistan in 1979.",
+     "wer": 18.6,
+     "seconds": 29.1,
+     "compute": 3.142
+    },
+    {
+     "audio": "14187645011903893773.wav",
+     "lang": "en",
+     "ref": "Bush spokesman Gordon Johndroe called North Korea's pledge \"a major step towards the goal of achieving the verifiable denuclearization of the Korean peninsula.\"",
+     "hyp": "Bush spokesman Gordon Jondro called North Korea's pledge a major step towards the goal of achieving the verifiable denuclearization of the Korean Peninsula.",
+     "wer": 4.2,
+     "seconds": 11.94,
+     "compute": 1.563
+    },
+    {
+     "audio": "12443760270511039663.wav",
+     "lang": "en",
+     "ref": "Science now indicates that this massive carbon economy has dislodged the biosphere from one of its stable states that has supported human evolution for the past two million years.",
+     "hyp": "Science now indicates that this massive carbon economy has just  lodged the biosphere from one of its stable states that has supported human  evolution for the past two million years.",
+     "wer": 6.9,
+     "seconds": 13.08,
+     "compute": 1.614
+    },
+    {
+     "audio": "10305808618795196942.wav",
+     "lang": "en",
+     "ref": "Pronunciation is relatively easy in Italian since most words are pronounced exactly how they are written",
+     "hyp": "The pronunciation is relatively easy in Italian since most words are pronounced exactly how they are written.",
+     "wer": 6.2,
+     "seconds": 9.32,
+     "compute": 1.241
+    },
+    {
+     "audio": "13870674013435125016.wav",
+     "lang": "en",
+     "ref": "A course will normally cover all the issues discussed here in far greater detail, usually with practical experience.",
+     "hyp": "Of course, we'll normally cover all the issues discussed here in far greater detail usually with practical experience.",
+     "wer": 16.7,
+     "seconds": 8.28,
+     "compute": 1.314
+    }
+   ]
+  },
+  {
+   "model": "medium",
+   "pipeline": "raw",
+   "agg": {
+    "fa": {
+     "we": 127,
+     "wn": 304,
+     "ce": 111,
+     "cn": 1212,
+     "n": 12,
+     "audio": 194.46,
+     "compute": 82.43196845706552
+    },
+    "en": {
+     "we": 16,
+     "wn": 263,
+     "ce": 28,
+     "cn": 1313,
+     "n": 12,
+     "audio": 130.98000000000002,
+     "compute": 46.552832752116956
+    }
+   },
+   "details": [
+    {
+     "audio": "12890402516457960164.wav",
+     "lang": "fa",
+     "ref": "در اصل بودیسم تبتی خیلی ساده است، و شامل کندالینی یوگا،‌ مراقبه و مسیر عشق فراگیر می‌شود.",
+     "hyp": "در اسل بودیسم تبتی خیل ساده است و شامل کندالینی یوگاه مراقبه و مصیر اشق فراجر می شود.",
+     "wer": 47.1,
+     "seconds": 14.7,
+     "compute": 4.992
+    },
+    {
+     "audio": "3206635087170235621.wav",
+     "lang": "fa",
+     "ref": "اکنون علم نشان می‌دهد که این اقتصاد کلان کربن، بیوسفر را از یکی از حالات پایدارش خارج کرده است، حالتی که تکامل انسان را در طی دو میلیون سال گذشته تأمین و پشتیبانی کرده است.",
+     "hyp": "اکنون علم نشام میدهد که این اقتصاد کلان کربون بیوصفر را از یکی از حالات پایدار اش خارج کرده است  حالتی که تقامل انسان را در تقیق 2 میلیون سال گذشته تأمین و پشتیبانی کرده است",
+     "wer": 20.0,
+     "seconds": 18.42,
+     "compute": 8.247
+    },
+    {
+     "audio": "14416255861754485742.wav",
+     "lang": "fa",
+     "ref": "ارزشش را دارد که نیم ساعت حوالی این روستای جذاب پرسه بزنید.",
+     "hyp": "ارز ششرا دارد که نیم ساعت حوالی این روستای جزا پرس بزنید",
+     "wer": 33.3,
+     "seconds": 7.56,
+     "compute": 4.314
+    },
+    {
+     "audio": "9173769016283886221.wav",
+     "lang": "fa",
+     "ref": "برخی جشنواره‌ها مکان‌های ویژه‌ای برای اردو زدن خانواده‌ها با فرزند خردسال، دارند.",
+     "hyp": "برخی جشتواره ها مکان های ویژهی برای اردوزدن خانواده ها با فرزند خوردسال دارند.",
+     "wer": 75.0,
+     "seconds": 10.92,
+     "compute": 5.526
+    },
+    {
+     "audio": "13714415504834507055.wav",
+     "lang": "fa",
+     "ref": "حوادث هوایی در ایران رایج است، این کشور دارای ناوگان پیری است که هم در عملیات‌‌‌های غیرنظامی و هم عملیات نظامی به شکل ضعیفی تعمیر و نگهداری می‌شود.",
+     "hyp": "هوادس هوایی در ایران رایج است. این کشور دارای نافقان پیریست که هم در عملیات های غیر نظامی و هم عملیات نظامی به شکل زعیفی تعمیر و نگهتاری می شود.",
+     "wer": 42.9,
+     "seconds": 15.72,
+     "compute": 7.555
+    },
+    {
+     "audio": "5233442681445789389.wav",
+     "lang": "fa",
+     "ref": "سخنگوی «بوش» «گردون جاندرو» تعهد کره شمالی را «یک قدم عمده در جهت هدف دستیابی به خلع سلاح هسته‌ای قابل تأیید برای شبه جزیره کره» قلمداد کرد.",
+     "hyp": "سخنگوی بوش گردون جان رو تأخوض کوره شمالی را یک قدم امده در جهد هدف دستیابی به خل اسلاح هستهی قابل تعیید برای شپ جزیر کوره قلم داد کرد.",
+     "wer": 55.6,
+     "seconds": 17.58,
+     "compute": 7.101
+    },
+    {
+     "audio": "16039268649614350638.wav",
+     "lang": "fa",
+     "ref": "دانشمندان می گویند که پرهای زینتی این حیوان در بالای به رنگ شاه بلوط قهوه ای و در پایین به رنگ کاروتنوئید بود.",
+     "hyp": "تانشمندان میگویین که پرهای زینتی این حیوان در بالا به رنگ شاه بلوت قهوهی و در پاین به رنگ کاروتو نوید بود.",
+     "wer": 43.5,
+     "seconds": 12.24,
+     "compute": 5.684
+    },
+    {
+     "audio": "5642184601461536465.wav",
+     "lang": "fa",
+     "ref": "این هشدار می دهد که هیچ کس نمی تواند تضمین کند که هرگونه اقدام در عراق در این مرحله، جنگ فرقه ای، خشونت رو به رشد و یا خیزش به سمت هرج و مرج را متوقف خواهد کرد.",
+     "hyp": "این حشدار میدهد که هیچکس نمی تواند تزمین کنند که هر گونه اقدام در عراق در این مرحله جنگ فرقهی خوشنت رو به رشد یا بیا خیزش به سمت هر جمعش را متاقف خواهد کرد.",
+     "wer": 47.4,
+     "seconds": 18.66,
+     "compute": 7.706
+    },
+    {
+     "audio": "7280306912057077927.wav",
+     "lang": "fa",
+     "ref": "همچنان در کشورهای آمریکای مرکزی روی هشتاد درصد کالاهای ما از طریق وضع تعرفه، مالیات گرفته می‌شد. ما با شما رفتار می‌کنیم.",
+     "hyp": "همچنان در کشورهای امریکای مرکزی روی 80 درست کالاهای ما از طریق وضع طرفه مالیات گرفت می شود.  ما با شما رفتار می کنیم.",
+     "wer": 36.4,
+     "seconds": 13.92,
+     "compute": 5.81
+    },
+    {
+     "audio": "6349654479829416050.wav",
+     "lang": "fa",
+     "ref": "غذای جاوه‌ای که امروزه به طور گسترده در سراسر مجمع الجزایر در دسترس است، حاوی طیفی از خوراک‌های چاشنی دار ساده است، طعم دهنده‌های غالب جاوه‌ای بادام زمینی، فلفل، شکر (به خصوص شکر نارگیل جاوه‌ای) و انواع ادویه‌های معطر است.",
+     "hyp": "قضای جاوئی که امروز به طور گسترده در سراصر مجمع اولجزایر در دست رسست  حاوی تفیی از خوراکای چاشنیدار ساده است  تمدهنده های قالب جاوئی، وادام زمینی، فلفل، شکر  به خصوص شکر نارگیل جاوئی، و انواع ادویه های معتر است",
+     "wer": 50.0,
+     "seconds": 32.04,
+     "compute": 12.799
+    },
+    {
+     "audio": "13330306151486253943.wav",
+     "lang": "fa",
+     "ref": "اسرائیل پس از امضای توافق‌نامه خواستار حضور نظامی مداوم در دره برای ده سال است، درحالیكه پارلمان موافق است چنین حضوری تنها برای پنج سال باشد.",
+     "hyp": "اسرائیل پس از امزای تافقنامه خواستار حضور نظامی مداوم در در ره برای ده سال است.  در حالی که پارلمان موافق است چنین حضور تنها برای پنج سال باشد.",
+     "wer": 30.8,
+     "seconds": 16.02,
+     "compute": 6.535
+    },
+    {
+     "audio": "16906437297549914450.wav",
+     "lang": "fa",
+     "ref": "تمبر 1000‌ام او «کارهای بزرگ پادشاهان سوئدی» از دیوید کلوکر ارنشترال در سال 2000 بود که در کتاب رکوردهای جهانی گینس ثبت شده است.",
+     "hyp": "تمبر هزارام او کارهای بزرگ پاتشان سوهدی از دیوید کلکر انشترال در سال 2000 بود که در کتاب رکورتهای جهانی گینس سب چده است.",
+     "wer": 33.3,
+     "seconds": 16.68,
+     "compute": 6.163
+    },
+    {
+     "audio": "13851036903026386291.wav",
+     "lang": "en",
+     "ref": "Next, some saddles, particularly English saddles, have safety bars that allow a stirrup leather to fall off the saddle if pulled backwards by a falling rider.",
+     "hyp": "Next, some saddles, particularly English saddles, have safety bars that allow a stirrup leather  to fall off the saddle if pulled backwards by a falling rider.",
+     "wer": 0.0,
+     "seconds": 9.36,
+     "compute": 3.893
+    },
+    {
+     "audio": "9909934339673808373.wav",
+     "lang": "en",
+     "ref": "The original population hasn't changed at all, they still need the same adaptations as before.",
+     "hyp": "The original population hasn't changed at all. They still need the same adaptations as before.",
+     "wer": 0.0,
+     "seconds": 10.08,
+     "compute": 3.196
+    },
+    {
+     "audio": "2031944424456517788.wav",
+     "lang": "en",
+     "ref": "The U.N. also hopes to finalize a fund to help countries affected by global warming to cope with the impacts.",
+     "hyp": "The UN also hopes to finalize a fund to help countries affected by global warming to cope with the impacts.",
+     "wer": 9.5,
+     "seconds": 7.08,
+     "compute": 3.425
+    },
+    {
+     "audio": "10146705666908229607.wav",
+     "lang": "en",
+     "ref": "The major religion in Moldova is Orthodox Christian.",
+     "hyp": "The major religion in Moldova is Orthodox Christian.",
+     "wer": 0.0,
+     "seconds": 4.92,
+     "compute": 2.84
+    },
+    {
+     "audio": "6840966447225121742.wav",
+     "lang": "en",
+     "ref": "Any amendments or requests though should be coursed through the travel agent first and not directly with the hotel.",
+     "hyp": "Any amendments or requests should be course through the travel agent first and not directly with the hotel.",
+     "wer": 10.5,
+     "seconds": 10.2,
+     "compute": 3.272
+    },
+    {
+     "audio": "7333859905385431862.wav",
+     "lang": "en",
+     "ref": "If you visit the Arctic or Antarctic areas in the winter you will experience the polar night, which means that the sun doesn't rise above the horizon.",
+     "hyp": "If you visit the Arctic or Antarctic areas in the winter, you will experience the polar night, which means the sun doesn't rise above the horizon.",
+     "wer": 3.6,
+     "seconds": 12.1,
+     "compute": 4.156
+    },
+    {
+     "audio": "11840539862172308240.wav",
+     "lang": "en",
+     "ref": "The satellite in space gets the call and then reflects it back down, almost instantly.",
+     "hyp": "The satellite in space gets the call and then reflects it back down almost instantly.",
+     "wer": 0.0,
+     "seconds": 5.52,
+     "compute": 3.084
+    },
+    {
+     "audio": "7777234891538102330.wav",
+     "lang": "en",
+     "ref": "As NSA, he assisted Carter in diplomatically handling world affairs, such as the Camp David Accords, 1978; normalizing US–China relations thought the late 1970s; the Iranian Revolution, which led to the Iran hostage crisis, 1979; and the Soviet invasion in Afghanistan, 1979.",
+     "hyp": "As NSA, he assisted Carter in diplomatically handling world affairs such as the Camp David  Accords in 1978, normalizing U.S.-China relations through the late 1970s, the Iranian Revolution  which led to the Iran hostage crisis in 1979, in the Soviet invasion in Afghanistan in 1979.",
+     "wer": 16.3,
+     "seconds": 29.1,
+     "compute": 8.511
+    },
+    {
+     "audio": "14187645011903893773.wav",
+     "lang": "en",
+     "ref": "Bush spokesman Gordon Johndroe called North Korea's pledge \"a major step towards the goal of achieving the verifiable denuclearization of the Korean peninsula.\"",
+     "hyp": "Bush spokesman Gordon Gendro called North Korea's pledge a major step towards the goal of achieving the verifiable denuclearization of the Korean Peninsula.",
+     "wer": 4.2,
+     "seconds": 11.94,
+     "compute": 3.806
+    },
+    {
+     "audio": "12443760270511039663.wav",
+     "lang": "en",
+     "ref": "Science now indicates that this massive carbon economy has dislodged the biosphere from one of its stable states that has supported human evolution for the past two million years.",
+     "hyp": "Science now indicates that this massive carbon economy has dislodged the biosphere from one  of its stable states that has supported human evolution for the past two million years.",
+     "wer": 0.0,
+     "seconds": 13.08,
+     "compute": 3.917
+    },
+    {
+     "audio": "10305808618795196942.wav",
+     "lang": "en",
+     "ref": "Pronunciation is relatively easy in Italian since most words are pronounced exactly how they are written",
+     "hyp": "Pronunciation is relatively easy in Italian since most words are pronounced exactly how they are written.",
+     "wer": 0.0,
+     "seconds": 9.32,
+     "compute": 3.149
+    },
+    {
+     "audio": "13870674013435125016.wav",
+     "lang": "en",
+     "ref": "A course will normally cover all the issues discussed here in far greater detail, usually with practical experience.",
+     "hyp": "Of course, we'll normally cover all the issues discussed here in far greater detail, usually with practical experience.",
+     "wer": 16.7,
+     "seconds": 8.28,
+     "compute": 3.304
+    }
+   ]
+  },
+  {
+   "model": "large-v3-turbo",
+   "pipeline": "raw",
+   "agg": {
+    "fa": {
+     "we": 97,
+     "wn": 304,
+     "ce": 79,
+     "cn": 1212,
+     "n": 12,
+     "audio": 194.46,
+     "compute": 57.33354008104652
+    },
+    "en": {
+     "we": 12,
+     "wn": 263,
+     "ce": 29,
+     "cn": 1313,
+     "n": 12,
+     "audio": 130.98000000000002,
+     "compute": 45.99634979106486
+    }
+   },
+   "details": [
+    {
+     "audio": "12890402516457960164.wav",
+     "lang": "fa",
+     "ref": "در اصل بودیسم تبتی خیلی ساده است، و شامل کندالینی یوگا،‌ مراقبه و مسیر عشق فراگیر می‌شود.",
+     "hyp": "در اصل بودیسم تبتی خیلی ساده است و شامل کندالینی یوگا مراقبه و مسیر عشق فراگیر می شود.",
+     "wer": 11.8,
+     "seconds": 14.7,
+     "compute": 3.912
+    },
+    {
+     "audio": "3206635087170235621.wav",
+     "lang": "fa",
+     "ref": "اکنون علم نشان می‌دهد که این اقتصاد کلان کربن، بیوسفر را از یکی از حالات پایدارش خارج کرده است، حالتی که تکامل انسان را در طی دو میلیون سال گذشته تأمین و پشتیبانی کرده است.",
+     "hyp": "اکنون علم نشان می دهد که این اقتصاد کلان کربون بیوسفر را از یکی از حالات پایدارش خارج کرده است، حالتی که تکامل انسان را در تیگه دو میلیون سال گذشته تأمین و پشتیبانی کرده است.",
+     "wer": 11.4,
+     "seconds": 18.42,
+     "compute": 4.569
+    },
+    {
+     "audio": "14416255861754485742.wav",
+     "lang": "fa",
+     "ref": "ارزشش را دارد که نیم ساعت حوالی این روستای جذاب پرسه بزنید.",
+     "hyp": "عرض شش را دارد که نیم ساعت حوالی این رستای جذاب پرسه بزنید",
+     "wer": 25.0,
+     "seconds": 7.56,
+     "compute": 3.715
+    },
+    {
+     "audio": "9173769016283886221.wav",
+     "lang": "fa",
+     "ref": "برخی جشنواره‌ها مکان‌های ویژه‌ای برای اردو زدن خانواده‌ها با فرزند خردسال، دارند.",
+     "hyp": "برخی جشتواره ها مکانهای ویجهی برای اردوزدن خانواده ها با فرزند خردسال دارند.",
+     "wer": 50.0,
+     "seconds": 10.92,
+     "compute": 4.239
+    },
+    {
+     "audio": "13714415504834507055.wav",
+     "lang": "fa",
+     "ref": "حوادث هوایی در ایران رایج است، این کشور دارای ناوگان پیری است که هم در عملیات‌‌‌های غیرنظامی و هم عملیات نظامی به شکل ضعیفی تعمیر و نگهداری می‌شود.",
+     "hyp": "حوادث هوایی در ایران رایج است. این کشور دارای نافگان پیریست که هم در عملیات های غیر نظامی و هم عملیات نظامی به شکل زعیفی تعمیر و نگهتاری می شود.",
+     "wer": 39.3,
+     "seconds": 15.72,
+     "compute": 4.566
+    },
+    {
+     "audio": "5233442681445789389.wav",
+     "lang": "fa",
+     "ref": "سخنگوی «بوش» «گردون جاندرو» تعهد کره شمالی را «یک قدم عمده در جهت هدف دستیابی به خلع سلاح هسته‌ای قابل تأیید برای شبه جزیره کره» قلمداد کرد.",
+     "hyp": "سخنگوی بوش گردون جان رو تعهد کره شمالی را  یک قدم امده در جهت هدف دستیابی به خل اصلاح هستهی قابل تعیید برای شپ جزیره کره قلم داد کرد",
+     "wer": 37.0,
+     "seconds": 17.58,
+     "compute": 4.465
+    },
+    {
+     "audio": "16039268649614350638.wav",
+     "lang": "fa",
+     "ref": "دانشمندان می گویند که پرهای زینتی این حیوان در بالای به رنگ شاه بلوط قهوه ای و در پایین به رنگ کاروتنوئید بود.",
+     "hyp": "دانشمندان می گویند که پرهای زینتی این حیوان در بالا به رنگ شاه بلوت قهوهی و در پایین به رنگ کاروتونایید بود.",
+     "wer": 21.7,
+     "seconds": 12.24,
+     "compute": 4.22
+    },
+    {
+     "audio": "5642184601461536465.wav",
+     "lang": "fa",
+     "ref": "این هشدار می دهد که هیچ کس نمی تواند تضمین کند که هرگونه اقدام در عراق در این مرحله، جنگ فرقه ای، خشونت رو به رشد و یا خیزش به سمت هرج و مرج را متوقف خواهد کرد.",
+     "hyp": "این حشدار میدهد که هیچ کس نمیتواند تزمین کند که هر گونه اقدام در عراق در این مرحله جنگ فرقی خوشنت رو به رشد یا بیا خیزش به سمت هر جمرش را متعقف خواهد کرد",
+     "wer": 44.7,
+     "seconds": 18.66,
+     "compute": 4.794
+    },
+    {
+     "audio": "7280306912057077927.wav",
+     "lang": "fa",
+     "ref": "همچنان در کشورهای آمریکای مرکزی روی هشتاد درصد کالاهای ما از طریق وضع تعرفه، مالیات گرفته می‌شد. ما با شما رفتار می‌کنیم.",
+     "hyp": "همچنان در کشورهای امریکای مرکزی روی 80 درصد کالاهای ما از طریق وضع تعرفه مالیات گرفته می شود.  ما با شما رفتار می کنیم.",
+     "wer": 22.7,
+     "seconds": 13.92,
+     "compute": 4.407
+    },
+    {
+     "audio": "6349654479829416050.wav",
+     "lang": "fa",
+     "ref": "غذای جاوه‌ای که امروزه به طور گسترده در سراسر مجمع الجزایر در دسترس است، حاوی طیفی از خوراک‌های چاشنی دار ساده است، طعم دهنده‌های غالب جاوه‌ای بادام زمینی، فلفل، شکر (به خصوص شکر نارگیل جاوه‌ای) و انواع ادویه‌های معطر است.",
+     "hyp": "قضای جاوهی که امروزه به طور گسترده در سراسر مجمع الجزایر در دست رسست  هاوی تیفی از خوراک های چاشنیدار ساده است  تمدهنده های غالب جاوهی، وادام زمینی، فلفل، شکر  به خصوص شکر نارگیل جاوهی و انواع عدویه های معتر است  موسیقی",
+     "wer": 45.0,
+     "seconds": 32.04,
+     "compute": 9.12
+    },
+    {
+     "audio": "13330306151486253943.wav",
+     "lang": "fa",
+     "ref": "اسرائیل پس از امضای توافق‌نامه خواستار حضور نظامی مداوم در دره برای ده سال است، درحالیكه پارلمان موافق است چنین حضوری تنها برای پنج سال باشد.",
+     "hyp": "اسرائیل پس از امزای توافق نامه خواستار حضور نظامی مداوم در دره برای ده سال است.  در حالی که پارلمان موافق است چنین حضوری تنها برای پنج سال باشد.",
+     "wer": 23.1,
+     "seconds": 16.02,
+     "compute": 4.634
+    },
+    {
+     "audio": "16906437297549914450.wav",
+     "lang": "fa",
+     "ref": "تمبر 1000‌ام او «کارهای بزرگ پادشاهان سوئدی» از دیوید کلوکر ارنشترال در سال 2000 بود که در کتاب رکوردهای جهانی گینس ثبت شده است.",
+     "hyp": "تمر هزارام او کارهای بزرگ پاتشاان سوئدی از دیوید کلکر انشترال در سال دو هزار بود که در کتاب رکورت های جهانی گینس سبت شده است.",
+     "wer": 41.7,
+     "seconds": 16.68,
+     "compute": 4.694
+    },
+    {
+     "audio": "13851036903026386291.wav",
+     "lang": "en",
+     "ref": "Next, some saddles, particularly English saddles, have safety bars that allow a stirrup leather to fall off the saddle if pulled backwards by a falling rider.",
+     "hyp": "Next, some saddles, particularly English saddles, have safety bars that allow a stirrup leather  to fall off the saddle if pulled backwards by a falling rider.",
+     "wer": 0.0,
+     "seconds": 9.36,
+     "compute": 3.976
+    },
+    {
+     "audio": "9909934339673808373.wav",
+     "lang": "en",
+     "ref": "The original population hasn't changed at all, they still need the same adaptations as before.",
+     "hyp": "The original population hasn't changed at all. They still need the same adaptations as before.",
+     "wer": 0.0,
+     "seconds": 10.08,
+     "compute": 3.678
+    },
+    {
+     "audio": "2031944424456517788.wav",
+     "lang": "en",
+     "ref": "The U.N. also hopes to finalize a fund to help countries affected by global warming to cope with the impacts.",
+     "hyp": "The UN also hopes to finalize a fund to help countries affected by global warming to cope with the impacts.",
+     "wer": 9.5,
+     "seconds": 7.08,
+     "compute": 3.759
+    },
+    {
+     "audio": "10146705666908229607.wav",
+     "lang": "en",
+     "ref": "The major religion in Moldova is Orthodox Christian.",
+     "hyp": "The major religion in Moldova is Orthodox Christian.",
+     "wer": 0.0,
+     "seconds": 4.92,
+     "compute": 3.57
+    },
+    {
+     "audio": "6840966447225121742.wav",
+     "lang": "en",
+     "ref": "Any amendments or requests though should be coursed through the travel agent first and not directly with the hotel.",
+     "hyp": "Any amendments or requests should be coursed through the travel agent first and not directly with the hotel.",
+     "wer": 5.3,
+     "seconds": 10.2,
+     "compute": 3.745
+    },
+    {
+     "audio": "7333859905385431862.wav",
+     "lang": "en",
+     "ref": "If you visit the Arctic or Antarctic areas in the winter you will experience the polar night, which means that the sun doesn't rise above the horizon.",
+     "hyp": "If you visit the Arctic or Antarctic areas in the winter, you will experience the polar night, which means the sun doesn't rise above the horizon.",
+     "wer": 3.6,
+     "seconds": 12.1,
+     "compute": 3.87
+    },
+    {
+     "audio": "11840539862172308240.wav",
+     "lang": "en",
+     "ref": "The satellite in space gets the call and then reflects it back down, almost instantly.",
+     "hyp": "The satellite in space gets the call and then reflects it back down almost instantly.",
+     "wer": 0.0,
+     "seconds": 5.52,
+     "compute": 3.641
+    },
+    {
+     "audio": "7777234891538102330.wav",
+     "lang": "en",
+     "ref": "As NSA, he assisted Carter in diplomatically handling world affairs, such as the Camp David Accords, 1978; normalizing US–China relations thought the late 1970s; the Iranian Revolution, which led to the Iran hostage crisis, 1979; and the Soviet invasion in Afghanistan, 1979.",
+     "hyp": "As NSA, he assisted Carter in diplomatically handling world affairs such as the Camp David  Accords , normalizing U.S.-China relations through the late 1970s, the Iranian Revolution  which led to the Iran hostage crisis in the Soviet invasion in Afghanistan .",
+     "wer": 16.3,
+     "seconds": 29.1,
+     "compute": 4.284
+    },
+    {
+     "audio": "14187645011903893773.wav",
+     "lang": "en",
+     "ref": "Bush spokesman Gordon Johndroe called North Korea's pledge \"a major step towards the goal of achieving the verifiable denuclearization of the Korean peninsula.\"",
+     "hyp": "Bush spokesman Gordon Jandro called North Korea's pledge a major step towards the goal of achieving the verifiable denuclearization of the Korean Peninsula.",
+     "wer": 4.2,
+     "seconds": 11.94,
+     "compute": 3.889
+    },
+    {
+     "audio": "12443760270511039663.wav",
+     "lang": "en",
+     "ref": "Science now indicates that this massive carbon economy has dislodged the biosphere from one of its stable states that has supported human evolution for the past two million years.",
+     "hyp": "Science now indicates that this massive carbon economy has dislodged the biosphere from one of its stable states that has supported human evolution for the past 2 million years.",
+     "wer": 0.0,
+     "seconds": 13.08,
+     "compute": 3.868
+    },
+    {
+     "audio": "10305808618795196942.wav",
+     "lang": "en",
+     "ref": "Pronunciation is relatively easy in Italian since most words are pronounced exactly how they are written",
+     "hyp": "Pronunciation is relatively easy in Italian since most words are pronounced exactly how they are written.",
+     "wer": 0.0,
+     "seconds": 9.32,
+     "compute": 3.697
+    },
+    {
+     "audio": "13870674013435125016.wav",
+     "lang": "en",
+     "ref": "A course will normally cover all the issues discussed here in far greater detail, usually with practical experience.",
+     "hyp": "A course will normally cover all the issues discussed here in far greater detail, usually with practical experience.",
+     "wer": 0.0,
+     "seconds": 8.28,
+     "compute": 4.021
+    }
+   ]
+  },
+  {
+   "model": "large-v3",
+   "pipeline": "raw",
+   "agg": {
+    "fa": {
+     "we": 95,
+     "wn": 304,
+     "ce": 88,
+     "cn": 1212,
+     "n": 12,
+     "audio": 194.46,
+     "compute": 140.41960124892648
+    },
+    "en": {
+     "we": 15,
+     "wn": 263,
+     "ce": 36,
+     "cn": 1313,
+     "n": 12,
+     "audio": 130.98000000000002,
+     "compute": 74.93350054090843
+    }
+   },
+   "details": [
+    {
+     "audio": "12890402516457960164.wav",
+     "lang": "fa",
+     "ref": "در اصل بودیسم تبتی خیلی ساده است، و شامل کندالینی یوگا،‌ مراقبه و مسیر عشق فراگیر می‌شود.",
+     "hyp": "در اصل بودیسم طبتی خیلی ساده است و شامل کندالینی یوگا مراقبه و مسیر عشق فراگیر می شود.",
+     "wer": 17.6,
+     "seconds": 14.7,
+     "compute": 8.706
+    },
+    {
+     "audio": "3206635087170235621.wav",
+     "lang": "fa",
+     "ref": "اکنون علم نشان می‌دهد که این اقتصاد کلان کربن، بیوسفر را از یکی از حالات پایدارش خارج کرده است، حالتی که تکامل انسان را در طی دو میلیون سال گذشته تأمین و پشتیبانی کرده است.",
+     "hyp": "اکنون علم نشان می دهد که این اقتصاد کلان کربون بیوسفر را از یکی از حالات پایدارش خارج کرده است، حالتی که تکامل انسان را در تقیه دو میلیون سال گذشته تأمین و پشتیبانی کرده است.",
+     "wer": 11.4,
+     "seconds": 18.42,
+     "compute": 13.215
+    },
+    {
+     "audio": "14416255861754485742.wav",
+     "lang": "fa",
+     "ref": "ارزشش را دارد که نیم ساعت حوالی این روستای جذاب پرسه بزنید.",
+     "hyp": "ارزشش را دارد که نیم ساعت حوالی این رستای جذاب پرسه بزنید",
+     "wer": 8.3,
+     "seconds": 7.56,
+     "compute": 7.882
+    },
+    {
+     "audio": "9173769016283886221.wav",
+     "lang": "fa",
+     "ref": "برخی جشنواره‌ها مکان‌های ویژه‌ای برای اردو زدن خانواده‌ها با فرزند خردسال، دارند.",
+     "hyp": "برخی جشتواره ها مکانهای ویجهی برای اردوزدن خانواده ها با فرزند خوردسال دارند.",
+     "wer": 58.3,
+     "seconds": 10.92,
+     "compute": 8.692
+    },
+    {
+     "audio": "13714415504834507055.wav",
+     "lang": "fa",
+     "ref": "حوادث هوایی در ایران رایج است، این کشور دارای ناوگان پیری است که هم در عملیات‌‌‌های غیرنظامی و هم عملیات نظامی به شکل ضعیفی تعمیر و نگهداری می‌شود.",
+     "hyp": "حوادث هوایی در ایران رایج است. این کشور دارای نافگان پیری است که هم در عملیاتهای غیر نظامی و هم عملیات نظامی به شکل زعیفی تعمیر و نگهتاری می شود.",
+     "wer": 25.0,
+     "seconds": 15.72,
+     "compute": 11.849
+    },
+    {
+     "audio": "5233442681445789389.wav",
+     "lang": "fa",
+     "ref": "سخنگوی «بوش» «گردون جاندرو» تعهد کره شمالی را «یک قدم عمده در جهت هدف دستیابی به خلع سلاح هسته‌ای قابل تأیید برای شبه جزیره کره» قلمداد کرد.",
+     "hyp": "سخنگوی بوش گردون جان رو تعهد کوره شمالی را  یک قدم عمده در جهد هدف دستیابی به خل اصلاح هستئی قابل تعیید برای شپ جزیره کوره قلم داد کرد",
+     "wer": 44.4,
+     "seconds": 17.58,
+     "compute": 11.768
+    },
+    {
+     "audio": "16039268649614350638.wav",
+     "lang": "fa",
+     "ref": "دانشمندان می گویند که پرهای زینتی این حیوان در بالای به رنگ شاه بلوط قهوه ای و در پایین به رنگ کاروتنوئید بود.",
+     "hyp": "دانشمندان می گویند که پرهای زینتی این حیوان در بالا به رنگ شاه، بلوت قهوهی و در پایین به رنگ کاروتونایید بود.",
+     "wer": 21.7,
+     "seconds": 12.24,
+     "compute": 9.607
+    },
+    {
+     "audio": "5642184601461536465.wav",
+     "lang": "fa",
+     "ref": "این هشدار می دهد که هیچ کس نمی تواند تضمین کند که هرگونه اقدام در عراق در این مرحله، جنگ فرقه ای، خشونت رو به رشد و یا خیزش به سمت هرج و مرج را متوقف خواهد کرد.",
+     "hyp": "این حشدار میدهد که هیچ کس نمیتواند تزمین کند که هر گونه اقدام در عراق در این مرحله جنگ فرقی خوشنات رو به رشد یا بیا خیزش به سمت هر جمعه را متقف خواهد کرد",
+     "wer": 44.7,
+     "seconds": 18.66,
+     "compute": 12.867
+    },
+    {
+     "audio": "7280306912057077927.wav",
+     "lang": "fa",
+     "ref": "همچنان در کشورهای آمریکای مرکزی روی هشتاد درصد کالاهای ما از طریق وضع تعرفه، مالیات گرفته می‌شد. ما با شما رفتار می‌کنیم.",
+     "hyp": "همچنان در کشورهای امریکای مرکزی روی 80 درصد کالاهای ما از طریق وضع تعرفه مالیات گرفته می شود. ما با شما رفتار می کنیم.",
+     "wer": 22.7,
+     "seconds": 13.92,
+     "compute": 10.193
+    },
+    {
+     "audio": "6349654479829416050.wav",
+     "lang": "fa",
+     "ref": "غذای جاوه‌ای که امروزه به طور گسترده در سراسر مجمع الجزایر در دسترس است، حاوی طیفی از خوراک‌های چاشنی دار ساده است، طعم دهنده‌های غالب جاوه‌ای بادام زمینی، فلفل، شکر (به خصوص شکر نارگیل جاوه‌ای) و انواع ادویه‌های معطر است.",
+     "hyp": "غذای جاویی که امروزه به طور گسترده در سراسر مجمعال جزائیر در دست رسست،  هاوی تیفی از خوراک های چاشنیدار ساده است،  تمدهنده های غالب جاویی، وادام زمینی، فلفل، شکر،  به خصوص شکر نارگیل جاویی و انواع عدویه های معتر است.  موسیقی",
+     "wer": 47.5,
+     "seconds": 32.04,
+     "compute": 23.057
+    },
+    {
+     "audio": "13330306151486253943.wav",
+     "lang": "fa",
+     "ref": "اسرائیل پس از امضای توافق‌نامه خواستار حضور نظامی مداوم در دره برای ده سال است، درحالیكه پارلمان موافق است چنین حضوری تنها برای پنج سال باشد.",
+     "hyp": "اسرائیل پس از امزای توافقنامه خواستار حضور نظامی مداوم در دره برای ده سال است.  در حالی که پارلمان موافق است چنین حضوری تنها برای پنج سال باشد.",
+     "wer": 15.4,
+     "seconds": 16.02,
+     "compute": 11.256
+    },
+    {
+     "audio": "16906437297549914450.wav",
+     "lang": "fa",
+     "ref": "تمبر 1000‌ام او «کارهای بزرگ پادشاهان سوئدی» از دیوید کلوکر ارنشترال در سال 2000 بود که در کتاب رکوردهای جهانی گینس ثبت شده است.",
+     "hyp": "تمر هزارام او کارهای بزرگ پاتشان سوهدی از دیوید کولکر انرشترال در سال دو هزار بود که در کتاب ریکوردهای جهانی گینست سبت شده است.",
+     "wer": 45.8,
+     "seconds": 16.68,
+     "compute": 11.327
+    },
+    {
+     "audio": "13851036903026386291.wav",
+     "lang": "en",
+     "ref": "Next, some saddles, particularly English saddles, have safety bars that allow a stirrup leather to fall off the saddle if pulled backwards by a falling rider.",
+     "hyp": "Next, some saddles, particularly English saddles have safety bars that allow a stirrup leather to fall off the saddle if pulled backwards by a falling rider.",
+     "wer": 0.0,
+     "seconds": 9.36,
+     "compute": 7.026
+    },
+    {
+     "audio": "9909934339673808373.wav",
+     "lang": "en",
+     "ref": "The original population hasn't changed at all, they still need the same adaptations as before.",
+     "hyp": "The original population hasn't changed at all. They still need the same  adaptations as before.",
+     "wer": 0.0,
+     "seconds": 10.08,
+     "compute": 5.84
+    },
+    {
+     "audio": "2031944424456517788.wav",
+     "lang": "en",
+     "ref": "The U.N. also hopes to finalize a fund to help countries affected by global warming to cope with the impacts.",
+     "hyp": "The UN also hopes to finalize a fund to help countries affected by global warming to cope with the impacts.",
+     "wer": 9.5,
+     "seconds": 7.08,
+     "compute": 5.955
+    },
+    {
+     "audio": "10146705666908229607.wav",
+     "lang": "en",
+     "ref": "The major religion in Moldova is Orthodox Christian.",
+     "hyp": "The major religion in Moldova is Orthodox Christian.",
+     "wer": 0.0,
+     "seconds": 4.92,
+     "compute": 4.826
+    },
+    {
+     "audio": "6840966447225121742.wav",
+     "lang": "en",
+     "ref": "Any amendments or requests though should be coursed through the travel agent first and not directly with the hotel.",
+     "hyp": "Any amendments or requests should be coerced through the travel agent first and not directly with the hotel.",
+     "wer": 10.5,
+     "seconds": 10.2,
+     "compute": 5.989
+    },
+    {
+     "audio": "7333859905385431862.wav",
+     "lang": "en",
+     "ref": "If you visit the Arctic or Antarctic areas in the winter you will experience the polar night, which means that the sun doesn't rise above the horizon.",
+     "hyp": "If you visit the Arctic or Antarctic areas in the winter, you will experience the polar night, which means the sun doesn't rise above the horizon.",
+     "wer": 3.6,
+     "seconds": 12.1,
+     "compute": 6.596
+    },
+    {
+     "audio": "11840539862172308240.wav",
+     "lang": "en",
+     "ref": "The satellite in space gets the call and then reflects it back down, almost instantly.",
+     "hyp": "The satellite in space gets the call and then reflects it back down almost instantly.",
+     "wer": 0.0,
+     "seconds": 5.52,
+     "compute": 5.115
+    },
+    {
+     "audio": "7777234891538102330.wav",
+     "lang": "en",
+     "ref": "As NSA, he assisted Carter in diplomatically handling world affairs, such as the Camp David Accords, 1978; normalizing US–China relations thought the late 1970s; the Iranian Revolution, which led to the Iran hostage crisis, 1979; and the Soviet invasion in Afghanistan, 1979.",
+     "hyp": "As an essay, he assisted Carter in diplomatically handling world affairs such as the Camp David  Accords .  Normalizing U.S.-China relations through the late 1970s, the Iranian Revolution which led  to the Iran Hostage Crisis in the Soviet invasion in Afghanistan .",
+     "wer": 20.9,
+     "seconds": 29.1,
+     "compute": 8.923
+    },
+    {
+     "audio": "14187645011903893773.wav",
+     "lang": "en",
+     "ref": "Bush spokesman Gordon Johndroe called North Korea's pledge \"a major step towards the goal of achieving the verifiable denuclearization of the Korean peninsula.\"",
+     "hyp": "Bush spokesman Gordon Gendro called North Korea's pledge a major step towards the goal of achieving the verifiable denuclearization of the Korean Peninsula.",
+     "wer": 4.2,
+     "seconds": 11.94,
+     "compute": 6.535
+    },
+    {
+     "audio": "12443760270511039663.wav",
+     "lang": "en",
+     "ref": "Science now indicates that this massive carbon economy has dislodged the biosphere from one of its stable states that has supported human evolution for the past two million years.",
+     "hyp": "Science now indicates that this massive carbon economy has dislodged the biosphere from one of its stable states that has supported human evolution for the past 2 million years.",
+     "wer": 0.0,
+     "seconds": 13.08,
+     "compute": 6.807
+    },
+    {
+     "audio": "10305808618795196942.wav",
+     "lang": "en",
+     "ref": "Pronunciation is relatively easy in Italian since most words are pronounced exactly how they are written",
+     "hyp": "Pronunciation is relatively easy in Italian since most words are pronounced exactly how they are written.",
+     "wer": 0.0,
+     "seconds": 9.32,
+     "compute": 5.571
+    },
+    {
+     "audio": "13870674013435125016.wav",
+     "lang": "en",
+     "ref": "A course will normally cover all the issues discussed here in far greater detail, usually with practical experience.",
+     "hyp": "A course will normally cover all the issues discussed here in far greater detail,  usually with practical experience.",
+     "wer": 0.0,
+     "seconds": 8.28,
+     "compute": 5.75
+    }
+   ]
+  }
+ ]
+}

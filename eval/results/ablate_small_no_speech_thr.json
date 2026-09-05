@@ -1,0 +1,1114 @@
+{
+ "langs": [
+  "en",
+  "fa"
+ ],
+ "results": [
+  {
+   "model": "small",
+   "pipeline": "guya-no_speech_thr",
+   "agg": {
+    "fa": {
+     "we": 848,
+     "wn": 1355,
+     "ce": 1153,
+     "cn": 5572,
+     "n": 60,
+     "audio": 885.3600000000001,
+     "compute": 238.75776799710002
+    },
+    "en": {
+     "we": 189,
+     "wn": 1211,
+     "ce": 640,
+     "cn": 5812,
+     "n": 60,
+     "audio": 566.0600000000001,
+     "compute": 92.8108880413929
+    }
+   },
+   "details": [
+    {
+     "audio": "12890402516457960164.wav",
+     "lang": "fa",
+     "ref": "در اصل بودیسم تبتی خیلی ساده است، و شامل کندالینی یوگا،‌ مراقبه و مسیر عشق فراگیر می‌شود.",
+     "hyp": "در اصل، بودیسم، تبتی خیل ساده است، وشامل کندالینی یوگا، مراقبه، ومسیر عشک فراغیر می شد.",
+     "wer": 47.1,
+     "seconds": 14.7,
+     "compute": 3.274
+    },
+    {
+     "audio": "3206635087170235621.wav",
+     "lang": "fa",
+     "ref": "اکنون علم نشان می‌دهد که این اقتصاد کلان کربن، بیوسفر را از یکی از حالات پایدارش خارج کرده است، حالتی که تکامل انسان را در طی دو میلیون سال گذشته تأمین و پشتیبانی کرده است.",
+     "hyp": "اکنون، علم نشام میدهت که این اختصاد کلان کربان بیوزفر را از یکی از حالات پایدا رش خارج کردست. حالتی که تقام مول انسان را در تگه 2 ملیون سال گذاشته, تعمین و پوشتبانی کردست.",
+     "wer": 51.4,
+     "seconds": 18.42,
+     "compute": 5.486
+    },
+    {
+     "audio": "14416255861754485742.wav",
+     "lang": "fa",
+     "ref": "ارزشش را دارد که نیم ساعت حوالی این روستای جذاب پرسه بزنید.",
+     "hyp": "ارز ششرا دارت کنیم ساعت هوالی، ان رسطای جذب پرس بزنید.",
+     "wer": 83.3,
+     "seconds": 7.56,
+     "compute": 2.783
+    },
+    {
+     "audio": "9173769016283886221.wav",
+     "lang": "fa",
+     "ref": "برخی جشنواره‌ها مکان‌های ویژه‌ای برای اردو زدن خانواده‌ها با فرزند خردسال، دارند.",
+     "hyp": "برخی جشت واره ها، مکانهای ویجعی، پرای اوردوزادن خانواده‌ها بفرضند خود سال دارند.",
+     "wer": 83.3,
+     "seconds": 10.92,
+     "compute": 3.132
+    },
+    {
+     "audio": "13714415504834507055.wav",
+     "lang": "fa",
+     "ref": "حوادث هوایی در ایران رایج است، این کشور دارای ناوگان پیری است که هم در عملیات‌‌‌های غیرنظامی و هم عملیات نظامی به شکل ضعیفی تعمیر و نگهداری می‌شود.",
+     "hyp": "هوادس حوائی در ایران رایا جست، این کشفر، داره نافگان پیریز، که هم در عملیادهای غیر نظامی، به هم عملیات نظامی بشکل زعیفی تعمیر و نقعتاری می شود.",
+     "wer": 67.9,
+     "seconds": 15.72,
+     "compute": 5.786
+    },
+    {
+     "audio": "5233442681445789389.wav",
+     "lang": "fa",
+     "ref": "سخنگوی «بوش» «گردون جاندرو» تعهد کره شمالی را «یک قدم عمده در جهت هدف دستیابی به خلع سلاح هسته‌ای قابل تأیید برای شبه جزیره کره» قلمداد کرد.",
+     "hyp": "سوخنگوی باش، گردون جندرو، تحاد کوره شمالی را، یک قدم اومده دارجهاد هداف دستیابی به خل استلاحی حسطیق آب لتائید برای شپجزیری کوره قلم دات کرد.",
+     "wer": 66.7,
+     "seconds": 17.58,
+     "compute": 4.82
+    },
+    {
+     "audio": "16039268649614350638.wav",
+     "lang": "fa",
+     "ref": "دانشمندان می گویند که پرهای زینتی این حیوان در بالای به رنگ شاه بلوط قهوه ای و در پایین به رنگ کاروتنوئید بود.",
+     "hyp": "تانشمندون میگویند که پرحای زینتکه این هیوان، دربالها برایم شاه, بلوت غفعی، و در پایین به رنگ کاروط نوعید بود.",
+     "wer": 65.2,
+     "seconds": 12.24,
+     "compute": 3.874
+    },
+    {
+     "audio": "5642184601461536465.wav",
+     "lang": "fa",
+     "ref": "این هشدار می دهد که هیچ کس نمی تواند تضمین کند که هرگونه اقدام در عراق در این مرحله، جنگ فرقه ای، خشونت رو به رشد و یا خیزش به سمت هرج و مرج را متوقف خواهد کرد.",
+     "hyp": "این هستار میدهت کهیچکس نمیطا من تزمن کنند، که هر گونه اقدام در عراق، در این مرحل جنگ فرغی، خوشنات رو بروشت یا بیا خیضش به سمت حرج ومرج را متوقف خواعت کرد.",
+     "wer": 65.8,
+     "seconds": 18.66,
+     "compute": 5.463
+    },
+    {
+     "audio": "7280306912057077927.wav",
+     "lang": "fa",
+     "ref": "همچنان در کشورهای آمریکای مرکزی روی هشتاد درصد کالاهای ما از طریق وضع تعرفه، مالیات گرفته می‌شد. ما با شما رفتار می‌کنیم.",
+     "hyp": "همچان در کشفرهای امریکای مرکزی رو یه حشتات در سد قالاهای ما از طریق وضع ترفه، مالیات گرفته می شودت. ما باشما رفتار می کنیم.",
+     "wer": 72.7,
+     "seconds": 13.92,
+     "compute": 4.495
+    },
+    {
+     "audio": "6349654479829416050.wav",
+     "lang": "fa",
+     "ref": "غذای جاوه‌ای که امروزه به طور گسترده در سراسر مجمع الجزایر در دسترس است، حاوی طیفی از خوراک‌های چاشنی دار ساده است، طعم دهنده‌های غالب جاوه‌ای بادام زمینی، فلفل، شکر (به خصوص شکر نارگیل جاوه‌ای) و انواع ادویه‌های معطر است.",
+     "hyp": "گزای جاوئی که ام روز بطور گسترده در سراسر مجماول، جذائیر، در دسترست، هوافی تحفی از خوراقهای چشنیدار ساده است. تم دهندہ‌های غالب جاوئی و آدم زمینی، فلفل، شکر، به خصوظ شکر نارگیل جاوئی و انواعی عدویه‌های معترست.",
+     "wer": 62.5,
+     "seconds": 32.04,
+     "compute": 7.803
+    },
+    {
+     "audio": "13330306151486253943.wav",
+     "lang": "fa",
+     "ref": "اسرائیل پس از امضای توافق‌نامه خواستار حضور نظامی مداوم در دره برای ده سال است، درحالیكه پارلمان موافق است چنین حضوری تنها برای پنج سال باشد.",
+     "hyp": "اسرائیل پس از امضای توافق نامه خاصتار حوظور نظامی مدعوم در، در رے برای 10 سال است. در هالی که پارلمان معافگست, چنین حوظوری تنها برای 5 سال باشته.",
+     "wer": 53.8,
+     "seconds": 16.02,
+     "compute": 4.452
+    },
+    {
+     "audio": "16906437297549914450.wav",
+     "lang": "fa",
+     "ref": "تمبر 1000‌ام او «کارهای بزرگ پادشاهان سوئدی» از دیوید کلوکر ارنشترال در سال 2000 بود که در کتاب رکوردهای جهانی گینس ثبت شده است.",
+     "hyp": "تمره هزارام او، کارهای بظورگ پاتشا اون سوایدی، از دیبیت قلکر، انشطرال، در سال دو حضار بود، که در کتاب ریکورتهای جحانی گینس سپ چادست.",
+     "wer": 66.7,
+     "seconds": 16.68,
+     "compute": 4.282
+    },
+    {
+     "audio": "5088173562799094320.wav",
+     "lang": "fa",
+     "ref": "در ابتدای سفر خارجی خود، مردم احتمالاً صبور و فهمیده بودند و می دانستند که مسافرانی که به یک کشور جدید آمده‌اند نیاز به سازگاری دارند.",
+     "hyp": "در ابتدای سفر خارجی خود، مردم احتمالا صبور و فهمیده بودند. و میدان اسسند که ماصافراین که به یک شوارمی جدید میهایند آمادند نیاست به سازگاری دارند.",
+     "wer": 26.9,
+     "seconds": 15.72,
+     "compute": 4.268
+    },
+    {
+     "audio": "14309400691211053478.wav",
+     "lang": "fa",
+     "ref": "به محض اینکه از جریان خارج شوید، با شنا بازگشتن از شرایط معمول سخت‌تر نخواهد بود.",
+     "hyp": "بمحس اینکه از جریان خارد شوید، باشنا، بازگشن، از شرایت مامول سختر نخاوت بود.",
+     "wer": 62.5,
+     "seconds": 9.72,
+     "compute": 2.821
+    },
+    {
+     "audio": "8764311298878604165.wav",
+     "lang": "fa",
+     "ref": "هزاران سال پیش، مردی به نام آریستارخوس گفت که منظومه شمسی به دور خورشید حرکت می کند.",
+     "hyp": "هزاران سال پیش، مردی به نام آریس ترخوص گفت که منظومی شمسی بدور خرشیط حرکت میکنت.",
+     "wer": 47.1,
+     "seconds": 14.16,
+     "compute": 2.873
+    },
+    {
+     "audio": "12467783608177773440.wav",
+     "lang": "fa",
+     "ref": "این نظریه‌ها مطرح می‌کنند که افراد نیازها و/یا تمایلاتی مشخص دارند که طی رشد و رسیدن به بزرگسالی این نیازها و تمایلات درون‌سازی شده‌اند.",
+     "hyp": "این نظریها مطرح میکنند، که افراید نیاز ها و یاد حمایولاتی مشخص دارند, کتی روشت و رسیدان به بضورگ سالی، این نیاز ها و حمایولات ترون صازی شودند.",
+     "wer": 72.0,
+     "seconds": 13.86,
+     "compute": 4.252
+    },
+    {
+     "audio": "16951202049154891087.wav",
+     "lang": "fa",
+     "ref": "پرتغالی‌ها آن را تخریب کردند و سپس آن را با نام کازابلانکا بازسازی کردند و تنها پس از زلزله سال 1755 آن را ترک کردند.",
+     "hyp": "پورتاغالیها انرا تخویب کردن، و سفس انرا بنام کازله بالانکاه، به استاذی کردند. وطنحا, پس از دیزله صاله 1755 انرا طرق کردند.",
+     "wer": 76.0,
+     "seconds": 16.8,
+     "compute": 3.818
+    },
+    {
+     "audio": "10868745281789156233.wav",
+     "lang": "fa",
+     "ref": "غذاهای روم باستان نمی‌تواند غذاهایی که در قرن‌های بعد از آمریکا و آسیا آورده می‌شد را شامل شده باشد.",
+     "hyp": "گزاهای روم بستان، نمیتبوند، گزاهای که در قرنهای بعد از امریکاه و آسیا عوردمی شروع پرا شامل چوده باشد.",
+     "wer": 47.4,
+     "seconds": 12.42,
+     "compute": 3.309
+    },
+    {
+     "audio": "13583074280919071750.wav",
+     "lang": "fa",
+     "ref": "کمی بعد، افسرهای مجهز به تجهیزات ضد شورش وارد حیاط شدند و زندانی‌ها را با گاز اشک‌آور محدود کردند.",
+     "hyp": "کمی بد، افسرحای مجهز به تقعیضات زت دشورش، وارد حیاد شودند، و ذندا نها را بگاز عاشکاور محتوط کردند.",
+     "wer": 68.4,
+     "seconds": 11.94,
+     "compute": 3.435
+    },
+    {
+     "audio": "1482661730007773555.wav",
+     "lang": "fa",
+     "ref": "قسمت شمالی یا دامنه سنتینل دارای مرتفع‌ترین کوه قطب جنوب، یعنی وینسون ماسیف است که دارای ارتفاع 4892 متر در کوه وینسون است.",
+     "hyp": "قسمت شمادی دوانه سنطینل، دارای مرتفع ترین کوم خود بجونوب، یعنی وینسون، ماصیف است، که دارای ارتفاع 4.892 متر، در کوه وینسون است.",
+     "wer": 52.2,
+     "seconds": 21.72,
+     "compute": 3.989
+    },
+    {
+     "audio": "16566550308172702482.wav",
+     "lang": "fa",
+     "ref": "وقتی با کسی تماس می‌گیرید که هزاران مایل با شما فاصله دارد، دارید از ماهواره استفاده می‌کنید.",
+     "hyp": "وقت باکست تماس میگیرید که هزارم مایل باشما فاصر دارت، دارید از محور استفاد میکنید.",
+     "wer": 58.8,
+     "seconds": 10.56,
+     "compute": 2.73
+    },
+    {
+     "audio": "4174939948499554943.wav",
+     "lang": "fa",
+     "ref": "در نهایت چرخ‌های چوبی جایگزین چرخ‌های آهنین شد. در 1767، اولین ریل‌های تمام آهنی معرفی شد.",
+     "hyp": "در نهایت، چارخای چوبی، جائگوزین، چارخای آهنین شود، در 1787، اولین ریل های تمام آهنی معرفی شود.",
+     "wer": 50.0,
+     "seconds": 13.86,
+     "compute": 3.221
+    },
+    {
+     "audio": "13531907089267762960.wav",
+     "lang": "fa",
+     "ref": "برخی از حیوانات، مانند فیل ها و زرافه ها، تمایل دارند از به اتومبیل ها نزدیک شوند و تجهیزات استاندارد امکان بازدید مناسب آنها را فراهم می آورد.",
+     "hyp": "برخی از حیوانات سمانند، فلها و زرافه ها تمایول دارند، از به آتوموبیلها نصذیک شبند. و تجشیظات اسندارد امکان بازدی دمونسه به انها را فراهم میاهورد.",
+     "wer": 57.1,
+     "seconds": 20.4,
+     "compute": 4.43
+    },
+    {
+     "audio": "10049006222377318397.wav",
+     "lang": "fa",
+     "ref": "بزرگترین مسابقه سال در ماه دسامبر در زمین‌های چوگان «لاس کانیتاس» اتفاق می‌افتد.",
+     "hyp": "بزوگ تر این مصابقه سال، در ماهدسام، در زمینهای چغاند لاست کنیکاس، اتفاق میوفتهد.",
+     "wer": 76.9,
+     "seconds": 9.54,
+     "compute": 2.807
+    },
+    {
+     "audio": "10686253278685371444.wav",
+     "lang": "fa",
+     "ref": "دین اصلی مردم مولداوی مسیحیت ارتدکس است.",
+     "hyp": "دین اصلی مردوم مولداوی، مسیحیت آور توژودکسست.",
+     "wer": 42.9,
+     "seconds": 6.48,
+     "compute": 2.087
+    },
+    {
+     "audio": "14357883945688037673.wav",
+     "lang": "fa",
+     "ref": "سازمان ملل همچنین امیدوار است برای کمک به کشورهایی که تحت تاثیر گرمایش کره زمین قرار گرفته اند، بودجه‌ای را نهایی کند تا بتواند با این اثرات مقابله کند.",
+     "hyp": "سازمان ملال، همچنین اومیدوار است برای کامک به کشفرهایی که تحت تصور گرمای شیکوری زمین قرار گرفتا اند، بود جئیرا نحائقوند، طابط واند, با ایم اسرات معابل کرند.",
+     "wer": 62.1,
+     "seconds": 16.92,
+     "compute": 4.918
+    },
+    {
+     "audio": "4427534799203774941.wav",
+     "lang": "fa",
+     "ref": "این پارک 19،500 کیلومتر مربع مساحت دارد و به 14 قلمرو مختلف زیست‌جغرافیایی تقسیم می‌شود، که هر یک از آنها حیات‌وحش متفاوتی را پشتیبانی می‌کنند.",
+     "hyp": "این پارک نوز، ده هزار، پنست کلومیٹر مربع مساحت دارد، بب چادخ قلم روی مختلف زیست جاغرافیای تقصیم میشات، که هری یک از آناها حیاه وحشر متafavetira پوشطیبانی مییکونند.",
+     "wer": 76.9,
+     "seconds": 15.96,
+     "compute": 4.895
+    },
+    {
+     "audio": "12674073833018650977.wav",
+     "lang": "fa",
+     "ref": "تلفظ واژه‌های زبان ایتالیایی نسبتاً ساده است، زیرا تلفظ اکثر لغات دقیقاً همانند نوشتن آن است.",
+     "hyp": "تلفوز واجه های زبان ایتالیای نسبطن ساد است، زیرا تلفوز، تلفوز عکسر لغات دقیگا حمنند نمیشتهن آناست.",
+     "wer": 87.5,
+     "seconds": 12.84,
+     "compute": 3.465
+    },
+    {
+     "audio": "11219382292680106104.wav",
+     "lang": "fa",
+     "ref": "بدلیل فاصله زیاد از قاره، حیوانات پستاندار نمی‌توانستند تا آنجا سفر کنند، از این رو لاکپشت بزرگ اصلی‌ترین حیوانی است که در گالاپاگوس چرا می‌کند.",
+     "hyp": "بدلی لفصله، زیاد از قارره، حیوانات پسندار نمیتون سنطانجا صفر کناد. از این رور لاکبشته بظور که اس وی طریق هایوانی است که در گالا پابوس چرا می کناد.",
+     "wer": 84.0,
+     "seconds": 17.64,
+     "compute": 4.677
+    },
+    {
+     "audio": "2842833485187093848.wav",
+     "lang": "fa",
+     "ref": "در سراسر ایالات متحده آمریکا، تقریباً 400،000 مورد شناخته شده از بیماری گرفتگی بافت‌های گوناگون (MS) وجود دارد، که یک بیماری عصبی مهم در بزرگسالان جوان‌تر و مسن به حساب می‌آید.",
+     "hyp": "در سراسر ای حالت مدطایده عمریکها، تقویمان چار سات هزار مورد شناخته شده از بیماری گرفتگی بافتای گناگون، این اس وجود دارد، کک بیماری أسبی مهم در بظورت سلان جوانتر و موسند بهحصاب میائیاد.",
+     "wer": 65.6,
+     "seconds": 22.44,
+     "compute": 5.498
+    },
+    {
+     "audio": "7060947375204686095.wav",
+     "lang": "fa",
+     "ref": "نمونه‌هایی از فعالیت‌ها در این محل عبارتند از شکار، ماهیگیری، عکاسی، تماشای پرندگان و بازدید از پارک‌ها و مطالعه اطلاعاتی در مورد اکوسیستم.",
+     "hyp": "نمونهای از فعادیت ها در این محل، عبارتند، از شکار ماهگری اقسی، تماشه پرندگان و بازید از پارکاه و متالئه اعتلاطی درمرو به قصیست.",
+     "wer": 56.5,
+     "seconds": 17.16,
+     "compute": 4.039
+    },
+    {
+     "audio": "8152981438188133086.wav",
+     "lang": "fa",
+     "ref": "برنده مدال طلای المپیک در شنای 100 متر و 200 متر آزاد و شنای سه‌گانه در بازی‌های کشورهای مشترک‌المنافع بود، اما به دلیل شکایت وی، در خصوص آمادگی جسمانی او در این مسابقات تردید وجود داشته‌ است.",
+     "hyp": "برنده مدال تلای اولمپیک در شنای سد میتر و دیوست میتر آزاد و شنای سگانه، دربازی های کشفرهای مشتراکون منافعه بود. عماب دلی لشقائط به این، در خصوص آمادگی جسمانی و دری مسابغات تردید وجود داشته است.",
+     "wer": 56.8,
+     "seconds": 20.16,
+     "compute": 5.634
+    },
+    {
+     "audio": "602810101472758516.wav",
+     "lang": "fa",
+     "ref": "شهر «تیمبوکتو» که تقریباً دسترسی خیلی کمی داشته سبب شده که نامش به عنوان استعاره برای سرزمین‌های عجیب و دور از دسترس استفاده شود.",
+     "hyp": "شهر تیم بکتو، که تقریبا دستراسی خیلیکم ایداشته، سبب شوده، که نامش به ان وان استعاره برای سر زمنهای عجیب و دورز دستراس استفاده شوت.",
+     "wer": 62.5,
+     "seconds": 14.16,
+     "compute": 4.13
+    },
+    {
+     "audio": "14301738889013282423.wav",
+     "lang": "fa",
+     "ref": "آرژانتین بخاطر داشتن یکی از بهترین تیم‌های چوگان و بهترین بازیکنان جهان شهرت دارد.",
+     "hyp": "آر جانتین به خاطر داشنه یکی از بہترین تیم های چلگان، وبهترین بازدیکونا نجحان شاهرت دارت.",
+     "wer": 100.0,
+     "seconds": 9.9,
+     "compute": 3.065
+    },
+    {
+     "audio": "12970932205929123480.wav",
+     "lang": "fa",
+     "ref": "محصولات صنایع دستی ممکن است به عنوان عتیقه تعریف شود، گرچه آنها از کالاهای مشابه تولید انبوه جدیدتر هستند.",
+     "hyp": "محسولات سنایه دستی ممکن اصد به اومان عتق تریف شود، گرچه اونا از کالا های مشابه تو لید انبو جدیت رستند.",
+     "wer": 73.7,
+     "seconds": 12.12,
+     "compute": 3.412
+    },
+    {
+     "audio": "1596990958235939726.wav",
+     "lang": "fa",
+     "ref": "هنگامی‌ که از میلر خواسته شد اظهارنظر کند گفت: «مایک در زمان دادرسی زیاد صحبت می‌کرد ... من داشتم آماده می‌شدم بنابراین واقعاً نمی‌شنیدم که چه می‌گوید.»",
+     "hyp": "هنگامی که از میلر خواستشود اسحار نظر کرد، گفت، ماک تر زمان دا عادراسی، زیاد صبح میکند، انداشتم آماده می شدم، بنابر این واقعا نشیدم کچه می کو یاد.",
+     "wer": 80.8,
+     "seconds": 16.8,
+     "compute": 4.23
+    },
+    {
+     "audio": "557789485011138964.wav",
+     "lang": "fa",
+     "ref": "از آنجا که دانش آموزان اغلب نکته‌سنج‌ترین مخاطب هستند، نویسنده وبلاگ برای جلوگیری از انتقاد، در جهت بهبود نوشتن تلاش می کند.",
+     "hyp": "از انجاک دانشاموزان، اقلب نفتسنشترین مخاطب هستند، نیوی سنده و بلاگ برای جلوجری از انتقاد، درجحت بهبود نمیشتهد تلاش می کونت.",
+     "wer": 68.2,
+     "seconds": 12.9,
+     "compute": 3.97
+    },
+    {
+     "audio": "4059247542219944286.wav",
+     "lang": "fa",
+     "ref": "بدلیل قرار گرفتن اوکلند بین دو بندرگاه، ساحل‌های بسیاری وجود دارند. محبوب‌ترین آنها در سه ناحیه قرار دارند.",
+     "hyp": "به دلی لقرار گرفتن اکناد، بین دو بندگا، سائلها یه بسیا ری وجود دارند. محبوب تری نانها در 3 ناهی قرار دارند.",
+     "wer": 72.2,
+     "seconds": 9.96,
+     "compute": 3.377
+    },
+    {
+     "audio": "6698514748925595505.wav",
+     "lang": "fa",
+     "ref": "دکتر مول فکر می کند که برخی از بیماران ممکن است در بیمارستان با ساس داشته باشند، و حداقل دو نفر از آنها کارمندان بهداشت بیمارستان بودند.",
+     "hyp": "دکتار مول فیکش می کلد که برخی از بیمارا ممکنس تر بیمارستان با ساس داشته باشند، وحتقال دونفر از اونا قرمندا بهتاشته بیمارستان بودند.",
+     "wer": 51.9,
+     "seconds": 13.62,
+     "compute": 4.155
+    },
+    {
+     "audio": "12507307002034733311.wav",
+     "lang": "fa",
+     "ref": "حشرات اولین دسته از حیوانات بودند که به هوا می‌رفتند. توانایی‌شان در پرواز به آنها کمک کرد که راحت‌تر از دشمن بگریزند و بهتر بتوانند غذا و جفت پیدا کنند.",
+     "hyp": "حشارات اولین دستز هیبانت بودند که بهحوام رفتهد، تمانا یئر شن در پرباز به انها قماق کرد که راحتر از دوشمن بگریزن، و به تمانن غذا و جوفت پیدا کنت.",
+     "wer": 63.3,
+     "seconds": 15.66,
+     "compute": 4.329
+    },
+    {
+     "audio": "6988710556725517215.wav",
+     "lang": "fa",
+     "ref": "رئیس جمهور جورج دبلیو بوش از این اعلانیه استقبال کرد.",
+     "hyp": "رئیس چمهور، جوجد و بوش، از ان الانی استقبال کرد.",
+     "wer": 50.0,
+     "seconds": 9.36,
+     "compute": 2.069
+    },
+    {
+     "audio": "17090408619125597012.wav",
+     "lang": "fa",
+     "ref": "در ابتدا لباس عمدتاً‌ متأثر از فرهنگ بیزانس در شرق بود.",
+     "hyp": "تر ابتدا، لباس عمدتان متعصر از فرحنگ بیزانس دار شرخ بود.",
+     "wer": 54.5,
+     "seconds": 7.38,
+     "compute": 2.34
+    },
+    {
+     "audio": "5358906310696567170.wav",
+     "lang": "fa",
+     "ref": "برایم معنی نداشت؛ مسلماً عادلانه نبود.",
+     "hyp": "برای مقنی نداشت، مسلمان عادلانه نبود.",
+     "wer": 50.0,
+     "seconds": 6.48,
+     "compute": 1.804
+    },
+    {
+     "audio": "3375570777830386105.wav",
+     "lang": "fa",
+     "ref": "گزینه‌ای که به طور فزاینده محبوب‌تر است همانا برای افرادی که یک سال فاصله را برنامه‌ریزی می‌کنند و آن را به سفر و یادگیری اختصاص می‌دهند.",
+     "hyp": "گوزینهی کبتار فضایند محبوب ترست، همانا برای افلادی که یک سال فاصل را برنام ریذی میگنند و ان را به سفر و یادگری اختصاس میدهند.",
+     "wer": 57.7,
+     "seconds": 14.22,
+     "compute": 3.975
+    },
+    {
+     "audio": "9078534884458406521.wav",
+     "lang": "fa",
+     "ref": "همچنین هیچ مرجعی برای لغو قوانین مالیاتی و تعرفه ها بین کشورها نداشت.",
+     "hyp": "همچنین، هیچ مرجای برای لق و قوانی نمالیتیا تعرفها به اینکه شورنا داشته.",
+     "wer": 76.9,
+     "seconds": 9.42,
+     "compute": 2.554
+    },
+    {
+     "audio": "17872466382180324428.wav",
+     "lang": "fa",
+     "ref": "از فناوری مبتنی بر ماهواره در مقابل فناوری مبتنی بر رادار زمینی استفاده می‌کند که به کنترل کننده‌های ترافیک هوایی امکان می‌دهد هواپیما را با دقت بیشتری ردیابی کند و به خلبانان اطلاعات دقیق‌تری می‌دهد.",
+     "hyp": "از فرناوری مبتدی، بر معفاره، دل مغابل فرناوری مبتدی. از فرناوری مبتنی بر معواره، دل مغابل فرناوری مبتنی بر رادار زمینی استفاده می کند, که به کانطرور کونندهای ترافق هوایی امکام می داست، حواب ما رابع دیکھات بیشسی رجربی کند و بخلابان اتلاحته دائی اختری می داست.",
+     "wer": 97.1,
+     "seconds": 29.4,
+     "compute": 7.832
+    },
+    {
+     "audio": "3859642052889488510.wav",
+     "lang": "fa",
+     "ref": "آمازون پهناورترین رودخانه روی کره زمین نیز هست، و در نقاطی عرض آن به شش مایل می‌رسد.",
+     "hyp": "آمازون، پهناورترین روطانی روی کاری زمن نیز هست، و در نغاتی ارض عن بشش مائل میریسد.",
+     "wer": 58.8,
+     "seconds": 11.16,
+     "compute": 2.921
+    },
+    {
+     "audio": "17109632843820496594.wav",
+     "lang": "fa",
+     "ref": "اسکی فعالیت اصلی سفر است که علاقه‌مندان زیادی دارد و گهگاه با نام «اسکی گردی» شناخته می شود، یعنی برنامه ریزی کل تعطیلات حول محور اسکی کردن در یک محل خاص.",
+     "hyp": "اسکی فعالیت اصلی سفر است، که از علاق مندان زیادی دارد، و گحگاه بنام اسکی گردی شناخته میشه بد، یعنی به انام رضی کول تحتلاد حول محور اسکی کردن، در ایک منطقی خاص.",
+     "wer": 48.4,
+     "seconds": 17.76,
+     "compute": 4.736
+    },
+    {
+     "audio": "9666423171626660167.wav",
+     "lang": "fa",
+     "ref": "عربها اسلام را به این سرزمین‌ها نیز آوردند، و در جزایر کومور و مایوت در مقیاس وسیع شکل گرفت.",
+     "hyp": "عربها اسلام رو به این سرز همین، حانیس آوردنت، و ده جازایر کومور و مایود، دار میقیاص و وسیش شک گرفته.",
+     "wer": 73.7,
+     "seconds": 10.8,
+     "compute": 3.105
+    },
+    {
+     "audio": "5877257621569799055.wav",
+     "lang": "fa",
+     "ref": "یک دوره آموزشی معمولاً تمام مسائل مطروحه در اینجا را با جزئیات خیلی بیشتری تحت پوشش قرار می‌دهد و معمولاً‌ شامل تجربه عملی نیز می‌شود.",
+     "hyp": "یک دور آموزشی مامولن، تمام مسائل متروهد در اینجار با جو زیاد خیلی بیشتری تحت پوشه شخرار میدهد و مامولن شامل تجربه علمینیس میشود.",
+     "wer": 48.0,
+     "seconds": 12.66,
+     "compute": 4.077
+    },
+    {
+     "audio": "96758978439259126.wav",
+     "lang": "fa",
+     "ref": "ملت‌ها پس از دیدن وحشت و قساوت جنگ در طول جنگ جهانی اول، تصمیم گرفتند از بروز دوباره این وضعیت در آینده جلوگیری کنند.",
+     "hyp": "ملتها پس از دیدان وحشت، و قصاوته جنگ در طول جنگ جہانی، اول تسمیم گرفتند، از بروض دوباری این وذیت در آینده جلوگی ریکونند.",
+     "wer": 37.5,
+     "seconds": 15.72,
+     "compute": 3.894
+    },
+    {
+     "audio": "7613822870520089279.wav",
+     "lang": "fa",
+     "ref": "این محیط جدید دارای منابع و رقبای مختلف است، پس جمعیت جدید برای اینکه یک رقیب قوی به حساب آید، سوای از آنچه قبلاً احتیاج داشتند، به قابلیت‌ها یا سازگاری‌های متفاوت نیاز خواهد داشت.",
+     "hyp": "این موهیت جدید، دارای منابع و رغبائی مختلف هست، پس شمیط جدید برای این که یک رقی به قوی به حصاب آیاد، سوایز ان چگبلن احتیاش داشتهند به غابلیتها یاس عاز گاریهای متفاوت نیاز خاهت داشته.",
+     "wer": 64.7,
+     "seconds": 18.84,
+     "compute": 5.328
+    },
+    {
+     "audio": "2167142393749945816.wav",
+     "lang": "fa",
+     "ref": "رئیس اسبق مجلس نمایندگان، نوت گینگریچ، ریک پری، فرماندار تگزاس و میشل باکمن، نماینده زن کنگره به ترتیب در مکان‌های چهارم، پنجم و ششم قرار گرفتند.",
+     "hyp": "رئیس اصبق مجسمه نمائندگان، نوت، گنگریچ، ریک پری، فرمندار تکزاز و میشیل باکمن، نمائنده زن کونگرا به ترتیب در مکانهای چاروم، پنجوم و شاشوم قرار گرفتند.",
+     "wer": 46.2,
+     "seconds": 20.7,
+     "compute": 4.756
+    },
+    {
+     "audio": "7237269097184872006.wav",
+     "lang": "fa",
+     "ref": "در مرحله بعد، برخی از زین ها، به خصوص زین های انگلیسی، دارای میله های ایمنی هستند که در صورت سقوط اسب سوار، اجازه می دهد چرم رکاب از زین جدا شود.",
+     "hyp": "در مرحله بد، برخی از زینها، به خصوظ زینها یا انگلیسی، داراه میله های ایمانی حسن که در سورت صغوت عسب سبار، اجازم یدحت چند من ریکاب از زین جدا شباد.",
+     "wer": 59.4,
+     "seconds": 16.26,
+     "compute": 4.347
+    },
+    {
+     "audio": "2698719864189003821.wav",
+     "lang": "fa",
+     "ref": "در ژاپن، نخستین مراسم شکوفه گیلاس توسط امپراتور و تنها برای خود او و اعضای اشرافی نزدیک به دربار امپراتوری برگزار می‌شود.",
+     "hyp": "در جابان، نخوستیم مراسم شکوفه گلاس، تباسوتا ایمپراتور، وتنها برای خود آون و عزائی اشرفی نظدیک به دربار ایمپراطوری پرگذار میشه بد.",
+     "wer": 68.2,
+     "seconds": 15.06,
+     "compute": 4.043
+    },
+    {
+     "audio": "18205295735976798135.wav",
+     "lang": "fa",
+     "ref": "مقامات محلی به ساکنین همسایگی نیروگاه هشدار می‌دهند که در خانه بمانند،‌ تهویه هوا را خاموش کنند و آب شیر ننوشند.",
+     "hyp": "مقامات محلی به ساکنین همسائگی نیروگاهها حوشتار میدهند، که در خانه بیمانند، تخویه هوا را خاموشونند و آب شیر ننوشند.",
+     "wer": 33.3,
+     "seconds": 15.6,
+     "compute": 3.708
+    },
+    {
+     "audio": "3356833202229712046.wav",
+     "lang": "fa",
+     "ref": "محققان اظهار داشتند كه حتی اگر این دم یک دایناسور جوان باشد، باز هم این نمونه نشان دهنده پر حیوان بالغ است نه کرک یک جوجه.",
+     "hyp": "محققان، اصار داشتن که حتی اگر این دم یک دای ناسور جوابام بشد، بس هم این نمونه نشان دهنده پراهیوان بالغست، نک خورکه یک جوجه.",
+     "wer": 50.0,
+     "seconds": 16.5,
+     "compute": 4.084
+    },
+    {
+     "audio": "10242821013991758239.wav",
+     "lang": "fa",
+     "ref": "از این رو هر گونه اصلاحیه یا تقاضایی باید از طریق متصدی آژانس مسافرتی و نه بطور مستقیم از طریق هتل صورت گیرد.",
+     "hyp": "از این رو هر گنه استلاحیه یا تقازاه باید، اس طریق مطسدی آجان سمصفرتی و نبتوره مستقیم, اس طریق حوتر صورت گیرت.",
+     "wer": 52.2,
+     "seconds": 14.76,
+     "compute": 3.649
+    },
+    {
+     "audio": "4967209903228738609.wav",
+     "lang": "fa",
+     "ref": "به گفته دانشمندان، انفجار ناشی از این برخورد بسیار گسترده بود.",
+     "hyp": "به گفته دانشوندان، ان فجار ناشی ازین برخورد بسیار گسترده بود.",
+     "wer": 45.5,
+     "seconds": 8.46,
+     "compute": 2.367
+    },
+    {
+     "audio": "7387931124330469699.wav",
+     "lang": "fa",
+     "ref": "NHK همچنین گزارش داد که نیروگاه هسته ای کاشیوازاکی کاریوا در استان نیگاتا به طور عادی مشعول به کار بود.",
+     "hyp": "انیچگه این هم چنی گزارشتر کنی روغا حسری، یک کاشی وازقی، یک کاریوا، براستان این نباته، ویطور عدی مشمل به کار گود.",
+     "wer": 100.0,
+     "seconds": 14.94,
+     "compute": 3.683
+    },
+    {
+     "audio": "13851036903026386291.wav",
+     "lang": "en",
+     "ref": "Next, some saddles, particularly English saddles, have safety bars that allow a stirrup leather to fall off the saddle if pulled backwards by a falling rider.",
+     "hyp": "Next, some saddles particularly English saddles have safety bars that allow a stirrup leather",
+     "wer": 46.2,
+     "seconds": 9.36,
+     "compute": 1.291
+    },
+    {
+     "audio": "9909934339673808373.wav",
+     "lang": "en",
+     "ref": "The original population hasn't changed at all, they still need the same adaptations as before.",
+     "hyp": "The original population hasn't changed at all. They still need the same adaptations as before",
+     "wer": 0.0,
+     "seconds": 10.08,
+     "compute": 1.301
+    },
+    {
+     "audio": "2031944424456517788.wav",
+     "lang": "en",
+     "ref": "The U.N. also hopes to finalize a fund to help countries affected by global warming to cope with the impacts.",
+     "hyp": "The UN also hopes to finalize the fund to help countries affected by global warming to cope with impacts.",
+     "wer": 19.0,
+     "seconds": 7.08,
+     "compute": 1.455
+    },
+    {
+     "audio": "10146705666908229607.wav",
+     "lang": "en",
+     "ref": "The major religion in Moldova is Orthodox Christian.",
+     "hyp": "The major religion in Moldova is Orthodox Christian.",
+     "wer": 0.0,
+     "seconds": 4.92,
+     "compute": 1.119
+    },
+    {
+     "audio": "6840966447225121742.wav",
+     "lang": "en",
+     "ref": "Any amendments or requests though should be coursed through the travel agent first and not directly with the hotel.",
+     "hyp": "Any amendments or requests should be course through the travel agent first, and not directly with",
+     "wer": 21.1,
+     "seconds": 10.2,
+     "compute": 1.346
+    },
+    {
+     "audio": "7333859905385431862.wav",
+     "lang": "en",
+     "ref": "If you visit the Arctic or Antarctic areas in the winter you will experience the polar night, which means that the sun doesn't rise above the horizon.",
+     "hyp": "If you visit the Arctic or Antarctic areas in winter, You will experience the polar night which means The sun doesn't rise above horizon.",
+     "wer": 10.7,
+     "seconds": 12.1,
+     "compute": 1.596
+    },
+    {
+     "audio": "11840539862172308240.wav",
+     "lang": "en",
+     "ref": "The satellite in space gets the call and then reflects it back down, almost instantly.",
+     "hyp": "The satellite in space gets the call and then reflects it back down almost instantly.",
+     "wer": 0.0,
+     "seconds": 5.52,
+     "compute": 1.237
+    },
+    {
+     "audio": "7777234891538102330.wav",
+     "lang": "en",
+     "ref": "As NSA, he assisted Carter in diplomatically handling world affairs, such as the Camp David Accords, 1978; normalizing US–China relations thought the late 1970s; the Iranian Revolution, which led to the Iran hostage crisis, 1979; and the Soviet invasion in Afghanistan, 1979.",
+     "hyp": "As NSA, he assisted Carter in diplomatically handling world affairs such as the Camp David Accord's 1978. Normalizing U.S.-China relations through late 1970s—the Iranian Revolution which led to the Iran hostage crisis, 1929—in Soviet invasion in Afghanistan 1979.",
+     "wer": 20.9,
+     "seconds": 29.1,
+     "compute": 3.548
+    },
+    {
+     "audio": "14187645011903893773.wav",
+     "lang": "en",
+     "ref": "Bush spokesman Gordon Johndroe called North Korea's pledge \"a major step towards the goal of achieving the verifiable denuclearization of the Korean peninsula.\"",
+     "hyp": "Bush spokesman Gordon Jondro called North Korea's pledge a major step towards the goal of achieving the verifiable denuclearization of Korean Peninsula.",
+     "wer": 8.3,
+     "seconds": 11.94,
+     "compute": 2.425
+    },
+    {
+     "audio": "12443760270511039663.wav",
+     "lang": "en",
+     "ref": "Science now indicates that this massive carbon economy has dislodged the biosphere from one of its stable states that has supported human evolution for the past two million years.",
+     "hyp": "Science now indicates that this massive carbon economy has just lauded the biosphere from one of its, it's stable states and have supported human evolution for in a past two million years.",
+     "wer": 27.6,
+     "seconds": 13.08,
+     "compute": 1.838
+    },
+    {
+     "audio": "10305808618795196942.wav",
+     "lang": "en",
+     "ref": "Pronunciation is relatively easy in Italian since most words are pronounced exactly how they are written",
+     "hyp": "The pronunciation is relatively easy in Italian, since most words are pronounced exactly how they are written.",
+     "wer": 6.2,
+     "seconds": 9.32,
+     "compute": 2.151
+    },
+    {
+     "audio": "13870674013435125016.wav",
+     "lang": "en",
+     "ref": "A course will normally cover all the issues discussed here in far greater detail, usually with practical experience.",
+     "hyp": "Of course, we'll normally cover all the issues discussed here in far greater detail usually with practical experience.",
+     "wer": 16.7,
+     "seconds": 8.28,
+     "compute": 1.328
+    },
+    {
+     "audio": "16522271426775743376.wav",
+     "lang": "en",
+     "ref": "The Tibetan Buddhism is based on the teachings of Buddha, but were extended by the mahayana path of love and by a lot of techniques from Indian Yoga.",
+     "hyp": "The Tibetan Buddhism is based on the teachings of Buddha, but we're extended by Mahayana.",
+     "wer": 53.6,
+     "seconds": 8.88,
+     "compute": 1.605
+    },
+    {
+     "audio": "5710220425952785052.wav",
+     "lang": "en",
+     "ref": "It's worth half an hour to stroll about the intriguing village.",
+     "hyp": "It's worth half an hour to stroll about the intriguing village.",
+     "wer": 0.0,
+     "seconds": 3.84,
+     "compute": 1.14
+    },
+    {
+     "audio": "16038225777468807850.wav",
+     "lang": "en",
+     "ref": "It uses satellite-based technology as opposed to older ground-radar-based technology to allow air traffic controllers to pinpoint aircraft with greater precision and give pilots more accurate information.",
+     "hyp": "It uses satellite-based technology as opposed to older ground radar based Technology, To allow air traffic controllers To pinpoint aircraft with greater precision And give pilots more accurate information.",
+     "wer": 0.0,
+     "seconds": 15.78,
+     "compute": 1.797
+    },
+    {
+     "audio": "17034861753789241333.wav",
+     "lang": "en",
+     "ref": "An increasingly more popular option for those planning a gap-year is to travel and learn.",
+     "hyp": "An increasingly more popular option for those planning a gap year is to travel and learn.",
+     "wer": 0.0,
+     "seconds": 8.8,
+     "compute": 1.245
+    },
+    {
+     "audio": "7770540822513680038.wav",
+     "lang": "en",
+     "ref": "It also had no authority to override tax laws and tariffs between states.",
+     "hyp": "It also had no authority to override tax laws and tariffs between states.",
+     "wer": 0.0,
+     "seconds": 7.96,
+     "compute": 1.186
+    },
+    {
+     "audio": "4418066175314133039.wav",
+     "lang": "en",
+     "ref": "The winter can be deceptively chilly: temperatures rarely go below freezing, but the wind and humidity combine to make it feel colder than what the thermometer says.",
+     "hyp": "The winter can be deceptively chilly. Temperatures rarely go below freezing, but the wind and humidity combine to make it feel colder than what the thermometer says",
+     "wer": 0.0,
+     "seconds": 12.48,
+     "compute": 1.585
+    },
+    {
+     "audio": "6746343449836773292.wav",
+     "lang": "en",
+     "ref": "You can see the pyramids in the dark and you can see them in silence before the show begins.",
+     "hyp": "You can see the pyramids in dark, and you can see them in silence before show begins.",
+     "wer": 10.5,
+     "seconds": 7.5,
+     "compute": 1.435
+    },
+    {
+     "audio": "3207241257175584099.wav",
+     "lang": "en",
+     "ref": "Over time, as the new population begins to adapt to their new environment, they start to look less and less like the other population.",
+     "hyp": "Over time, as the new population begins to adapt to their environment they start to look less and",
+     "wer": 25.0,
+     "seconds": 11.22,
+     "compute": 1.52
+    },
+    {
+     "audio": "4907562996880232007.wav",
+     "lang": "en",
+     "ref": "Such things have become separate disciplines, which focus on providing solutions to real life problems.",
+     "hyp": "Such things have become separate disciplines, which focus on providing solutions to real-life problems.",
+     "wer": 0.0,
+     "seconds": 8.4,
+     "compute": 1.254
+    },
+    {
+     "audio": "10511964668971448587.wav",
+     "lang": "en",
+     "ref": "Due to the long distance from the continent mammals were unable to make the journey making the giant tortoise the primary grazing animal in the Galapagos.",
+     "hyp": "Due to the long distance from the continent, mammals were unable To make a journey making the giant tortoise The primary grazing animal in the goblos.",
+     "wer": 7.7,
+     "seconds": 12.58,
+     "compute": 1.682
+    },
+    {
+     "audio": "10597813815011301513.wav",
+     "lang": "en",
+     "ref": "They are still trying to determine just how large the crash was and how the Earth will be affected.",
+     "hyp": "They are still trying to determine just how large the crash was, and How The Earth Will Be Affected.",
+     "wer": 0.0,
+     "seconds": 7.8,
+     "compute": 1.4
+    },
+    {
+     "audio": "3750870877278507400.wav",
+     "lang": "en",
+     "ref": "Now widely available throughout the archipelago, Javanese cuisine features an array of simply seasoned dishes, the predominant flavorings the Javanese favor being peanuts, chillies, sugar (especially Javanese coconut sugar) and various aromatic spices.",
+     "hyp": "Now, widely available throughout the archipelago, Japanese cuisine features an array of simply seasoned dishes that predominant flavorings the Japanese favor being peanuts, chilies sugar",
+     "wer": 36.4,
+     "seconds": 18.48,
+     "compute": 1.701
+    },
+    {
+     "audio": "17646385371758249908.wav",
+     "lang": "en",
+     "ref": "According to police, the driver of the vehicle that hit the photographer is unlikely to face criminal charges.",
+     "hyp": "According to police, the driver of a vehicle that hid the photographer is unlikely to face criminal charges.",
+     "wer": 11.1,
+     "seconds": 7.62,
+     "compute": 1.377
+    },
+    {
+     "audio": "272272662040669170.wav",
+     "lang": "en",
+     "ref": "In this dynamic transport shuttle everyone is somehow connected with, and supporting, a transport system based on private cars.",
+     "hyp": "In this Dynamic Transport Shuttle, everyone is somehow connected with and supporting a transport system based on private cars.",
+     "wer": 0.0,
+     "seconds": 9.36,
+     "compute": 1.366
+    },
+    {
+     "audio": "13772318551921062719.wav",
+     "lang": "en",
+     "ref": "The patient had been to Nigeria, where some cases of the Ebola virus have occurred.",
+     "hyp": "The patient had been to Nigeria, where some cases of the Ebola virus have occurred.",
+     "wer": 0.0,
+     "seconds": 7.7,
+     "compute": 1.238
+    },
+    {
+     "audio": "13432781409214475589.wav",
+     "lang": "en",
+     "ref": "Robin Uthappa made the innings highest score, 70 runs in just 41 balls by hitting 11 fours and 2 sixes.",
+     "hyp": "Robin Utapa made the innings highest score, 70 runs and just 41 balls by hitting 11 fours",
+     "wer": 25.0,
+     "seconds": 8.64,
+     "compute": 1.338
+    },
+    {
+     "audio": "10461636001046553742.wav",
+     "lang": "en",
+     "ref": "Although three people were inside the house when the car impacted it, none of them were hurt.",
+     "hyp": "Although free people were inside the house when car impacted it, none of them are hurt.",
+     "wer": 17.6,
+     "seconds": 7.54,
+     "compute": 1.273
+    },
+    {
+     "audio": "7939024995221969344.wav",
+     "lang": "en",
+     "ref": "There are many beaches, due to Auckland's straddling of two harbours. The most popular ones are in three areas.",
+     "hyp": "There are many beaches due to Auckland's straddling of two harbors, the most popular ones are in three areas.",
+     "wer": 5.0,
+     "seconds": 10.68,
+     "compute": 2.438
+    },
+    {
+     "audio": "14227270688333398054.wav",
+     "lang": "en",
+     "ref": "Most districts are served by small Japanese Coaster Buses, which are comfortable and sturdy.",
+     "hyp": "Most districts are served by small Japanese coaster buses, which are comfortable and sturdy.",
+     "wer": 0.0,
+     "seconds": 9.0,
+     "compute": 1.286
+    },
+    {
+     "audio": "2606692427476446963.wav",
+     "lang": "en",
+     "ref": "Insects were the first animals to take to the air. Their ability to fly helped them evade enemies more easily and find food and mates more efficiently.",
+     "hyp": "Insects were the first animals to take to-the air. Their ability to fly helped them evade enemies more easily and find food and mates more efficiently.",
+     "wer": 0.0,
+     "seconds": 9.12,
+     "compute": 2.7
+    },
+    {
+     "audio": "6119070842754110164.wav",
+     "lang": "en",
+     "ref": "Some animals, such as elephants and giraffes, tend to approach closely to cars and standard equipment will allow good viewing.",
+     "hyp": "Some animals, such as elephants and giraffes tend to approach closely the cars. Standard equipment will allow good viewing",
+     "wer": 10.0,
+     "seconds": 8.82,
+     "compute": 1.442
+    },
+    {
+     "audio": "17566024285835266239.wav",
+     "lang": "en",
+     "ref": "Soon, officers equipped with riot gear entered the yard and cornered the inmates with tear gas.",
+     "hyp": "Soon officers, quick with riot gear enter the yard and cornered in mates with tear gas.",
+     "wer": 25.0,
+     "seconds": 5.16,
+     "compute": 1.323
+    },
+    {
+     "audio": "6048950654071186425.wav",
+     "lang": "en",
+     "ref": "Science’s main goal is to figure out the way the world works through the scientific method. This method in fact guides most scientific research.",
+     "hyp": "Science's main goal is to figure out the way that world works through scientific method.",
+     "wer": 40.0,
+     "seconds": 10.16,
+     "compute": 1.579
+    },
+    {
+     "audio": "665356010601593238.wav",
+     "lang": "en",
+     "ref": "Water is spilling over the levee in a section 100 feet wide.",
+     "hyp": "Water is spilling over the levy in a section 100 feet wide.",
+     "wer": 8.3,
+     "seconds": 6.28,
+     "compute": 1.207
+    },
+    {
+     "audio": "7383904139424536248.wav",
+     "lang": "en",
+     "ref": "Famous singers across the country presented bhajans, or devotional songs, to Shri Shyam's feet.",
+     "hyp": "Famous singers across the country presented Bahajans, or devotional songs to Shia'am's feet.",
+     "wer": 20.0,
+     "seconds": 10.76,
+     "compute": 1.397
+    },
+    {
+     "audio": "2307697358480493938.wav",
+     "lang": "en",
+     "ref": "Women should realize that cultural differences may result in what they would consider harassment and it is not uncommon to be followed, grabbed by the arm, etc.",
+     "hyp": "Women should realize that cultural differences may result in what they would consider harassment and it is not uncommon to be followed, grabbed by the arm etc.",
+     "wer": 0.0,
+     "seconds": 9.3,
+     "compute": 1.54
+    },
+    {
+     "audio": "12723040353813591545.wav",
+     "lang": "en",
+     "ref": "Yet eighty percent of our goods were taxed through tariffs in Central American countries. we treat you.",
+     "hyp": "Yet, 80% of our goods were taxed through tariffs in Central American countries.",
+     "wer": 23.5,
+     "seconds": 6.48,
+     "compute": 1.238
+    },
+    {
+     "audio": "4547743266503066629.wav",
+     "lang": "en",
+     "ref": "Inland waterways can be a good theme to base a holiday around.",
+     "hyp": "Inland waterways can be a good theme to base the holiday around.",
+     "wer": 8.3,
+     "seconds": 3.96,
+     "compute": 1.179
+    },
+    {
+     "audio": "12541283768447528582.wav",
+     "lang": "en",
+     "ref": "Argentina is well known for having one of the best polo teams and players in the world.",
+     "hyp": "Argentina is well known for having one of the best polo teams and players in the world.",
+     "wer": 0.0,
+     "seconds": 5.82,
+     "compute": 1.281
+    },
+    {
+     "audio": "6037648224035961543.wav",
+     "lang": "en",
+     "ref": "In the churchyard, there are interesting marble sculptures of doves over some tombs.",
+     "hyp": "In the churchyard, there are interesting marble sculptures of some doves over some tombs.",
+     "wer": 7.7,
+     "seconds": 9.54,
+     "compute": 1.284
+    },
+    {
+     "audio": "6976486294626142871.wav",
+     "lang": "en",
+     "ref": "In principle the Tibetan Buddhism is very simple. It consists of Kundalini Yoga, meditation and the path of all-embracing love.",
+     "hyp": "In principle, the Tibetan Buddhism is very simple. It consists of kundalini yoga meditation and a path",
+     "wer": 23.8,
+     "seconds": 13.2,
+     "compute": 1.403
+    },
+    {
+     "audio": "4421291307365212801.wav",
+     "lang": "en",
+     "ref": "Handicraft products might be defined as antiques, though they are younger than similar mass-produced goods.",
+     "hyp": "Handicraft products might be defined as antiques, though they are younger than similar mass-produced goods.",
+     "wer": 0.0,
+     "seconds": 11.16,
+     "compute": 1.366
+    },
+    {
+     "audio": "14384287797588585122.wav",
+     "lang": "en",
+     "ref": "New Kingdom ancient Egyptians marvelled at their predecessors monuments, which were then well over a thousand year old.",
+     "hyp": "New Kingdom Ancient Egyptians marveled at the predecessor's monuments, which were then well over a thousand years old.",
+     "wer": 27.8,
+     "seconds": 9.92,
+     "compute": 1.355
+    },
+    {
+     "audio": "4582604850545677686.wav",
+     "lang": "en",
+     "ref": "I lost my sister and her friend, and on my way there were two disabled people in wheelchairs, people just jumping over and pushing them,\" Armand Versace said.",
+     "hyp": "I lost my sister and her friend, And on the way there were two disabled people in wheelchairs. People just jumping over and pushing them. Armand Visage said",
+     "wer": 7.1,
+     "seconds": 13.16,
+     "compute": 1.778
+    },
+    {
+     "audio": "14457772613577527611.wav",
+     "lang": "en",
+     "ref": "Members of a subculture often signal their membership through a distinctive and symbolic use of style, which includes fashions, mannerisms, and argot.",
+     "hyp": "Members of a subculture often signal their membership through instinctive and symbolic use-of style, which includes fashions, mannerism and argot.",
+     "wer": 13.6,
+     "seconds": 8.4,
+     "compute": 2.65
+    },
+    {
+     "audio": "4484727000875589449.wav",
+     "lang": "en",
+     "ref": "Ancient Roman meals couldn't have included foods that came to Europe from America or from Asia in later centuries.",
+     "hyp": "Ancient Roman mills couldn't have included foods that came to Europe from America or from Asia in later centuries.",
+     "wer": 5.0,
+     "seconds": 8.4,
+     "compute": 2.36
+    },
+    {
+     "audio": "15158676295442294624.wav",
+     "lang": "en",
+     "ref": "The main local beer is 'Number One', it is not a complex beer, but pleasant and refreshing. The other local beer is called \"Manta\".",
+     "hyp": "The main local beer is number one. It's not a complex beer, but pleasant and refreshing",
+     "wer": 33.3,
+     "seconds": 11.46,
+     "compute": 1.508
+    },
+    {
+     "audio": "5892105493233215004.wav",
+     "lang": "en",
+     "ref": "The first cases of the disease this season were reported in late July.",
+     "hyp": "The first cases of the disease this season were reported in late July.",
+     "wer": 0.0,
+     "seconds": 5.1,
+     "compute": 1.165
+    },
+    {
+     "audio": "12307759170163178109.wav",
+     "lang": "en",
+     "ref": "I don't know if you realize it or not, but most of the goods from Central America came into this country duty-free.",
+     "hyp": "I don't know if you realize it or not, but most of the goods from Central America came into",
+     "wer": 16.7,
+     "seconds": 8.04,
+     "compute": 1.357
+    },
+    {
+     "audio": "18352318493708579158.wav",
+     "lang": "en",
+     "ref": "He built a WiFi door bell, he said.",
+     "hyp": "He built a Wi-Fi doorbell, he said.",
+     "wer": 37.5,
+     "seconds": 2.7,
+     "compute": 1.119
+    },
+    {
+     "audio": "11437006947329980503.wav",
+     "lang": "en",
+     "ref": "Her first was the Slalom, where she earned a Did Not Finish in her first run. 36 of the 116 competitors had the same result in that race.",
+     "hyp": "Her first was to Shalom where she earned a did-not finish in her 1st run, 36 of the 116 competitors",
+     "wer": 35.7,
+     "seconds": 12.52,
+     "compute": 1.685
+    },
+    {
+     "audio": "11030046932175288954.wav",
+     "lang": "en",
+     "ref": "It had been scheduled to be cut down on Tuesday, but was saved after an emergency court ruling.",
+     "hyp": "It has been scheduled to be cut down on Tuesday, but was saved after an emergency court ruling.",
+     "wer": 5.6,
+     "seconds": 4.92,
+     "compute": 1.314
+    },
+    {
+     "audio": "17023935455389393902.wav",
+     "lang": "en",
+     "ref": "This became common practice, but the iron caused more wear on the wooden wheels of the wagons.",
+     "hyp": "This became common practice, but the iron caused more wear on wind wheels of wagons.",
+     "wer": 17.6,
+     "seconds": 7.38,
+     "compute": 1.288
+    },
+    {
+     "audio": "2444568678842868955.wav",
+     "lang": "en",
+     "ref": "Japans holds nearly 7,000 islands (the biggest being Honshu), making Japan the 7th largest island in the world!",
+     "hyp": "Japan holds nearly 7,000 islands. The biggest being Honshu making Japan the seventh largest island in the world.",
+     "wer": 10.5,
+     "seconds": 11.76,
+     "compute": 2.359
+    },
+    {
+     "audio": "14103207573366096931.wav",
+     "lang": "en",
+     "ref": "The Portuguese destroyed it and rebuilt it under the name Casa Branca, only to abandon it after an earthquake in 1755.",
+     "hyp": "The Portuguese destroyed it and rebuilt under the name Casa Branca, only to abandon after an earthquake in 1755.",
+     "wer": 9.5,
+     "seconds": 8.76,
+     "compute": 1.382
+    },
+    {
+     "audio": "5206282066649368548.wav",
+     "lang": "en",
+     "ref": "A curry can be either \"dry\" or \"wet\" depending on the amount of liquid.",
+     "hyp": "A curry can be either dry or wet, depending on the amount of liquid.",
+     "wer": 0.0,
+     "seconds": 7.66,
+     "compute": 1.205
+    },
+    {
+     "audio": "15859719143124778312.wav",
+     "lang": "en",
+     "ref": "Before an organization can be innovative, leadership must create a culture of innovation as well as shared knowledge and organizational learning.",
+     "hyp": "Before an organization can be innovative, leadership must create a culture of innovation as well",
+     "wer": 28.6,
+     "seconds": 10.62,
+     "compute": 1.251
+    },
+    {
+     "audio": "1250175024747413359.wav",
+     "lang": "en",
+     "ref": "When the fighting ceased after the wounded were transported to the hospital, about 40 of the other remaining inmates stayed in the yard and refused to return to their cells.",
+     "hyp": "When the fighting ceased after The Wounded were transported to hospital, about 40 of the other",
+     "wer": 46.7,
+     "seconds": 10.26,
+     "compute": 1.593
+    }
+   ]
+  }
+ ]
+}

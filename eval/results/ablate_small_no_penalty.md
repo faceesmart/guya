@@ -1,0 +1,3 @@
+| Model | Pipeline | Clips | EN-WER | FA-WER | EN-CER | FA-CER | EN-RTF | FA-RTF | RTF |
+|---|---|---|---|---|---|---|---|---|---|
+| small | guya-no_penalty | 60+60 | 6.0% | 57.3% | 2.5% | 17.5% | 0.15x | 0.27x | 0.22x |

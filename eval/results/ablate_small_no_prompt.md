@@ -1,0 +1,3 @@
+| Model | Pipeline | Clips | EN-WER | FA-WER | EN-CER | FA-CER | EN-RTF | FA-RTF | RTF |
+|---|---|---|---|---|---|---|---|---|---|
+| small | guya-no_prompt | 60+60 | 16.9% | 63.7% | 12.7% | 20.6% | 0.15x | 0.16x | 0.16x |
