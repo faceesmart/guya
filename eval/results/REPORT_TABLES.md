@@ -26,7 +26,7 @@
 |---|---:|---:|---:|---:|
 | stock faster-whisper | 56.6% | 16.7% | 6.0% | 2.6% |
 | Guya pipeline (all settings) | 63.2% | 21.6% | 15.6% | 11.0% |
-| Guya minus `no_cond` | 62.6% | 20.7% | 15.7% | 11.0% |
+| Guya minus `no_cond` | 62.6% | 20.7% | 15.6% | 11.0% |
 | Guya minus `no_penalty` | 57.3% | 17.5% | 6.0% | 2.5% |
 | Guya minus `no_postprocess` | 62.4% | 20.6% | 15.6% | 11.0% |
 | Guya minus `no_prompt` | 63.7% | 20.6% | 16.9% | 12.7% |
@@ -40,7 +40,10 @@
 |---|---:|---:|---:|---:|
 | stock faster-whisper | 28.9% | 6.0% | 4.0% | 1.9% |
 | Guya pipeline (all settings) | 29.2% | 6.3% | 4.1% | 2.0% |
+| Guya minus `no_penalty` | 27.1% | 6.6% | 3.9% | 1.8% |
+| Guya minus `no_postprocess` | 28.3% | 6.4% | 4.1% | 2.0% |
 | Guya minus `no_prompt` | 29.7% | 6.8% | 4.0% | 1.9% |
+| Guya minus `no_vad` | 29.7% | 7.2% | 4.4% | 2.0% |
 
 ## Held-out intent accuracy (eval/data/intents.jsonl)
 

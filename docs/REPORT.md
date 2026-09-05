@@ -296,7 +296,7 @@ The widget does not call the model with stock settings. Over months of use it ac
 | minus Persian post-processing | 62.4% | 20.6% | 15.6% | 11.0% |
 | minus the stricter no-speech threshold | 62.6% | 20.7% | 15.6% | 11.0% |
 | minus loudness normalisation | 64.3% | 22.1% | 16.4% | 12.2% |
-| minus conditioning on previous text | 62.6% | 20.7% | 15.7% | 11.0% |
+| minus the short-recording switch-off of conditioning | 62.6% | 20.7% | 15.6% | 11.0% |
 
 *Table 2. The production pipeline on `small`, and each setting returned to stock in turn.*
 
