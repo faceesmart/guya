@@ -120,13 +120,29 @@ speech recognition. Its main components are:
 
 ## 8. Current status and remaining work
 
-The V1 feature set is implemented and has passed the current spoken acceptance
-tests on macOS. Feature development is now frozen. The remaining work is:
+*(updated September 2026; this proposal supersedes the June 2026 dictation-only
+draft kept in `docs/archive/`)*
 
-1. Run the final structured and daily-use evaluation.
-2. Validate installation and primary tasks on the target Windows computer.
-3. Test with representative users and fix only confirmed blockers or bugs.
-4. Analyze the results and complete the final report and demonstration.
+The V1 feature set is implemented and feature development is frozen. Since the
+July version of this document the following evidence has been produced and is
+in the repository:
+
+1. Speech accuracy and speed of six Whisper model sizes measured on a fixed
+   Persian and English test set (Google FLEURS, 60 + 60 clips), plus an
+   ablation of Guya's own decoding settings — `eval/results/`.
+2. A held-out test of the command parser on 219 unseen Persian and English
+   phrasings, before and after fixes (68.5% → 99.5% intent accuracy).
+3. The assistant's real-use log turned into task-outcome and latency tables.
+4. 104 automated tests.
+5. The final report, `docs/REPORT.md`.
+
+Remaining:
+
+1. Validate installation and the primary tasks on the target Windows computer.
+2. The session with the target user (recording his voice for the accuracy
+   set, the task list in `docs/Guya_V1_Test_and_Evaluation.docx`, and short
+   usability feedback).
+3. The demonstration video.
 
 The intended result is a stable, explainable and evaluated undergraduate
 prototype that addresses a concrete accessibility need.

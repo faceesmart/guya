@@ -1371,9 +1371,11 @@ def main():
             self.setLayoutDirection(Qt.LayoutDirection.RightToLeft if rtl else Qt.LayoutDirection.LeftToRight)
             self.setAccessibleDescription(text)
             width = 420
-            self.setFixedWidth(width)
-            self.adjustSize()
-            height = max(48, self.sizeHint().height())
+            # A word-wrapped QLabel reports its height only for a given width.
+            text_height = self._label.heightForWidth(width - 28)
+            if text_height <= 0:
+                text_height = self._label.sizeHint().height()
+            height = max(48, text_height + 20)
             self.setFixedSize(width, height)
             screen = QApplication.primaryScreen()
             available = screen.availableGeometry() if screen else anchor

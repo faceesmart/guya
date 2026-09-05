@@ -112,9 +112,14 @@ every possible environment.
 
 ## Current completion estimate
 
-- V1 software implementation: approximately **85% complete**.
-- Whole capstone including evaluation, Windows validation, report, and demo:
-  approximately **65–70% complete**.
+*(September 2026)*
 
-Most remaining value now comes from testing, evidence, and documentation rather
-than adding more features.
+- V1 software implementation: **complete** for the boundary above. The
+  measured defects found while writing the report (an evaluation of every
+  subsystem is summarised in `docs/REPORT.md`, Section 7) have been fixed,
+  and the fixes are covered by tests.
+- Evidence: speech accuracy/speed, decoding-setting ablation, held-out parser
+  accuracy and real-use log analysis are done (`eval/results/`).
+- Whole capstone: roughly **85%**. What remains cannot be produced without
+  other people or other machines: the Windows validation run, the session with
+  the target user, and the demonstration video.
