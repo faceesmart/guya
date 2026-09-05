@@ -282,6 +282,7 @@ class WindowsActions(SafeDesktopActions):
             "Select-Object -First 1; "
             "if (-not $candidate) { exit 0 }; "
             "$voice.SelectVoice($candidate.VoiceInfo.Name) }; "
+            "[Console]::InputEncoding = [System.Text.Encoding]::UTF8; "
             "$msg = [Console]::In.ReadToEnd(); "
             "$voice.Speak($msg)"
         )

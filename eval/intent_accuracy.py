@@ -91,6 +91,14 @@ def main():
 
     rows = load(args.data)
     parser = CommandParser()
+    # The partition is computed, not trusted: any row whose normalised text
+    # equals a phrase-pack entry is a pack row, whatever the file says.
+    pack_phrases = set()
+    for phrases in parser.phrases.values():
+        for examples in phrases.values():
+            pack_phrases.update(normalize(x) for x in examples)
+    for r in rows:
+        r["in_pack"] = bool(r.get("in_pack")) or normalize(r["text"]) in pack_phrases
     results = [judge(parser, r) for r in rows]
 
     held = [(r, x) for r, x in zip(rows, results) if not r.get("in_pack")]

@@ -1364,10 +1364,9 @@ def main():
             colour = {"ok": "#b7f7cf", "warn": "#ffe0a3", "error": "#ffb4b4"}.get(tone, "#f1f5f9")
             self._label.setStyleSheet(f"color: {colour};")
             self._label.setText(text)
-            self._label.setAlignment(
-                (Qt.AlignmentFlag.AlignRight if rtl else Qt.AlignmentFlag.AlignLeft)
-                | Qt.AlignmentFlag.AlignVCenter
-            )
+            # AlignLeading follows the text direction (right edge for Persian);
+            # AlignRight on RTL text would resolve to the LEFT edge.
+            self._label.setAlignment(Qt.AlignmentFlag.AlignLeading | Qt.AlignmentFlag.AlignVCenter)
             self.setLayoutDirection(Qt.LayoutDirection.RightToLeft if rtl else Qt.LayoutDirection.LeftToRight)
             self.setAccessibleDescription(text)
             width = 420
@@ -1897,7 +1896,7 @@ def main():
             # Final text will be pasted to the target after recording stops.
             self._last_partial_text = text
             display = text[:30] + "\u2026" if len(text) > 30 else text
-            self._label_text = f"\u25cf {display}"
+            self._set_label(f"\u25cf {display}")
             self.update()
 
         # ---- Final Transcription ----
@@ -1948,12 +1947,17 @@ def main():
             # it on the very next line, so errors were never visible.
             self._show_notice(f"Error: {error_msg[:40]}", "error", DONE_STATE_DURATION * 3)
 
+        def _set_label(self, text: str):
+            """Every pill text change goes through here so VoiceOver sees it."""
+            self._label_text = text
+            self.setAccessibleDescription(text)
+
         def _show_notice(self, text: str, tone: str = "warn", duration_ms: int = None):
             """Show a short message on the pill, coloured by tone, then return
             to idle. Used for every path that used to fail silently."""
             self._state = "done"
             self._done_tone = tone
-            self._label_text = text
+            self._set_label(text)
             self._expand()
             self.update()
             self._arm_idle_timer(duration_ms or max(DONE_STATE_DURATION, 2500))
@@ -1975,7 +1979,7 @@ def main():
             self._last_assistant_text = text
             self._assistant_command_started_at = time.time()
             self._assistant.set_target_app(self._target_hwnd)
-            self._label_text = "Understanding command…"
+            self._set_label("Understanding command…")
             self.update()
             self._assistant_thread = AssistantCommandThread(self._assistant, text)
             self._assistant_thread.finished.connect(self._on_assistant_done)
@@ -1993,7 +1997,7 @@ def main():
                 else "error" if status == "error"
                 else "warn"
             )
-            self._label_text = response.message
+            self._set_label(response.message)
             self._expand()
             self.update()
             # The pill shows ~30 characters. Anything longer, and every question
@@ -2071,7 +2075,7 @@ def main():
                     log.info(f"Final text pasted ({len(text)} chars) to hwnd={target}")
                 else:
                     log.warning(f"paste_text_to_window failed for hwnd={target}")
-                    self._label_text = ("Copied! Press ⌘V to paste" if IS_MAC else "Copied! Press Ctrl+V to paste")
+                    self._show_notice("Copied! Press ⌘V to paste" if IS_MAC else "Copied! Press Ctrl+V to paste", "warn")
                     self.update()
             except Exception as e:
                 log.error(f"Final paste failed: {e}")
@@ -2079,7 +2083,7 @@ def main():
                     pyperclip.copy(text)
                 except Exception:
                     pass
-                self._label_text = ("Copied! Press ⌘V to paste" if IS_MAC else "Copied! Press Ctrl+V to paste")
+                self._show_notice("Copied! Press ⌘V to paste" if IS_MAC else "Copied! Press Ctrl+V to paste", "warn")
                 self.update()
 
         def _on_text_ready(self, text: str):

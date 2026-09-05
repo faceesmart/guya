@@ -150,12 +150,18 @@ def cer_counts(ref: str, hyp: str, lang: str):
     return _edit_distance(r, h), len(r)
 
 
+def rate(edits: int, n_ref: int) -> float:
+    """Error rate as a fraction. With an empty reference, any output is a
+    100% error and no output is 0%; one rule for every code path."""
+    if n_ref:
+        return edits / n_ref
+    return 1.0 if edits else 0.0
+
+
 def wer(ref: str, hyp: str, lang: str) -> float:
     """Single-utterance WER as a fraction (1.0 == 100%)."""
-    e, n = wer_counts(ref, hyp, lang)
-    return (e / n) if n else (0.0 if not hyp else 1.0)
+    return rate(*wer_counts(ref, hyp, lang))
 
 
 def cer(ref: str, hyp: str, lang: str) -> float:
-    e, n = cer_counts(ref, hyp, lang)
-    return (e / n) if n else (0.0 if not hyp else 1.0)
+    return rate(*cer_counts(ref, hyp, lang))

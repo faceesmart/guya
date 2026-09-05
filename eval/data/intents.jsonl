@@ -120,12 +120,12 @@
 {"lang": "en", "text": "Open Chrome, search for YouTube, then open the first result", "intent": ["unknown", "sequence"], "note": "third step must not be executed as a click"}
 {"lang": "en", "text": "Search for GitHub on Chrome", "intent": ["web_search", "sequence", "search"], "note": "ideally web search; must not crash"}
 {"lang": "en", "text": "Yes", "intent": "confirm", "in_pack": true}
-{"lang": "en", "text": "Yes please", "intent": "confirm"}
-{"lang": "en", "text": "Sure, go ahead", "intent": "confirm"}
+{"lang": "en", "text": "Yes please", "intent": "confirm", "in_pack": true}
+{"lang": "en", "text": "Sure, go ahead", "intent": "confirm", "in_pack": true}
 {"lang": "en", "text": "Okay", "intent": "confirm", "in_pack": true}
 {"lang": "en", "text": "No", "intent": "cancel", "in_pack": true}
-{"lang": "en", "text": "No thanks", "intent": "cancel"}
-{"lang": "en", "text": "Cancel that", "intent": "cancel"}
+{"lang": "en", "text": "No thanks", "intent": "cancel", "in_pack": true}
+{"lang": "en", "text": "Cancel that", "intent": "cancel", "in_pack": true}
 {"lang": "en", "text": "Never mind", "intent": "cancel", "in_pack": true}
 {"lang": "en", "text": "Delete the report file", "intent": ["delete_unsupported", "unknown"], "note": "no delete intent exists — must stay unknown"}
 {"lang": "en", "text": "Remove the photos folder", "intent": ["delete_unsupported", "unknown"]}
@@ -242,12 +242,12 @@
 {"lang": "fa", "text": "سافاری رو باز کن سپس دانشگاه تهران رو جستجو کن", "intent": "sequence", "steps": ["open_app", "web_search"]}
 {"lang": "fa", "text": "بله", "intent": "confirm", "in_pack": true}
 {"lang": "fa", "text": "آره", "intent": "confirm", "in_pack": true}
-{"lang": "fa", "text": "باشه", "intent": "confirm"}
+{"lang": "fa", "text": "باشه", "intent": "confirm", "in_pack": true}
 {"lang": "fa", "text": "اوکی", "intent": "confirm", "in_pack": true}
-{"lang": "fa", "text": "بله لطفا", "intent": "confirm"}
+{"lang": "fa", "text": "بله لطفا", "intent": "confirm", "in_pack": true}
 {"lang": "fa", "text": "نه", "intent": "cancel", "in_pack": true}
-{"lang": "fa", "text": "نه ممنون", "intent": "cancel"}
-{"lang": "fa", "text": "لغو کن", "intent": "cancel"}
+{"lang": "fa", "text": "نه ممنون", "intent": "cancel", "in_pack": true}
+{"lang": "fa", "text": "لغو کن", "intent": "cancel", "in_pack": true}
 {"lang": "fa", "text": "بیخیال", "intent": "cancel", "in_pack": true}
 {"lang": "fa", "text": "فایل گزارش رو پاک کن", "intent": ["delete_unsupported", "unknown"], "note": "no delete intent — must stay unknown"}
 {"lang": "fa", "text": "پوشه عکس ها رو حذف کن", "intent": ["delete_unsupported", "unknown"]}

@@ -28,7 +28,7 @@ double-click every day. Weak computers can use a free online model instead.
 | Setup wizard with device benchmark, control panel, help, logs | done |
 | Automated tests | 104, all passing, no microphone or model needed |
 | Speech accuracy and speed measurements (Persian + English, six model sizes) | done, see [`eval/results/`](eval/results/) |
-| Held-out command-parser evaluation | done, 99.5% intent accuracy on 219 unseen phrasings |
+| Held-out command-parser evaluation | done, 100% intent accuracy on 211 unseen phrasings (71% before this work) |
 | macOS | tested daily |
 | Windows | code present, **not yet validated on a Windows machine** |
 | User study with the target user, demo video | remaining |

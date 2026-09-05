@@ -1,0 +1,135 @@
+"""Regressions found by the adversarial review of the September 2026 changes.
+Each test is a phrasing that worked before, broke, and must keep working."""
+
+import tempfile
+import unittest
+from pathlib import Path
+
+from guya.assistant.actions.common import SafeDesktopActions
+from guya.assistant.parser import CommandParser
+from guya.assistant.service import AssistantService
+
+
+class ParserRegressionTests(unittest.TestCase):
+    def setUp(self):
+        self.parser = CommandParser()
+
+    def parse(self, text):
+        c = self.parser.parse(text)
+        return c.intent, c.slots
+
+    def test_word_file_without_a_name_opens_word(self):
+        for text in ("open word file", "open the word file", "فایل ورد رو باز کن", "سند ورد رو باز کن", "یه فایل ورد باز کن"):
+            self.assertEqual(("open_app", {"app": "word"}), self.parse(text), text)
+        self.assertEqual(("open_file", {"query": "report"}), self.parse("open the word file report"))
+
+    def test_spoken_contraction_rename(self):
+        self.assertEqual(("rename", {"new_name": "گزارش نهایی"}), self.parse("اسمشو بذار گزارش نهایی"))
+        self.assertEqual(("rename", {"new_name": "گزارش"}), self.parse("نامشو بذار گزارش"))
+        self.assertEqual("rename", self.parse("اسمشو عوض کن به نسخه دوم")[0])
+
+    def test_direction_words_alone_are_not_navigation(self):
+        for text in ("shut down the computer", "back up my thesis", "look up the weather",
+                     "pull up my thesis", "what's up", "turn it down", "go to the next tab", "ورد رو بیار بالا"):
+            self.assertNotEqual("browser_navigation", self.parse(text)[0], text)
+        self.assertEqual(("browser_navigation", {"action": "scroll_down"}), self.parse("Down"))
+        self.assertEqual(("browser_navigation", {"action": "forward"}), self.parse("Next page"))
+
+    def test_pack_phrase_heard_without_the_dot_still_opens_the_site(self):
+        self.assertEqual(("open_website", {"target": "github com"}), self.parse("visit github com"))
+
+    def test_delete_words_inside_other_commands(self):
+        self.assertEqual(("open_folder", {"query": "trash"}), self.parse("open the trash folder"))
+        self.assertEqual(("rename", {"new_name": "trash bin"}), self.parse("rename it to trash bin"))
+        self.assertEqual(("search", {"query": "remove"}), self.parse("find the file named remove"))
+        self.assertEqual("delete_unsupported", self.parse("remove the photos folder")[0])
+
+    def test_fillers_before_new_and_new_name(self):
+        self.assertEqual("create_folder", self.parse("Okay, new folder")[0])
+        self.assertEqual(("rename", {"new_name": "draft"}), self.parse("okay the new name should be draft"))
+
+    def test_leading_answer(self):
+        self.assertEqual("cancel", self.parser.leading_answer("no don't rename it"))
+        self.assertEqual("confirm", self.parser.leading_answer("yes rename it"))
+        self.assertEqual("confirm", self.parser.leading_answer("بله بازش کن"))
+        self.assertEqual("cancel", self.parser.leading_answer("نه اسمش رو عوض نکن"))
+        self.assertIsNone(self.parser.leading_answer("open chrome"))
+
+
+class FakeDesktopActions(SafeDesktopActions):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.calls = []
+
+    def open_path(self, path):
+        self.calls.append(("open_path", str(path)))
+        return self._success("Opened.", "باز شد.", Path(path))
+
+    def open_app(self, app):
+        self.calls.append(("open_app", app))
+        return self._success(f"Opened {app}.", f"{app} باز شد.")
+
+    def speak(self, text, language="en"):
+        pass
+
+
+class ServiceRegressionTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.root = Path(self.temp.name).resolve()
+        self.service = AssistantService(roots=[self.root], default_directory=self.root, platform="darwin")
+        self.service.actions = FakeDesktopActions(roots=[self.root], default_directory=self.root)
+
+    def tearDown(self):
+        self.temp.cleanup()
+
+    def test_spoken_refusal_with_extra_words_cancels(self):
+        (self.root / "draft.txt").touch()
+        self.service.context.remember(self.root / "draft.txt")
+        self.assertEqual("needs_confirmation", self.service.handle("rename it to final").status)
+        response = self.service.handle("no don't rename it")
+        self.assertEqual("cancelled", response.status)
+        self.assertTrue((self.root / "draft.txt").exists())
+        self.assertIsNone(self.service.context.pending_command)
+
+    def test_spoken_yes_with_extra_words_confirms(self):
+        (self.root / "draft.txt").touch()
+        self.service.context.remember(self.root / "draft.txt")
+        self.service.handle("rename it to final")
+        response = self.service.handle("yes rename it")
+        self.assertEqual("success", response.status)
+        self.assertTrue((self.root / "final.txt").exists())
+
+    def test_command_while_a_name_is_awaited_runs_the_command(self):
+        (self.root / "draft.txt").touch()
+        self.service.context.remember(self.root / "draft.txt")
+        self.assertEqual("needs_input", self.service.handle("rename it").status)
+        response = self.service.handle("open calculator")
+        self.assertEqual("success", response.status)
+        self.assertEqual([("open_app", "calculator")], self.service.actions.calls)
+        self.assertTrue((self.root / "draft.txt").exists())
+
+    def test_bare_word_while_a_name_is_awaited_is_the_name(self):
+        (self.root / "draft.txt").touch()
+        self.service.context.remember(self.root / "draft.txt")
+        self.service.handle("rename it")
+        response = self.service.handle("memo")
+        self.assertEqual("needs_confirmation", response.status)
+        self.assertIn("memo", response.message)
+
+    def test_folder_named_build_is_still_found(self):
+        (self.root / "build").mkdir()
+        (self.root / "build" / "thesis.pdf").touch()
+        self.assertEqual("success", self.service.handle("open the build folder").status)
+        self.assertEqual("success", self.service.handle("open thesis pdf").status)
+
+    def test_word_file_after_a_remembered_folder_opens_word(self):
+        (self.root / "backend").mkdir()
+        self.service.handle("find backend folder")
+        response = self.service.handle("open word file")
+        self.assertEqual("success", response.status)
+        self.assertEqual(("open_app", "word"), self.service.actions.calls[-1])
+
+
+if __name__ == "__main__":
+    unittest.main()

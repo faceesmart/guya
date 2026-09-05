@@ -43,3 +43,14 @@ Transcripts the parser did not understand (13):
 - «Let's scroll down.»
 - «Let's scroll the page up.»
 - «I screwed the page up.»
+
+Re-parsed with the current parser: 9 of 13 are now understood.
+- «Again, scroll down.» → browser_navigation {'action': 'scroll_down'}
+- «Again, scroll down.» → browser_navigation {'action': 'scroll_down'}
+- «Went back.» → browser_navigation {'action': 'back'}
+- «Go to Instagram.» → open_website {'target': 'instagram'}
+- «Go to Instagram.» → open_website {'target': 'instagram'}
+- «I scroll down.» → browser_navigation {'action': 'scroll_down'}
+- «Let's scroll down.» → browser_navigation {'action': 'scroll_down'}
+- «Let's scroll the page up.» → browser_navigation {'action': 'scroll_up'}
+- «I screwed the page up.» → browser_navigation {'action': 'scroll_up'}

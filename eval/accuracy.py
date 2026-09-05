@@ -44,7 +44,7 @@ import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from wer import wer_counts, cer_counts  # noqa: E402
+from wer import wer_counts, cer_counts, rate  # noqa: E402
 
 
 def load_manifest(path):
@@ -79,7 +79,8 @@ ABLATIONS = {
     "no_speech_thr": {"overrides": {"no_speech_threshold": 0.6}},
     "no_postprocess": {"postprocess": False},
     "no_rms":        {"rms": False},
-    "no_cond":       {"overrides": {"condition_on_previous_text": False}},
+    # stock is True; Guya turns it off for recordings under 5 s
+    "no_cond":       {"overrides": {"condition_on_previous_text": True}},
 }
 
 
@@ -124,7 +125,7 @@ def evaluate(name, pipeline, transcribe_fn, items, decode_audio, quiet=False):
         a["audio"] += seconds; a["compute"] += compute
         details.append({"audio": os.path.basename(it["audio"]), "lang": lang,
                         "ref": it["text"], "hyp": hyp,
-                        "wer": round(100.0 * we / wn, 1) if wn else 0.0,
+                        "wer": round(100.0 * rate(we, wn), 1),
                         "seconds": round(seconds, 2), "compute": round(compute, 3)})
         if not quiet and (k % 10 == 0 or k == len(items)):
             print(f"   {k}/{len(items)}", flush=True)
@@ -143,7 +144,7 @@ def rescore(result):
         a = agg.setdefault(lang, {"we": 0, "wn": 0, "ce": 0, "cn": 0, "n": 0, "audio": 0.0, "compute": 0.0})
         a["we"] += we; a["wn"] += wn; a["ce"] += ce; a["cn"] += cn; a["n"] += 1
         a["audio"] += d.get("seconds", 0.0); a["compute"] += d.get("compute", 0.0)
-        d["wer"] = round(100.0 * we / wn, 1) if wn else 0.0
+        d["wer"] = round(100.0 * rate(we, wn), 1)
     result["agg"] = agg
     return result
 
@@ -263,9 +264,18 @@ def main():
         items = kept
     if args.limit:
         items = items[:args.limit]
+    # Drop clips that cannot be decoded up front, so one bad file never aborts
+    # a two-hour run and the Clips column stays honest.
+    readable, total_audio = [], 0.0
+    for it in items:
+        try:
+            total_audio += len(decode_audio(it["audio"], sampling_rate=16000)) / 16000.0
+            readable.append(it)
+        except Exception as e:  # noqa: BLE001
+            print(f"   ! skipping {os.path.basename(it['audio'])}: {e}")
+    items = readable
     langs = sorted({it["lang"] for it in items})
     counts = ", ".join(f"{l}:{sum(1 for i in items if i['lang'] == l)}" for l in langs)
-    total_audio = sum(len(decode_audio(it["audio"], sampling_rate=16000)) / 16000.0 for it in items)
     print(f"Loaded {len(items)} clips ({counts}), {total_audio/60:.1f} min of audio, pipeline={args.pipeline}\n")
 
     results = []

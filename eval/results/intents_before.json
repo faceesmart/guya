@@ -1,9 +1,9 @@
 {
  "tag": "before",
- "n": 219,
+ "n": 211,
  "summary": {
   "lang:en": {
-   "n": 122,
+   "n": 118,
    "intent": 79,
    "full": 76
   },
@@ -13,7 +13,7 @@
    "full": 8
   },
   "all:all": {
-   "n": 219,
+   "n": 211,
    "intent": 150,
    "full": 143
   },
@@ -78,9 +78,9 @@
    "full": 7
   },
   "intent:unknown": {
-   "n": 18,
-   "intent": 17,
-   "full": 17
+   "n": 14,
+   "intent": 14,
+   "full": 14
   },
   "intent:sequence": {
    "n": 8,
@@ -92,18 +92,13 @@
    "intent": 1,
    "full": 1
   },
-  "intent:confirm": {
+  "intent:delete_unsupported": {
    "n": 4,
-   "intent": 0,
-   "full": 0
-  },
-  "intent:cancel": {
-   "n": 4,
-   "intent": 0,
-   "full": 0
+   "intent": 3,
+   "full": 3
   },
   "lang:fa": {
-   "n": 97,
+   "n": 93,
    "intent": 71,
    "full": 67
   }
@@ -707,54 +702,6 @@
    "note": "must NOT become a website"
   },
   {
-   "lang": "en",
-   "text": "Yes please",
-   "expected": "confirm",
-   "expected_slots": null,
-   "expected_steps": null,
-   "got": "unknown",
-   "got_slots": {},
-   "got_steps": null,
-   "kind": "intent",
-   "note": null
-  },
-  {
-   "lang": "en",
-   "text": "Sure, go ahead",
-   "expected": "confirm",
-   "expected_slots": null,
-   "expected_steps": null,
-   "got": "unknown",
-   "got_slots": {},
-   "got_steps": null,
-   "kind": "intent",
-   "note": null
-  },
-  {
-   "lang": "en",
-   "text": "No thanks",
-   "expected": "cancel",
-   "expected_slots": null,
-   "expected_steps": null,
-   "got": "unknown",
-   "got_slots": {},
-   "got_steps": null,
-   "kind": "intent",
-   "note": null
-  },
-  {
-   "lang": "en",
-   "text": "Cancel that",
-   "expected": "cancel",
-   "expected_slots": null,
-   "expected_steps": null,
-   "got": "unknown",
-   "got_slots": {},
-   "got_steps": null,
-   "kind": "intent",
-   "note": null
-  },
-  {
    "lang": "fa",
    "text": "میشه یه فایل ورد به اسم جزوه بسازی",
    "expected": "create_word_document",
@@ -1117,56 +1064,11 @@
   },
   {
    "lang": "fa",
-   "text": "باشه",
-   "expected": "confirm",
-   "expected_slots": null,
-   "expected_steps": null,
-   "got": "unknown",
-   "got_slots": {},
-   "got_steps": null,
-   "kind": "intent",
-   "note": null
-  },
-  {
-   "lang": "fa",
-   "text": "بله لطفا",
-   "expected": "confirm",
-   "expected_slots": null,
-   "expected_steps": null,
-   "got": "unknown",
-   "got_slots": {},
-   "got_steps": null,
-   "kind": "intent",
-   "note": null
-  },
-  {
-   "lang": "fa",
-   "text": "نه ممنون",
-   "expected": "cancel",
-   "expected_slots": null,
-   "expected_steps": null,
-   "got": "unknown",
-   "got_slots": {},
-   "got_steps": null,
-   "kind": "intent",
-   "note": null
-  },
-  {
-   "lang": "fa",
-   "text": "لغو کن",
-   "expected": "cancel",
-   "expected_slots": null,
-   "expected_steps": null,
-   "got": "unknown",
-   "got_slots": {},
-   "got_steps": null,
-   "kind": "intent",
-   "note": null
-  },
-  {
-   "lang": "fa",
    "text": "فایل گزارش رو پاک کن",
-   "expected": "unknown",
+   "expected": [
+    "delete_unsupported",
+    "unknown"
+   ],
    "expected_slots": null,
    "expected_steps": null,
    "got": "search",

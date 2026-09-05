@@ -1,3 +1,3 @@
-| Model | Pipeline | EN-WER | FA-WER | EN-CER | FA-CER | EN-RTF | FA-RTF | RTF |
-|---|---|---|---|---|---|---|---|---|
-| large-v3 | raw | 4.8% | 27.7% | 2.2% | 5.6% | 0.64x | 2.10x | 1.53x |
+| Model | Pipeline | Clips | EN-WER | FA-WER | EN-CER | FA-CER | EN-RTF | FA-RTF | RTF |
+|---|---|---|---|---|---|---|---|---|---|
+| large-v3 | raw | 60+60 | 4.8% | 28.2% | 2.2% | 5.8% | 0.64x | 2.10x | 1.53x |

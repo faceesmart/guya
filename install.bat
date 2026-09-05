@@ -21,7 +21,7 @@ echo [1/3] Creating virtual environment...
 if not exist venv ( python -m venv venv )
 call venv\Scripts\activate.bat
 
-echo [2/3] Nothing to download for the GPU: faster-whisper uses CTranslate2, not PyTorch.
+echo [2/3] GPU (optional): faster-whisper needs NVIDIA cuBLAS for CUDA 12 and cuDNN 9 installed separately; without them Guya uses the CPU.
 
 echo [3/3] Installing dependencies...
 pip install -r requirements.txt

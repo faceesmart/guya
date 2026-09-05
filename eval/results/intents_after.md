@@ -1,17 +1,15 @@
-Intent accuracy — after (219 held-out rows, 38 pack rows excluded)
+Intent accuracy — after (211 held-out rows, 46 pack rows excluded)
 
 | Group | n | Intent correct | Intent + slots correct |
 |---|---:|---:|---:|
-| All | 219 | 99.5% | 99.5% |
-| English | 122 | 99.2% | 99.2% |
-| Persian | 97 | 100.0% | 100.0% |
+| All | 211 | 100.0% | 100.0% |
+| English | 118 | 100.0% | 100.0% |
+| Persian | 93 | 100.0% | 100.0% |
 
 | Intent | n | Intent correct | Intent + slots correct |
 |---|---:|---:|---:|
-| browser_navigation | 71 | 98.6% | 98.6% |
-| cancel | 4 | 100.0% | 100.0% |
+| browser_navigation | 71 | 100.0% | 100.0% |
 | close_current | 7 | 100.0% | 100.0% |
-| confirm | 4 | 100.0% | 100.0% |
 | create_folder | 7 | 100.0% | 100.0% |
 | create_text_file | 6 | 100.0% | 100.0% |
 | create_word_document | 10 | 100.0% | 100.0% |
@@ -28,4 +26,4 @@ Intent accuracy — after (219 held-out rows, 38 pack rows excluded)
 | unknown | 14 | 100.0% | 100.0% |
 | web_search | 1 | 100.0% | 100.0% |
 
-Phrase-pack rows (sanity, not generalisation): 38 rows, 100.0% intent, 100.0% intent+slots.
+Phrase-pack rows (sanity, not generalisation): 46 rows, 100.0% intent, 100.0% intent+slots.

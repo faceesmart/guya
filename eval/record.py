@@ -65,13 +65,13 @@ def main():
     os.makedirs(args.out, exist_ok=True)
     manifest = os.path.join(args.out, "manifest.jsonl")
 
-    # Re-running for the same speaker replaces that speaker's rows instead of
-    # appending duplicates that point at the overwritten wav files.
+    # Re-running for the same speaker replaces only the rows whose wav files
+    # are actually re-recorded this session; everything else is kept, so a
+    # Ctrl+C after two clips loses nothing.
     existing = []
     if os.path.exists(manifest):
         with open(manifest, encoding="utf-8") as mf:
             existing = [json.loads(line) for line in mf if line.strip()]
-        existing = [row for row in existing if row.get("speaker") != args.speaker]
 
     pa = pyaudio.PyAudio()
     print(f"\nRecording {len(SENTENCES)} clips (speaker: {args.speaker}).")
@@ -90,10 +90,12 @@ def main():
         print("\nStopped early; keeping the clips recorded so far.")
     finally:
         pa.terminate()
+    recorded = {row["audio"] for row in rows}
+    kept = [row for row in existing if row.get("audio") not in recorded]
     with open(manifest, "w", encoding="utf-8") as mf:
-        for row in existing + rows:
+        for row in kept + rows:
             mf.write(json.dumps(row, ensure_ascii=False) + "\n")
-    print(f"✓ wrote {len(rows)} clips + {manifest} ({len(existing) + len(rows)} rows)")
+    print(f"✓ wrote {len(rows)} clips + {manifest} ({len(kept) + len(rows)} rows)")
 
 
 if __name__ == "__main__":

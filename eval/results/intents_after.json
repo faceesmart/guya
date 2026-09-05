@@ -1,11 +1,11 @@
 {
  "tag": "after",
- "n": 219,
+ "n": 211,
  "summary": {
   "lang:en": {
-   "n": 122,
-   "intent": 121,
-   "full": 121
+   "n": 118,
+   "intent": 118,
+   "full": 118
   },
   "intent:create_word_document": {
    "n": 10,
@@ -13,9 +13,9 @@
    "full": 10
   },
   "all:all": {
-   "n": 219,
-   "intent": 218,
-   "full": 218
+   "n": 211,
+   "intent": 211,
+   "full": 211
   },
   "intent:create_folder": {
    "n": 7,
@@ -69,8 +69,8 @@
   },
   "intent:browser_navigation": {
    "n": 71,
-   "intent": 70,
-   "full": 70
+   "intent": 71,
+   "full": 71
   },
   "intent:open_website": {
    "n": 9,
@@ -92,41 +92,16 @@
    "intent": 1,
    "full": 1
   },
-  "intent:confirm": {
-   "n": 4,
-   "intent": 4,
-   "full": 4
-  },
-  "intent:cancel": {
-   "n": 4,
-   "intent": 4,
-   "full": 4
-  },
   "intent:delete_unsupported": {
    "n": 4,
    "intent": 4,
    "full": 4
   },
   "lang:fa": {
-   "n": 97,
-   "intent": 97,
-   "full": 97
+   "n": 93,
+   "intent": 93,
+   "full": 93
   }
  },
- "failures": [
-  {
-   "lang": "en",
-   "text": "Jump to the end of the page",
-   "expected": "browser_navigation",
-   "expected_slots": {
-    "action": "bottom"
-   },
-   "expected_steps": null,
-   "got": "unknown",
-   "got_slots": {},
-   "got_steps": null,
-   "kind": "intent",
-   "note": null
-  }
- ]
+ "failures": []
 }

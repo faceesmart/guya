@@ -49,19 +49,24 @@ _ARABIC_DIACRITICS = re.compile(r'[\u064B-\u065F\u0670]')
 
 # Common Whisper hallucination phrases (Persian & cross-language)
 _HALLUCINATION_PATTERNS = [
+    # Whole hallucination phrases only. Single words such as «ترجمه» or
+    # "subscribe" used to be here and deleted real sentences containing them.
     "ساب اسکرایب",
     "سابسکرایب",
-    "subscribe",
+    "please subscribe",
     "like and subscribe",
+    "thanks for watching",
     "ممنون از اینکه",
     "ممنون که گوش دادید",
     "ادامه دارد",
     "تماشا کنید",
     "لطفا لایک کنید",
-    "زیرنویس",
-    "ترجمه",
+    "زیرنویس توسط",
+    "ترجمه و زیرنویس",
+    "زیرنویس و ترجمه",
     "www.",
-    "http",
+    "http://",
+    "https://",
 ]
 
 
@@ -307,12 +312,13 @@ def is_hallucination(text: str) -> bool:
             log.info(f"Filtered repeated-word hallucination: {text[:50]}")
             return True
 
-    # Known hallucination phrases — only when they make up most of the
-    # utterance. A real sentence that merely contains «ترجمه» or "subscribe"
-    # must not be thrown away.
+    # Known hallucination phrases — only when the phrase is (nearly) the whole
+    # utterance, counted in words. A real sentence that merely contains
+    # «ترجمه» or "subscribe" is kept; «ترجمه کن» (two words, one of them the
+    # phrase) is still dropped, which is the price of the filter.
     text_lower = text.lower().strip()
     for pattern in _HALLUCINATION_PATTERNS:
-        if pattern in text_lower and len(text_lower) <= len(pattern) + 12:
+        if pattern in text_lower and len(words) <= len(pattern.split()) + 1:
             log.info(f"Filtered known hallucination phrase '{pattern}': {text[:50]}")
             return True
 
@@ -427,7 +433,9 @@ def transcribe_audio(model, audio_data, language, audio_duration=None, sample_ra
         # Keep as comma-separated words/phrases — NOT full sentences (avoids hallucination).
         # faster-whisper keeps only the LAST 223 prompt tokens; the previous
         # 298-token prompt silently lost its first 75 tokens, which were the
-        # colloquial cue words it exists for. This one measures ~150 tokens.
+        # colloquial cue words it exists for. This one measures 214 tokens
+        # (tokenizer.encode(" " + prompt.strip())): do not add words without
+        # re-measuring.
         initial_prompt = (
             "خب، ببین، میخوام، نمیدونم، چجوری، بخوایم، اصن، دیگه، همینه، "
             "میشه، نمیشه، بگم، میگم، میکنیم، بریم، کردیم، "

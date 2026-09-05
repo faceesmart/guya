@@ -1,3 +1,3 @@
 | Model | Pipeline | Clips | EN-WER | FA-WER | EN-CER | FA-CER | EN-RTF | FA-RTF | RTF |
 |---|---|---|---|---|---|---|---|---|---|
-| medium | raw | 60+60 | 5.0% | 39.6% | 2.2% | 9.8% | 0.85x | 1.49x | 1.24x |
+| small | guya-no_rms | 60+60 | 16.4% | 64.3% | 12.2% | 22.1% | 0.16x | 0.26x | 0.23x |

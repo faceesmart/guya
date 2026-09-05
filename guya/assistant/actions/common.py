@@ -37,13 +37,15 @@ SKIPPED_DIRECTORY_SUFFIXES = (
     ".pkg",
     ".plugin",
 )
-# Folders that hold generated or third-party files, never the user's own
-# documents. Walking them wastes the candidate budget and produces noise such
-# as report.go / reporter.tsx next to a real report.docx.
+# Folders that only ever hold tooling output, never the user's own documents.
+# Walking them wastes the candidate budget and produces noise such as
+# report.go / reporter.tsx next to a real report.docx. Names a person might
+# give a real folder (build, out, dist, target, env) are deliberately NOT here.
+# A pruned folder is still offered as a folder candidate itself; only its
+# contents are skipped.
 SKIPPED_DIRECTORY_NAMES = {
-    "node_modules", "venv", "env", "__pycache__", "Library", "vendor",
-    "site-packages", "dist", "build", "target", "Pods", "DerivedData",
-    "bower_components", "coverage", "out",
+    "node_modules", "venv", "__pycache__", "Library", "vendor",
+    "site-packages", "Pods", "DerivedData", "bower_components",
 }
 # Documents live near the top of a user's folders; deep trees are code.
 MAX_SEARCH_DEPTH = 6
@@ -218,24 +220,24 @@ class SafeDesktopActions:
                 root_depth = len(Path(root).parts)
                 for current, dirs, files in os.walk(root):
                     depth = len(Path(current).parts) - root_depth
-                    if depth >= MAX_SEARCH_DEPTH:
-                        dirs[:] = []
-                    dirs[:] = [
+                    visible_dirs = [
                         directory
                         for directory in dirs
                         if not directory.startswith(".")
-                        and directory not in SKIPPED_DIRECTORY_NAMES
-                        and not directory.casefold().endswith(
-                            SKIPPED_DIRECTORY_SUFFIXES
-                        )
+                        and not directory.casefold().endswith(SKIPPED_DIRECTORY_SUFFIXES)
                     ]
+                    # Descend only into folders that can hold documents.
+                    if depth >= MAX_SEARCH_DEPTH:
+                        dirs[:] = []
+                    else:
+                        dirs[:] = [d for d in visible_dirs if d not in SKIPPED_DIRECTORY_NAMES]
                     candidates: Iterable[str]
                     if kind == "folder":
-                        candidates = dirs
+                        candidates = visible_dirs
                     elif kind == "file":
                         candidates = files
                     else:
-                        candidates = list(dirs) + list(files)
+                        candidates = list(visible_dirs) + list(files)
                     for name in candidates:
                         inspected += 1
                         total_inspected += 1
@@ -300,7 +302,10 @@ class SafeDesktopActions:
         try:
             path = Path(path).expanduser().resolve()
         except (OSError, RuntimeError):
-            return self._invalid_name()
+            return self._failure(
+                "That item is outside Guya's allowed folders or no longer exists.",
+                "این مورد خارج از پوشه‌های مجاز گویا است یا دیگر وجود ندارد.",
+            )
         if not self._is_allowed(path) or not path.exists():
             return self._failure(
                 "That item is outside Guya's allowed folders or no longer exists.",

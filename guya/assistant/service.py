@@ -46,8 +46,16 @@ class AssistantService:
     def handle(self, text: str) -> AssistantResponse:
         language = detect_language(text)
         if self.context.pending_expired():
+            had_list = bool(self.context.pending_options)
             log.info("Assistant pending question expired; clearing it")
             self.context.clear_pending()
+            if had_list and self.parser.selection_index(text) is not None:
+                return self._response(
+                    "error",
+                    language,
+                    "That list has expired. Please search again.",
+                    "آن فهرست منقضی شده است. لطفاً دوباره جستجو کنید.",
+                )
         if self.context.pending_options:
             return self._handle_pending_selection(text, language)
         if self.context.pending_command is not None:
@@ -56,9 +64,12 @@ class AssistantService:
             pending_action = self.context.pending_action
             if self.context.pending_slot is not None:
                 return self._fill_pending_slot(text, language)
-            if self.parser.is_confirmation(text):
+            # "yes, rename it" / «نه اسمش رو عوض نکن»: an answer that carries
+            # extra words is still an answer, never a new command.
+            answer = self.parser.leading_answer(text)
+            if answer == "confirm" or self.parser.is_confirmation(text):
                 return self._execute_pending()
-            if self.parser.is_cancellation(text):
+            if answer == "cancel" or self.parser.is_cancellation(text):
                 self.context.clear_pending()
                 if pending_action == "open_created" and pending_path is not None:
                     return self._response(
@@ -75,7 +86,10 @@ class AssistantService:
                     "لغو شد و تغییری انجام نشد.",
                 )
             fresh = self.parser.parse(text)
-            if fresh.intent in self._FRESH_COMMAND_INTENTS:
+            replaces = fresh.intent in self._FRESH_COMMAND_INTENTS and not (
+                fresh.intent == "rename" and not fresh.slots and pending_action == "rename"
+            )
+            if replaces:
                 log.info("Assistant pending question dropped for a new command: %s", fresh.intent)
                 self.context.clear_pending()
                 return self._dispatch(fresh, language)
@@ -623,6 +637,15 @@ class AssistantService:
                 command,
                 target,
             )
+        # A clearly different command ("open calculator", "scroll down") is not
+        # a name either: drop the rename and run it. A bare word stays a name.
+        fresh = self.parser.parse(text)
+        if fresh.intent in self._FRESH_COMMAND_INTENTS and fresh.intent != "rename" and (
+            fresh.slots or fresh.intent in ("save_current", "close_current", "delete_unsupported")
+        ):
+            log.info("Assistant name question dropped for a new command: %s", fresh.intent)
+            self.context.clear_pending()
+            return self._dispatch(fresh, language)
         value = normalize(text)
         if language == "en":
             for prefix in (

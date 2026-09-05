@@ -1979,7 +1979,7 @@ class WizardWindow(QWidget):
                 # be forced to English, which silently contradicted the Review
                 # page and left a Persian-only user with an English-only offline model.
                 chosen = self.choices.get("language")
-                cfg["language"] = chosen if chosen in ("fa", "en") else "en"
+                cfg["language"] = chosen if chosen in ("fa", "en", "dual") else "en"
             else:
                 cfg["cloud"]["enabled"] = False
                 cfg["language"] = self.choices["language"]

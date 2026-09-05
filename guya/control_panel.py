@@ -177,7 +177,9 @@ class ControlPanel(QWidget):
             c["model"]["device"] = self.device; c["model"]["compute_type"] = "auto"
             c["cloud"]["provider"] = "groq"; c["cloud"]["api_key"] = self.api_key
             c["cloud"]["enabled"] = True
-            c["language"] = self.lang if self.lang in ("fa", "en") else "en"
+            # The offline model runs in the chosen language, including "dual"
+            # (stt.transcribe_audio detects the language per segment).
+            c["language"] = self.lang if self.lang in ("fa", "en", "dual") else "en"
         else:  # offline
             c["model"]["backend"] = "faster-whisper"; c["model"]["size"] = self.model_size
             c["model"]["device"] = self.device; c["model"]["compute_type"] = "auto"
@@ -855,7 +857,9 @@ class ControlPanel(QWidget):
             pip = sys.executable.replace("python", "pip") if "python" in sys.executable else "pip"
         # Under Guya.app the code that runs is the copy in ~/.guya/runtime, so a
         # pull alone changes nothing; regenerate the launcher (which re-copies).
-        relaunch = f'"{os.path.join(root, "venv", "bin", "python")}" -c "import sys; sys.path.insert(0, \\"{root}\\"); from guya import launcher_gen; launcher_gen.create_launcher()"'
+        # sys.executable is the runtime interpreter, which always exists; a
+        # stock macOS install has no <checkout>/venv.
+        relaunch = f'"{sys.executable}" -c "import sys; sys.path.insert(0, \\"{root}\\"); from guya import launcher_gen; launcher_gen.create_launcher()"'
         if sys.platform == "win32":
             argv = ["cmd", "/c", f'cd /d "{root}" & git pull & "{pip}" install -r requirements.txt']
         else:
