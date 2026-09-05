@@ -63,11 +63,15 @@ try:
     from . import cloud_engine
     from . import runtime as guya_runtime
     from .assistant import AssistantService
+    from .stt import CloudModel, is_hallucination, transcribe_audio
+    from . import logsetup as guya_logsetup
 except ImportError:
     import config as guya_config
     import cloud_engine
     import runtime as guya_runtime
     from assistant import AssistantService
+    from stt import CloudModel, is_hallucination, transcribe_audio
+    import logsetup as guya_logsetup
 
 CFG = guya_config.load_config()
 
@@ -77,36 +81,9 @@ CFG = guya_config.load_config()
 # Logs go to ~/.guya/logs/ — always writable (never a TCC-protected folder
 # like Desktop, and never needs admin), cross-platform.
 
-LOG_DIR = os.path.join(guya_config.CONFIG_DIR, "logs")
-try:
-    os.makedirs(LOG_DIR, exist_ok=True)
-except Exception:
-    import tempfile
-    LOG_DIR = tempfile.gettempdir()
-LOG_FILE = os.path.join(LOG_DIR, "guya.log")
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)-7s] %(message)s",
-    datefmt="%H:%M:%S",
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-        RotatingFileHandler(
-            LOG_FILE,
-            mode="a",
-            maxBytes=2 * 1024 * 1024,
-            backupCount=5,
-            encoding="utf-8",
-        ),
-    ],
-)
+LOG_FILE = guya_logsetup.setup_logging()
+LOG_DIR = os.path.dirname(LOG_FILE)
 log = logging.getLogger("Guya")
-
-# Silence noisy HTTP libraries and PyTorch internals
-for _lib in ("httpx", "httpcore", "urllib3", "filelock", "huggingface_hub",
-             "torch", "torch.distributed", "torch._dynamo", "torch._inductor",
-             "torch.fx", "torch._C"):
-    logging.getLogger(_lib).setLevel(logging.WARNING)
 
 # ============================================================
 # CONFIGURATION (loaded from config.json, with sensible fallbacks)
@@ -476,300 +453,9 @@ if IS_WIN:
 
 
 # ============================================================
-# PERSIAN TEXT NORMALIZATION
+# PERSIAN TEXT NORMALIZATION / CORRECTIONS / HALLUCINATION FILTER / RMS
 # ============================================================
-
-# Arabic-to-Persian character map (lightweight, no external deps)
-_ARABIC_TO_PERSIAN = str.maketrans({
-    '\u064A': '\u06CC',  # ي → ی
-    '\u0643': '\u06A9',  # ك → ک
-    '\u0629': '\u0647',  # ة → ه
-    '\u0649': '\u06CC',  # ى → ی
-    '\u06C0': '\u0647',  # ۀ → ه
-    '\u0624': '\u0648',  # ؤ → و
-})
-
-# Arabic diacritics to strip (fathah, dammah, kasrah, sukun, shadda, tanwin, etc.)
-_ARABIC_DIACRITICS = re.compile(r'[\u064B-\u065F\u0670]')
-
-# Common Whisper hallucination phrases (Persian & cross-language)
-_HALLUCINATION_PATTERNS = [
-    "ساب اسکرایب",
-    "سابسکرایب",
-    "subscribe",
-    "like and subscribe",
-    "ممنون از اینکه",
-    "ممنون که گوش دادید",
-    "ادامه دارد",
-    "تماشا کنید",
-    "لطفا لایک کنید",
-    "زیرنویس",
-    "ترجمه",
-    "www.",
-    "http",
-]
-
-
-def normalize_persian(text: str) -> str:
-    """Normalize Persian text: fix Arabic chars, spacing, half-spaces, punctuation.
-
-    Lightweight — no external dependencies (hazm removed to avoid CUDA conflicts).
-    """
-    if not text:
-        return text
-
-    # Step 1: Arabic→Persian character substitution
-    text = text.translate(_ARABIC_TO_PERSIAN)
-
-    # Step 2: Strip Arabic diacritics (اعراب)
-    text = _ARABIC_DIACRITICS.sub('', text)
-
-    # Step 3: Fix common spacing issues
-    # Remove space before punctuation: "سلام ." → "سلام."
-    text = re.sub(r'\s+([\.،؛:؟!])', r'\1', text)
-    # Ensure space after punctuation (if followed by a word char)
-    text = re.sub(r'([\.،؛:؟!])(\w)', r'\1 \2', text)
-    # Collapse multiple spaces
-    text = re.sub(r'  +', ' ', text)
-
-    return text.strip()
-
-
-# ============================================================
-# WORD CORRECTION (post-processing)
-# ============================================================
-
-_WORD_CORRECTIONS = {
-    # --- Original project-specific corrections ---
-    "اقامدگاه": "اقامتگاه",
-    "عقامتگاه": "اقامتگاه",
-    "عقامتگاهی": "اقامتگاهی",
-    "حزینه": "هزینه",
-    "رزروع": "رزرو",
-    "پنشمبه": "پنجشنبه",
-    "تقمیمش": "تقویمش",
-    "مرای": "برای",
-    "سرچ گردن": "سرچ کردن",
-    "فل تک سرچ": "فول تکست سرچ",
-    "اویلبل": "اوِیلبل",
-    "جا باما": "جاباما",
-    "جاواما": "جاباما",
-    "بابا ما": "جاباما",
-    "جواب آما": "جاباما",
-    "فرایده": "فرایدی",
-
-    # --- Character confusion (similar-sounding letters: ب↔پ، د↔ت، ز↔ذ، ر↔ب) ---
-    "گفتاب": "گفتار",
-    "مودل": "مدل",
-    "برگذار": "برگزار",
-    "برگذاری": "برگزاری",
-    "فندی": "فنی",
-    "اسنب": "اسنپ",
-    "تیجیکالا": "دیجیکالا",
-    "دیجی‌کالا": "دیجیکالا",
-    "پرو سراغ": "برو سراغ",
-
-    # --- Word splitting / merging errors ---
-    "عمل کرده سیستم": "عملکرد سیستم",
-    "پارامت های": "پارامترهای",
-    "پارامت‌های": "پارامترهای",
-    "گفتاب متر": "گفتار به متن",
-    "گفتار بمتن": "گفتار به متن",
-
-    # --- Common Whisper misrecognitions for Persian ---
-    "مثلی": "متنی",
-    "سراغمون": "سراغ اون",
-    "دیری": "دیر",
-    "جلسته": "جلسه",
-    "اموز": "امروز",
-    "هوم اسفند": "اسفند",
-    "روابط پایتون": "رابط پایتون",
-    "دوازده هام": "دوازدهم",
-    "دوازده‌هام": "دوازدهم",
-    "محمد رزا": "محمدرضا",
-    "محمد رضا": "محمدرضا",
-    "دیژیکاله ها": "دیجیکالا",
-    "دیژیکالا": "دیجیکالا",
-    "دیجی کالا": "دیجیکالا",
-
-    # --- Tech terms Whisper often gets wrong ---
-    "اپ دیت": "آپدیت",
-    "اپلود": "آپلود",
-    "دانلد": "دانلود",
-    "سروور": "سرور",
-    "سرویر": "سرور",
-    "ریپازیتوری": "ریپوزیتوری",
-    "دیتا بیس": "دیتابیس",
-    "فریم ورک": "فریمورک",
-    "ایندکس": "ایندکس",
-    "تایم اوت": "تایم‌اوت",
-    "لاگ این": "لاگین",
-    "باگ فیکس": "باگ‌فیکس",
-
-    # --- Brand names ---
-    "اسنب فود": "اسنپ‌فود",
-    "اسنب‌فود": "اسنپ‌فود",
-    "تلگرم": "تلگرام",
-    "واتس اپ": "واتساپ",
-    "واتس‌اپ": "واتساپ",
-    "گیت هاب": "گیتهاب",
-    "گیت‌هاب": "گیتهاب",
-
-    # --- Common Persian word errors ---
-    "میکروفن": "میکروفون",
-    "میکروفم": "میکروفون",
-}
-
-
-def apply_word_corrections(text: str) -> str:
-    """Fix common Whisper misrecognitions using a lookup dictionary."""
-    if not text:
-        return text
-    # Apply multi-word corrections first (longer keys first to avoid partial matches)
-    for wrong, right in sorted(_WORD_CORRECTIONS.items(), key=lambda x: -len(x[0])):
-        if wrong in text:
-            text = text.replace(wrong, right)
-    return text
-
-
-# ============================================================
-# COLLOQUIAL PRESERVATION (formal → colloquial)
-# ============================================================
-
-# Whisper often formalizes colloquial Persian speech. These regex rules
-# convert formal verb forms back to their colloquial equivalents.
-# Order matters: longer/more-specific patterns first.
-_COLLOQUIAL_RULES = [
-    # ---- «می‌خواهم/میخواهم» family → «میخوام» ----
-    (re.compile(r'\bمی‌?خواهم\b'), 'میخوام'),
-    (re.compile(r'\bنمی‌?خواهم\b'), 'نمیخوام'),
-    (re.compile(r'\bمی‌?خواهی\b'), 'میخوای'),
-    (re.compile(r'\bنمی‌?خواهی\b'), 'نمیخوای'),
-    (re.compile(r'\bمی‌?خواهد\b'), 'میخواد'),
-    (re.compile(r'\bنمی‌?خواهد\b'), 'نمیخواد'),
-    (re.compile(r'\bمی‌?خواهیم\b'), 'میخوایم'),
-    (re.compile(r'\bنمی‌?خواهیم\b'), 'نمیخوایم'),
-
-    # ---- «بخواهم» family → «بخوام» ----
-    (re.compile(r'\bبخواهم\b'), 'بخوام'),
-    (re.compile(r'\bبخواهی\b'), 'بخوای'),
-    (re.compile(r'\bبخواهد\b'), 'بخواد'),
-    (re.compile(r'\bبخواهیم\b'), 'بخوایم'),
-    (re.compile(r'\bبخواهید\b'), 'بخواید'),
-    (re.compile(r'\bبخواهند\b'), 'بخوان'),
-
-    # ---- «است/هست» → «ه/ـه» (not always desired, so only specific forms) ----
-    (re.compile(r'\bهستم\b'), 'هستم'),  # keep as-is (ambiguous)
-
-    # ---- Common formal→colloquial verb endings ----
-    (re.compile(r'\bمی‌?دانم\b'), 'میدونم'),
-    (re.compile(r'\bنمی‌?دانم\b'), 'نمیدونم'),
-    (re.compile(r'\bمی‌?دانی\b'), 'میدونی'),
-    (re.compile(r'\bنمی‌?دانی\b'), 'نمیدونی'),
-    (re.compile(r'\bمی‌?داند\b'), 'میدونه'),
-    (re.compile(r'\bنمی‌?داند\b'), 'نمیدونه'),
-    (re.compile(r'\bمی‌?دانیم\b'), 'میدونیم'),
-    (re.compile(r'\bنمی‌?دانیم\b'), 'نمیدونیم'),
-
-    # ---- «می‌توانم» family → «میتونم» ----
-    (re.compile(r'\bمی‌?توانم\b'), 'میتونم'),
-    (re.compile(r'\bنمی‌?توانم\b'), 'نمیتونم'),
-    (re.compile(r'\bمی‌?توانی\b'), 'میتونی'),
-    (re.compile(r'\bنمی‌?توانی\b'), 'نمیتونی'),
-    (re.compile(r'\bمی‌?تواند\b'), 'میتونه'),
-    (re.compile(r'\bنمی‌?تواند\b'), 'نمیتونه'),
-    (re.compile(r'\bمی‌?توانیم\b'), 'میتونیم'),
-    (re.compile(r'\bنمی‌?توانیم\b'), 'نمیتونیم'),
-    (re.compile(r'\bبتوانم\b'), 'بتونم'),
-    (re.compile(r'\bبتوانی\b'), 'بتونی'),
-    (re.compile(r'\bبتواند\b'), 'بتونه'),
-    (re.compile(r'\bبتوانیم\b'), 'بتونیم'),
-
-    # ---- «اصلاً» → «اصن» (very common colloquial) ----
-    (re.compile(r'\bاصلاً?\b'), 'اصن'),
-
-    # ---- «آن» → «اون»، «این‌طور» → «اینجوری» etc. ----
-    (re.compile(r'\bآنها\b'), 'اونا'),
-    (re.compile(r'\bآن\b'), 'اون'),
-    (re.compile(r'\bاین‌?طور\b'), 'اینجوری'),
-    (re.compile(r'\bآن‌?طور\b'), 'اونجوری'),
-    (re.compile(r'\bهمین‌?طور\b'), 'همینجوری'),
-    (re.compile(r'\bچه‌?طور\b'), 'چطور'),
-    (re.compile(r'\bچگونه\b'), 'چجوری'),
-]
-
-
-def preserve_colloquial(text: str) -> str:
-    """Convert formal Persian verb forms back to colloquial.
-
-    Whisper's training data is biased toward formal written Persian, so it
-    tends to produce «میخواهم» even when the speaker said «میخوام». This
-    function reverses that formalization.
-    """
-    if not text:
-        return text
-    for pattern, replacement in _COLLOQUIAL_RULES:
-        text = pattern.sub(replacement, text)
-    return text
-
-
-# ============================================================
-# HALLUCINATION FILTER
-# ============================================================
-
-def is_hallucination(text: str) -> bool:
-    """Detect hallucinated or garbage transcription output."""
-    if not text:
-        return True
-    if len(text) < 2:
-        return True
-
-    # Pure punctuation
-    if re.match(r'^[\.\,\;\:\!\?\…\،\؛\؟\!\s\u200c]+$', text):
-        return True
-
-    # Single character repeated
-    stripped = text.replace(" ", "").replace("\u200c", "")
-    if len(set(stripped)) <= 1:
-        return True
-
-    # Phrase-level repetition: "سلام سلام سلام" or "تست تست تست"
-    words = text.split()
-    if len(words) >= 3:
-        counts = Counter(words)
-        most_common_count = counts.most_common(1)[0][1]
-        # If one word appears in >60% of all words → hallucination
-        if most_common_count / len(words) > 0.6:
-            log.debug(f"Hallucination (repeated word): {text[:50]}")
-            return True
-
-    # Known hallucination phrases
-    text_lower = text.lower().strip()
-    for pattern in _HALLUCINATION_PATTERNS:
-        if pattern in text_lower:
-            log.debug(f"Hallucination (known pattern '{pattern}'): {text[:50]}")
-            return True
-
-    return False
-
-
-# ============================================================
-# AUDIO RMS NORMALIZATION
-# ============================================================
-
-def normalize_audio_volume(audio, target_rms=0.1):
-    """Normalize audio volume using RMS normalization.
-
-    Ensures consistent input volume regardless of mic type or speaking volume.
-    """
-    rms = np.sqrt(np.mean(audio ** 2))
-    if rms < 1e-6:  # silence
-        return audio
-    gain = target_rms / rms
-    # Limit gain to prevent noise amplification (max ~30dB boost)
-    gain = min(gain, 30.0)
-    return np.clip(audio * gain, -1.0, 1.0).astype(np.float32)
-
+# Moved to guya/stt.py (see the import near the top of this file).
 
 # ============================================================
 # KEYBOARD HOOK THREAD (Windows; macOS version comes from platform_macos)
@@ -1005,12 +691,21 @@ class RecordingThread(threading.Thread):
         self._stop_event.set()
         self.is_recording = False
 
-    def get_audio_snapshot(self):
-        """Get a copy of current audio frames (for real-time transcription)."""
+    def get_audio_snapshot(self, max_seconds=None):
+        """Get a copy of current audio frames (for real-time transcription).
+
+        `max_seconds` returns only the trailing part of the buffer, so the
+        periodic partial pass stays bounded instead of re-decoding the whole
+        recording every two seconds (O(n^2) in recording length).
+        """
         with self._lock:
             if not self.frames:
                 return None
-            raw = b"".join(self.frames)
+            frames = self.frames
+            if max_seconds:
+                keep = int(max_seconds * SAMPLE_RATE * 2 / CHUNK_SIZE / 2) + 1
+                frames = frames[-keep:]
+            raw = b"".join(frames)
         audio = np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0
         duration = len(audio) / SAMPLE_RATE
         if duration < MIN_RECORDING_DURATION:
@@ -1023,171 +718,11 @@ class RecordingThread(threading.Thread):
 
 
 # ============================================================
-# TRANSCRIPTION HELPERS
+# TRANSCRIPTION HELPERS — moved to guya/stt.py
 # ============================================================
-
-class CloudModel:
-    """Stand-in 'model' for the online backend. Holds the provider + API key so
-    the transcription path can route to cloud_engine instead of a local Whisper
-    model. Lets the rest of the widget treat cloud and offline uniformly."""
-    is_cloud = True
-
-    def __init__(self, provider, api_key):
-        self.provider = provider
-        self.api_key = api_key
-
-
-def _postprocess_text(txt: str, language: str) -> str:
-    """Apply Persian normalization / corrections / colloquial preservation.
-
-    Shared by the offline (per-segment) and cloud (whole-text) paths.
-    FA: always. DUAL: only when the text contains Persian script.
-    """
-    if language == "fa":
-        txt = normalize_persian(txt)
-        txt = apply_word_corrections(txt)
-        txt = preserve_colloquial(txt)
-    elif language == "dual":
-        if _has_persian_chars(txt):
-            txt = normalize_persian(txt)
-            txt = apply_word_corrections(txt)
-            txt = preserve_colloquial(txt)
-    return txt
-
-
-def transcribe_cloud(cloud_model, audio_data, language) -> str:
-    """Transcribe via the online provider, then apply the same Persian
-    post-processing the offline path uses, so output quality is consistent."""
-    audio_data = normalize_audio_volume(audio_data)
-    raw = cloud_engine.transcribe(
-        audio_data, language,
-        api_key=cloud_model.api_key,
-        provider=cloud_model.provider,
-        sample_rate=SAMPLE_RATE,
-    )
-    if not raw or is_hallucination(raw):
-        return ""
-    text = _postprocess_text(raw, language)
-    return re.sub(r"  +", " ", text).strip()
-
-
-def transcribe_audio(model, audio_data, language, audio_duration=None):
-    """Run transcription and return cleaned text.
-
-    Language modes:
-      "fa"   — Persian only. Model forced to fa, Persian prompt & normalization.
-      "en"   — English only. Model forced to en, English prompt, no Persian normalization.
-      "dual" — Bilingual FA+EN. Uses multilingual=True for per-segment language detection.
-
-    If `model` is a CloudModel, transcription is delegated to the online provider.
-    """
-
-    # Online backend: delegate to the cloud provider.
-    if isinstance(model, CloudModel):
-        return transcribe_cloud(model, audio_data, language)
-
-    # RMS-normalize audio volume for consistent input regardless of mic/volume
-    audio_data = normalize_audio_volume(audio_data)
-
-    # Domain-vocabulary prompts — include brand names, colloquial words, and loanwords
-    # so Whisper biases toward correct spellings.
-    # IMPORTANT: Do NOT use full sentences — Whisper may hallucinate them as output!
-    initial_prompt = None
-    whisper_language = language  # what we pass to model.transcribe(language=...)
-    multilingual_flag = False
-    temperature_val = 0.0  # single-pass beam search (fastest)
-
-    if language == "fa":
-        # Rich vocabulary prompt: colloquial forms, tech terms, brand names, punctuation.
-        # Whisper uses this to bias its decoder toward correct spellings.
-        # Keep as comma-separated words/phrases — NOT full sentences (avoids hallucination).
-        initial_prompt = (
-            "خب، ببین، میخوام، نمیدونم، چجوری، بخوایم، اصن، دیگه، همینه، "
-            "میشه، نمیشه، بگم، میگم، میکنیم، میریم، بریم، کردیم، "
-            "عملکرد، گفتار به متن، پارامترهای، تنظیمات، فریمورک، پایتون، "
-            "مدل، ویسپر، دیتابیس، سرور، ریپوزیتوری، گیتهاب، "
-            "اسنپ، دیجیکالا، تلگرام، واتساپ، جاباما، "
-            "اقامتگاه، رزرو، میزبان، مهمان، هزینه، تقویم، برگزار، "
-            "پنجشنبه، جمعه، اسفند، فروردین، "
-            "سرچ کردن، فول تکست سرچ، بوکینگ، ایونت، فیچر، "
-            "فنی، متنی، امروز، عملکرد."
-        )
-        whisper_language = "fa"
-    elif language == "en":
-        initial_prompt = (
-            "Okay, so, let me, I want to, basically, "
-            "Whisper, Python, framework, faster-whisper, database, server, GitHub, "
-            "Snapp, Digikala, Jabama, accommodation, booking, reserve, available, "
-            "full text search, event, feature, calendar, parameters, performance."
-        )
-        whisper_language = "en"
-    elif language == "dual":
-        # CRITICAL: multilingual=True enables per-segment language detection.
-        # Without it, language=None detects once for the entire audio and
-        # transcribes everything in that single language — breaking code-switching.
-        initial_prompt = (
-            "خب، ببین، میخوام، نمیدونم، عملکرد، پارامترهای، فریمورک، "
-            "اسنپ، دیجیکالا، جاباما، اقامتگاه، رزرو، برگزار، "
-            "Whisper, Python, framework, database, server, GitHub, "
-            "booking, available, full text search, event, feature."
-        )
-        whisper_language = None  # auto-detect per segment
-        multilingual_flag = True
-        # Wider temperature fallback for mixed-language audio
-        temperature_val = [0.0, 0.2, 0.4, 0.6]
-
-    # For short recordings (<5s), disable condition_on_previous_text to prevent
-    # hallucination loops — there's no meaningful "previous text" context.
-    use_condition_on_prev = True
-    if audio_duration is not None and audio_duration < 5.0:
-        use_condition_on_prev = False
-
-    segments, info = model.transcribe(
-        audio_data,
-        language=whisper_language,
-        beam_size=5,
-        best_of=5,
-        vad_filter=True,
-        vad_parameters=dict(
-            threshold=0.3,                 # lower = more sensitive to quiet speech
-            min_silence_duration_ms=250,   # shorter = better pause segmentation
-            speech_pad_ms=500,             # wider padding keeps word edges intact
-            min_speech_duration_ms=80,     # don't discard very short utterances
-        ),
-        initial_prompt=initial_prompt,
-        repetition_penalty=1.2,
-        no_repeat_ngram_size=0,
-        no_speech_threshold=0.5,           # higher = stricter silence detection (less hallucination)
-        condition_on_previous_text=use_condition_on_prev,
-        temperature=temperature_val,
-        multilingual=multilingual_flag,
-    )
-
-    text_parts = []
-    for segment in segments:
-        txt = segment.text.strip()
-        if is_hallucination(txt):
-            log.debug(f"Filtered hallucination: {txt[:50]}")
-            continue
-        # Normalize Persian text (Arabic→Persian chars, diacritics, spacing).
-        txt = _postprocess_text(txt, language)
-        text_parts.append(txt)
-
-    result = " ".join(text_parts).strip()
-
-    # Final cleanup: collapse multiple spaces
-    result = re.sub(r'  +', ' ', result)
-
-    return result
-
-
-def _has_persian_chars(text: str) -> bool:
-    """Check if text contains Persian/Arabic script characters."""
-    for ch in text:
-        if '\u0600' <= ch <= '\u06FF' or '\uFB50' <= ch <= '\uFDFF' or '\uFE70' <= ch <= '\uFEFF':
-            return True
-    return False
-
+# CloudModel, transcribe_audio() and transcribe_cloud() live in stt.py so the
+# evaluation harness (eval/accuracy.py --pipeline guya) runs the identical
+# pipeline the widget runs. They are imported near the top of this file.
 
 # ============================================================
 # REAL-TIME TRANSCRIPTION THREAD
@@ -1211,13 +746,13 @@ class RealtimeTranscriber(threading.Thread):
             self._stop_event.wait(REALTIME_CHUNK_SEC)
             if self._stop_event.is_set():
                 break
-            audio = self.recording_thread.get_audio_snapshot()
+            audio = self.recording_thread.get_audio_snapshot(max_seconds=8.0)
             if audio is None:
                 continue
             try:
                 t0 = time.time()
                 dur = len(audio) / SAMPLE_RATE
-                text = transcribe_audio(self.model, audio, self.language, audio_duration=dur)
+                text = transcribe_audio(self.model, audio, self.language, audio_duration=dur, sample_rate=SAMPLE_RATE)
                 elapsed = time.time() - t0
                 log.debug(f"Real-time partial ({elapsed:.1f}s): {text[:60]}")
                 if text and not is_hallucination(text):
@@ -1632,7 +1167,7 @@ def main():
             try:
                 t0 = time.time()
                 dur = len(self.audio_data) / SAMPLE_RATE
-                text = transcribe_audio(self.model, self.audio_data, self.language, audio_duration=dur)
+                text = transcribe_audio(self.model, self.audio_data, self.language, audio_duration=dur, sample_rate=SAMPLE_RATE)
                 elapsed = time.time() - t0
                 log.info(f"Final transcription ({elapsed:.1f}s): {text[:80]}")
                 self.finished.emit(text)
@@ -1788,6 +1323,70 @@ def main():
             self.raise_()
             apply_nonactivating_style(self)
 
+    class ReplyBubble(QWidget):
+        """Non-activating bubble that shows the assistant's full reply.
+
+        The pill's label is ~154 px wide and cannot wrap, so a Persian
+        confirmation question ("Rename X to Y? Say yes or no.") was cut to its
+        first three words — and Persian is never spoken on macOS, so the label
+        was the only channel. The bubble wraps, follows text direction, and is
+        hidden when the pill returns to idle.
+        """
+
+        def __init__(self):
+            super().__init__()
+            flags = (
+                Qt.WindowType.FramelessWindowHint
+                | Qt.WindowType.WindowStaysOnTopHint
+                | Qt.WindowType.WindowDoesNotAcceptFocus
+            )
+            if not IS_MAC:
+                flags |= Qt.WindowType.Tool
+            self.setWindowFlags(flags)
+            self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
+            self.setObjectName("replyBubble")
+            self.setAccessibleName("Guya assistant reply")
+            self.setStyleSheet(
+                """
+                QWidget#replyBubble { background: #15191f; border: 1px solid #38414d; border-radius: 12px; }
+                QLabel { color: #f1f5f9; background: transparent; border: none; font-size: 14px; }
+                """
+            )
+            layout = QVBoxLayout(self)
+            layout.setContentsMargins(14, 10, 14, 10)
+            self._label = QLabel("")
+            self._label.setWordWrap(True)
+            self._label.setFont(QFont(UI_FONT, 13))
+            self._label.setTextInteractionFlags(Qt.TextInteractionFlag.NoTextInteraction)
+            layout.addWidget(self._label)
+
+        def show_message(self, text: str, anchor, tone: str = "ok", rtl: bool = False):
+            colour = {"ok": "#b7f7cf", "warn": "#ffe0a3", "error": "#ffb4b4"}.get(tone, "#f1f5f9")
+            self._label.setStyleSheet(f"color: {colour};")
+            self._label.setText(text)
+            self._label.setAlignment(
+                (Qt.AlignmentFlag.AlignRight if rtl else Qt.AlignmentFlag.AlignLeft)
+                | Qt.AlignmentFlag.AlignVCenter
+            )
+            self.setLayoutDirection(Qt.LayoutDirection.RightToLeft if rtl else Qt.LayoutDirection.LeftToRight)
+            self.setAccessibleDescription(text)
+            width = 420
+            self.setFixedWidth(width)
+            self.adjustSize()
+            height = max(48, self.sizeHint().height())
+            self.setFixedSize(width, height)
+            screen = QApplication.primaryScreen()
+            available = screen.availableGeometry() if screen else anchor
+            x = anchor.center().x() - width // 2
+            y = anchor.bottom() + 10
+            x = max(available.left() + 8, min(x, available.right() - width - 8))
+            if y + height > available.bottom() - 8:
+                y = anchor.top() - height - 10
+            self.move(x, max(available.top() + 8, y))
+            self.show()
+            self.raise_()
+            apply_nonactivating_style(self)
+
     class VoiceWidget(QWidget):
         """Minimal floating widget: collapses to a small circle, expands to a pill.
 
@@ -1820,6 +1419,7 @@ def main():
             self._transcription_thread = None
             self._assistant_thread = None
             self._results_popup = SearchResultsPopup()
+            self._reply_bubble = ReplyBubble()
             self._results_popup.option_selected.connect(
                 self._on_result_option_clicked
             )
@@ -1901,6 +1501,10 @@ def main():
             self.setWindowFlags(flags)
             self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
             self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
+            # Expose the pill to VoiceOver / screen readers: the status text is
+            # the only feedback channel for Persian users.
+            self.setAccessibleName("Guya voice widget")
+            self.setAccessibleDescription(self._label_text)
             # Start collapsed
             self.setFixedSize(WIDGET_COLLAPSED_SIZE, WIDGET_COLLAPSED_SIZE)
 
@@ -2203,6 +1807,19 @@ def main():
                 self._target_hwnd = hook_hwnd
                 log.info(f"Target (from hook): {self._target_hwnd}")
 
+            # On macOS a click on the pill or the results popup makes Guya
+            # itself the frontmost app; 6 of the first 41 logged commands were
+            # refused for that reason. Fall back to the last real target.
+            if IS_MAC:
+                own_ids = {"com.guya.app", "org.python.python"}
+                if str(self._target_hwnd) in own_ids:
+                    previous = getattr(self, "_last_external_target", None)
+                    if previous:
+                        log.info(f"Target was Guya itself; using previous target {previous}")
+                        self._target_hwnd = previous
+                elif self._target_hwnd:
+                    self._last_external_target = self._target_hwnd
+
             # Drill down to the actual text control (Windows only — no-op on macOS).
             self._target_control = get_focused_control(self._target_hwnd)
             if self._target_control != self._target_hwnd:
@@ -2259,7 +1876,7 @@ def main():
 
                 if audio_data is None:
                     log.info("Recording too short, ignoring")
-                    self._set_state("idle")
+                    self._show_notice("Too short — hold the key while you speak", "warn")
                     return
 
                 duration = len(audio_data) / SAMPLE_RATE
@@ -2309,7 +1926,7 @@ def main():
             if not text:
                 self._is_processing = False
                 log.info("No text from final transcription")
-                self._set_state("idle")
+                self._show_notice("Nothing heard — please try again", "warn")
                 return
 
             log.info(f"Final text: {text[:80]}")
@@ -2325,8 +1942,31 @@ def main():
         def _on_transcription_error(self, error_msg: str):
             self._is_processing = False
             log.error(f"Transcription error: {error_msg}")
-            self._label_text = f"Error: {error_msg[:35]}"
-            self._set_state("idle")
+            # Keep the message on screen; _set_state("idle") used to overwrite
+            # it on the very next line, so errors were never visible.
+            self._show_notice(f"Error: {error_msg[:40]}", "error", DONE_STATE_DURATION * 3)
+
+        def _show_notice(self, text: str, tone: str = "warn", duration_ms: int = None):
+            """Show a short message on the pill, coloured by tone, then return
+            to idle. Used for every path that used to fail silently."""
+            self._state = "done"
+            self._done_tone = tone
+            self._label_text = text
+            self._expand()
+            self.update()
+            self._arm_idle_timer(duration_ms or max(DONE_STATE_DURATION, 2500))
+
+        def _arm_idle_timer(self, duration_ms: int):
+            """One timer for the done->idle transition. A fire-and-forget
+            singleShot per reply let an OLD timer wipe a NEW reply early."""
+            timer = getattr(self, "_idle_timer", None)
+            if timer is None:
+                timer = QTimer(self)
+                timer.setSingleShot(True)
+                timer.timeout.connect(self._return_to_idle)
+                self._idle_timer = timer
+            timer.stop()
+            timer.start(int(duration_ms))
 
         def _start_assistant_command(self, text: str):
             log.info(f"Assistant heard: {text[:120]}")
@@ -2343,9 +1983,29 @@ def main():
         def _on_assistant_done(self, response):
             self._is_processing = False
             self._state = "done"
+            # Colour the reply by what happened: green only for success,
+            # amber for a question or a cancel, red for an error.
+            status = getattr(response, "status", "success")
+            self._done_tone = (
+                "ok" if status == "success"
+                else "error" if status == "error"
+                else "warn"
+            )
             self._label_text = response.message
             self._expand()
             self.update()
+            # The pill shows ~30 characters. Anything longer, and every question
+            # or error, is shown in full in a wrapped bubble under the pill.
+            if not response.options and (status != "success" or len(response.message) > 28):
+                try:
+                    self._reply_bubble.show_message(
+                        response.message, self.frameGeometry(), tone=self._done_tone,
+                        rtl=(response.language == "fa"),
+                    )
+                except Exception as exc:  # never let a display problem block the action
+                    log.warning(f"Reply bubble failed: {exc}")
+            else:
+                self._reply_bubble.hide()
             if response.options:
                 self._results_popup.show_results(
                     response.options,
@@ -2390,16 +2050,16 @@ def main():
             )
             if ASSISTANT_SPEAK_FEEDBACK:
                 self._assistant.speak(response.message, response.language)
-            QTimer.singleShot(max(DONE_STATE_DURATION, 3000), self._return_to_idle)
+            # Questions and Persian replies are read from the pill only, so
+            # give them longer than a plain "done".
+            self._arm_idle_timer(max(DONE_STATE_DURATION, 6000 if status != "success" else 3000))
 
         def _on_assistant_error(self, error_msg: str):
             self._is_processing = False
             log.error(f"Assistant error: {error_msg}")
             self._results_popup.hide()
-            self._state = "done"
-            self._label_text = "Assistant error"
-            self.update()
-            QTimer.singleShot(DONE_STATE_DURATION, self._return_to_idle)
+            self._assistant.context.clear_pending()
+            self._show_notice("Assistant error — see the log", "error")
 
         def _type_final_text(self, text: str):
             target = self._target_hwnd
@@ -2409,7 +2069,7 @@ def main():
                     log.info(f"Final text pasted ({len(text)} chars) to hwnd={target}")
                 else:
                     log.warning(f"paste_text_to_window failed for hwnd={target}")
-                    self._label_text = "Copied! Ctrl+V to paste"
+                    self._label_text = ("Copied! Press ⌘V to paste" if IS_MAC else "Copied! Press Ctrl+V to paste")
                     self.update()
             except Exception as e:
                 log.error(f"Final paste failed: {e}")
@@ -2417,7 +2077,7 @@ def main():
                     pyperclip.copy(text)
                 except Exception:
                     pass
-                self._label_text = "Copied! Ctrl+V to paste"
+                self._label_text = ("Copied! Press ⌘V to paste" if IS_MAC else "Copied! Press Ctrl+V to paste")
                 self.update()
 
         def _on_text_ready(self, text: str):
@@ -2446,17 +2106,25 @@ def main():
                     if self._active_recording_mode == "assistant"
                     else "\u25cf Dictation listening\u2026"
                 )
+                bubble = getattr(self, "_reply_bubble", None)
+                if bubble is not None:
+                    bubble.hide()
                 self._expand()
             elif state == "processing":
                 self._label_text = "Processing\u2026"
             elif state == "done":
                 self._label_text = "\u2713 Done"
-                QTimer.singleShot(DONE_STATE_DURATION, self._return_to_idle)
+                self._done_tone = "ok"
+                self._arm_idle_timer(DONE_STATE_DURATION)
+            self.setAccessibleDescription(self._label_text)
             self.update()
 
         def _return_to_idle(self):
             if self._state == "done":
                 self._set_state("idle")
+            bubble = getattr(self, "_reply_bubble", None)
+            if bubble is not None:
+                bubble.hide()
 
         def _idle_label(self):
             if self._assistant_enabled:
@@ -2937,8 +2605,17 @@ def main():
                 "listening":  QColor(255, 60, 60, 28),
                 "processing": QColor(60, 120, 255, 22),
                 "done":       QColor(60, 220, 100, 25),
+                "warn":       QColor(255, 190, 60, 26),
+                "error":      QColor(255, 80, 80, 28),
             }
-            return base, tints.get(self._state, tints["idle"])
+            return base, tints.get(self._tone_key(), tints["idle"])
+
+        def _tone_key(self):
+            """State name used for colours: 'done' splits into ok/warn/error."""
+            if self._state == "done":
+                tone = getattr(self, "_done_tone", "ok")
+                return "done" if tone == "ok" else tone
+            return self._state
 
         def _get_border_color(self):
             """Glass white edge + state accent overlay."""
@@ -2952,8 +2629,12 @@ def main():
                 accent = QColor(255, 80, 80, int(50 + 80 * breath))
             elif self._state == "processing":
                 accent = QColor(80, 150, 255, 70)
-            elif self._state == "done":
+            elif self._tone_key() == "done":
                 accent = QColor(80, 230, 120, 65)
+            elif self._tone_key() == "warn":
+                accent = QColor(255, 200, 80, 70)
+            elif self._tone_key() == "error":
+                accent = QColor(255, 90, 90, 75)
             else:
                 accent = QColor(180, 180, 200, 25)
             # Blend: white edge + accent
@@ -2971,8 +2652,10 @@ def main():
                 "listening":  QColor(255, 75, 75),
                 "processing": QColor(80, 160, 255),
                 "done":       QColor(75, 230, 120),
+                "warn":       QColor(255, 200, 70),
+                "error":      QColor(255, 90, 90),
             }
-            return colors.get(self._state, QColor(120, 120, 140))
+            return colors.get(self._tone_key(), QColor(120, 120, 140))
 
         def _get_glow_alpha(self):
             """Softer glow with slower breathing."""
@@ -2992,8 +2675,10 @@ def main():
                 "listening":  QColor(255, 130, 130),
                 "processing": QColor(140, 195, 255),
                 "done":       QColor(130, 255, 170),
+                "warn":       QColor(255, 215, 130),
+                "error":      QColor(255, 140, 140),
             }
-            return colors.get(self._state, QColor(200, 200, 215))
+            return colors.get(self._tone_key(), QColor(200, 200, 215))
 
     # =========================================================
     # STEP 4: Create Qt app and widget

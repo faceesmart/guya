@@ -45,6 +45,14 @@ def _prepare_macos_runtime(root: str) -> str:
             ignore=shutil.ignore_patterns("__pycache__", "*.pyc", ".DS_Store"),
         )
 
+    # Remember where the checkout lives, so the control panel launched from
+    # Guya.app (which runs this copy) can find the repo for Update/Uninstall.
+    try:
+        with open(os.path.join(runtime, "origin"), "w", encoding="utf-8") as handle:
+            handle.write(os.path.realpath(root) + "\n")
+    except OSError:
+        pass
+
     source_venv = os.path.join(root, "venv")
     runtime_venv = os.path.join(runtime, "venv")
     runtime_python = os.path.join(runtime_venv, "bin", "python")

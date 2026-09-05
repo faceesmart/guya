@@ -13,10 +13,14 @@ Decision rule:
     config present → launch the widget directly.
 """
 
+import logging
 import os
 import sys
 
 from . import config as guya_config
+from . import logsetup as guya_logsetup
+
+log = logging.getLogger("Guya")
 
 
 def _run_wizard() -> bool:
@@ -24,11 +28,13 @@ def _run_wizard() -> bool:
     try:
         from . import wizard
         return wizard.run()
-    except Exception as e:
-        # Safety net: if the wizard can't run (e.g. missing Qt during a headless
-        # test), fall back to writing defaults so the app is still usable.
-        print(f"[guya] Wizard unavailable ({e}); writing default config.")
-        return guya_config.save_config(guya_config.DEFAULT_CONFIG)
+    except Exception:
+        # A crashing wizard used to be hidden by writing DEFAULT_CONFIG as if
+        # setup had completed, so the wizard never ran again. Now the error is
+        # logged and setup is reported as failed.
+        log.exception("Setup wizard crashed")
+        print("[guya] The setup wizard could not run. See ~/.guya/logs/guya.log.")
+        return False
 
 
 def _relaunch_fresh():
@@ -39,6 +45,7 @@ def _relaunch_fresh():
 
 def main():
     args = set(sys.argv[1:])
+    guya_logsetup.setup_logging()
 
     # The Control Panel starts the dictation widget as `--widget`, and runs the
     # wizard as `--setup-only` (which must NOT relaunch into a Control Panel).

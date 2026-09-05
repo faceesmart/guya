@@ -49,6 +49,22 @@ def _project_root() -> str:
     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
+def _source_root() -> str:
+    """The git checkout. Under Guya.app the running code is a copy in
+    ~/.guya/runtime; the installer records the original folder in
+    ~/.guya/runtime/origin so Update and Uninstall can reach it."""
+    root = _project_root()
+    origin = os.path.join(root, "origin")
+    try:
+        with open(origin, encoding="utf-8") as handle:
+            recorded = handle.read().strip()
+        if recorded and os.path.isdir(recorded):
+            return recorded
+    except OSError:
+        pass
+    return root
+
+
 def _fmt_uptime(secs: float) -> str:
     s = int(secs)
     h, m, s = s // 3600, (s % 3600) // 60, s % 60
@@ -161,7 +177,7 @@ class ControlPanel(QWidget):
             c["model"]["device"] = self.device; c["model"]["compute_type"] = "auto"
             c["cloud"]["provider"] = "groq"; c["cloud"]["api_key"] = self.api_key
             c["cloud"]["enabled"] = True
-            c["language"] = "en"     # offline does English; online handles the rest
+            c["language"] = self.lang if self.lang in ("fa", "en") else "en"
         else:  # offline
             c["model"]["backend"] = "faster-whisper"; c["model"]["size"] = self.model_size
             c["model"]["device"] = self.device; c["model"]["compute_type"] = "auto"
@@ -285,13 +301,21 @@ class ControlPanel(QWidget):
         summary.setStyleSheet(f"color: {TEXT2}; padding: 0 2px 4px 2px;")
         help_col.addWidget(summary)
 
-        help_col.addWidget(self._help_card(
-            "⌨️  Two keys / دو کلید",
-            "Right Option (⌥): dictation into the active document.\n"
-            "Right Command (⌘): assistant commands. Press it while Guya is speaking "
-            "to interrupt and continue.\n\n"
-            "⌥ برای تبدیل صدا به متن  ·  ⌘ برای فرمان‌های دستیار",
-        ))
+        if sys.platform == "darwin":
+            keys_card = (
+                "Right Option (⌥): dictation into the active document.\n"
+                "Right Command (⌘): assistant commands. Press it while Guya is speaking "
+                "to interrupt and continue.\n\n"
+                "⌥ برای تبدیل صدا به متن  ·  ⌘ برای فرمان‌های دستیار"
+            )
+        else:
+            keys_card = (
+                f"{self.label}: dictation into the active document.\n"
+                f"{self.assistant_label}: assistant commands. Press it while Guya is speaking "
+                "to interrupt and continue.\n\n"
+                f"{self.label} برای تبدیل صدا به متن  ·  {self.assistant_label} برای فرمان‌های دستیار"
+            )
+        help_col.addWidget(self._help_card("⌨️  Two keys / دو کلید", keys_card))
         help_col.addWidget(self._help_card(
             "✨  Common commands / فرمان‌های اصلی",
             "Open Calculator  ·  ماشین حساب رو باز کن\n"
@@ -818,12 +842,24 @@ class ControlPanel(QWidget):
             self.start_widget()
 
     def _update(self):
-        root = _project_root()
+        root = _source_root()
+        if not os.path.isdir(os.path.join(root, ".git")):
+            QMessageBox.information(
+                self, "Update Guya",
+                "Automatic update needs the original project folder with git.\n\n"
+                f"Run these in a terminal instead:\n  cd \"{root}\"\n  git pull\n  ./install.sh   "
+                "(or double-click Install Guya)")
+            return
         pip = os.path.join(root, "venv", "Scripts" if sys.platform == "win32" else "bin", "pip")
+        if not os.path.exists(pip):
+            pip = sys.executable.replace("python", "pip") if "python" in sys.executable else "pip"
+        # Under Guya.app the code that runs is the copy in ~/.guya/runtime, so a
+        # pull alone changes nothing; regenerate the launcher (which re-copies).
+        relaunch = f'"{os.path.join(root, "venv", "bin", "python")}" -c "import sys; sys.path.insert(0, \\"{root}\\"); from guya import launcher_gen; launcher_gen.create_launcher()"'
         if sys.platform == "win32":
             argv = ["cmd", "/c", f'cd /d "{root}" & git pull & "{pip}" install -r requirements.txt']
         else:
-            argv = ["bash", "-lc", f'cd "{root}" && git pull && "{pip}" install -r requirements.txt']
+            argv = ["bash", "-lc", f'cd "{root}" && git pull && "{pip}" install -r requirements.txt && {relaunch}']
         self._run_console("Updating Guya…", argv)
 
     def _open_logs(self):
@@ -911,13 +947,21 @@ class ControlPanel(QWidget):
             return
         self.stop_widget()
         import shutil, glob
-        root = _project_root()
-        targets = [os.path.join(os.path.expanduser("~"), ".guya"),
-                   os.path.join(root, "Guya.app"),
+        root = _source_root()
+        home = os.path.expanduser("~")
+        guya_dir = os.path.join(home, ".guya")
+        # Launchers first (they point at the runtime), then user data, then the
+        # model cache. The runtime this process runs from is removed last and
+        # the process exits immediately afterwards.
+        targets = [os.path.join(root, "Guya.app"),
                    os.path.join(root, "Start Guya.command"),
-                   os.path.join(root, "Start Guya.vbs")]
-        targets += glob.glob(os.path.join(os.path.expanduser("~"), ".cache", "huggingface",
-                                          "hub", "models--*faster-whisper*"))
+                   os.path.join(root, "Start Guya.vbs"),
+                   os.path.join(guya_dir, "config.json"),
+                   os.path.join(guya_dir, "logs"),
+                   os.path.join(guya_dir, "rt_state.json"),
+                   os.path.join(guya_dir, "rt_cmd.json")]
+        targets += glob.glob(os.path.join(home, ".cache", "huggingface", "hub", "models--*faster-whisper*"))
+        targets.append(os.path.join(guya_dir, "runtime"))
         for t in targets:
             try:
                 shutil.rmtree(t, ignore_errors=True) if os.path.isdir(t) else (
@@ -925,7 +969,7 @@ class ControlPanel(QWidget):
             except Exception as e:
                 log.warning(f"uninstall: {t}: {e}")
         QMessageBox.information(self, "Guya", "Guya has been removed. Goodbye! 👋")
-        QApplication.quit()
+        os._exit(0)
 
     def _run_console(self, title, argv):
         dlg = QDialog(self); dlg.setWindowTitle(title); dlg.resize(660, 440)

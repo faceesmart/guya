@@ -20,6 +20,7 @@ clean, Qt-free process — required on Windows where importing Qt before the
 CTranslate2 CUDA backend can segfault.
 """
 
+import os
 import sys
 import json
 import time
@@ -82,39 +83,67 @@ LANGUAGE_FLOOR_RANK = {
 # THE BENCHMARK (runs in a subprocess)
 # ============================================================
 
+BENCH_CLIP = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "bench_speech.wav")
+
+
+def _benchmark_audio(audio_sec: float):
+    """The clip the proxy model is timed on.
+
+    Real speech (a bundled 7 s English sentence) is used, not noise: on noise
+    Whisper fails its own quality checks and retries at rising temperatures,
+    so the measured time reflects decoder retries rather than device speed
+    (measured on an M1 Pro: 2x spread between runs, and every run slower than
+    the machine's real large-v3-turbo RTF). Noise is kept only as a fallback
+    when the asset is missing.
+    """
+    import numpy as np
+    if os.path.exists(BENCH_CLIP):
+        from faster_whisper.audio import decode_audio
+        return decode_audio(BENCH_CLIP, sampling_rate=16000), "speech"
+    rng = np.random.default_rng(0)
+    return (rng.standard_normal(int(16000 * audio_sec)).astype("float32")) * 0.05, "noise"
+
+
 def run_proxy_benchmark(device: str, compute_type: str,
                         proxy: str = PROXY_MODEL,
-                        audio_sec: float = PROXY_AUDIO_SEC) -> dict:
-    """Load the proxy model, transcribe a fixed synthetic clip, return RTF."""
-    import numpy as np
+                        audio_sec: float = PROXY_AUDIO_SEC,
+                        repeats: int = 2) -> dict:
+    """Load the proxy model, transcribe a fixed clip, return the RTF."""
     from faster_whisper import WhisperModel
 
-    # Deterministic synthetic audio: low-amplitude noise. Exercises the full
-    # encoder pass (which dominates timing for short clips) without needing a
-    # bundled speech file. Seed fixed so the benchmark is reproducible.
-    rng = np.random.default_rng(0)
-    audio = (rng.standard_normal(int(16000 * audio_sec)).astype("float32")) * 0.05
+    audio, clip_kind = _benchmark_audio(audio_sec)
+    audio_sec = len(audio) / 16000.0
 
     kwargs = {"device": device, "compute_type": compute_type}
     if device == "cpu":
         kwargs["cpu_threads"] = 0  # use all cores
     model = WhisperModel(proxy, **kwargs)
 
+    # Same decoding settings the widget uses for a single-language pass, with
+    # temperature fallback off so the time is the device's, not the decoder's.
+    decode = dict(language="en", beam_size=5, temperature=0.0, vad_filter=False,
+                  condition_on_previous_text=False)
+
     # Warm-up: the first transcribe pays one-time init costs we don't want to
     # measure. Run a short throwaway pass first.
-    list(model.transcribe(audio[:16000], vad_filter=False, beam_size=1)[0])
+    list(model.transcribe(audio[:16000], **decode)[0])
 
-    t0 = time.time()
-    segments, _ = model.transcribe(audio, vad_filter=False, beam_size=5)
-    list(segments)  # force the lazy generator to actually run
-    elapsed = time.time() - t0
+    timings = []
+    for _ in range(max(1, repeats)):
+        t0 = time.perf_counter()
+        segments, _ = model.transcribe(audio, **decode)
+        list(segments)  # force the lazy generator to actually run
+        timings.append(time.perf_counter() - t0)
+    elapsed = min(timings)  # the best run is the least disturbed one
 
     return {
         "proxy": proxy,
         "device": device,
         "compute_type": compute_type,
-        "audio_sec": audio_sec,
+        "clip": clip_kind,
+        "audio_sec": round(audio_sec, 2),
         "elapsed": round(elapsed, 3),
+        "runs": [round(t, 3) for t in timings],
         "rtf_base": round(elapsed / audio_sec, 4),
     }
 
@@ -168,16 +197,22 @@ def annotate_and_recommend(options: list, rtf_base: float,
                          key=lambda o: ACCURACY_RANK.get(o["model_size"], 0),
                          reverse=True)
 
+    # One budget, applied once: the most accurate model predicted to run at or
+    # under real time. A two-tier budget (comfortable, then acceptable) was
+    # non-monotonic — a slightly slower machine could be told to run a bigger,
+    # slower model — so it was replaced by a single threshold.
     chosen = None
-    for o in by_accuracy:                       # comfortable first
+    for o in by_accuracy:
         if o["predicted_rtf"] is not None and o["predicted_rtf"] <= COMFORTABLE_RTF:
             chosen = o
             break
-    if chosen is None:
-        for o in by_accuracy:                   # then acceptable
-            if o["predicted_rtf"] is not None and o["predicted_rtf"] <= ACCEPTABLE_RTF:
-                chosen = o
-                break
+    for o in options:
+        if o["backend"] != "cloud" and o.get("predicted_rtf") is not None:
+            o["latency_label"] = (
+                "comfortable" if o["predicted_rtf"] <= COMFORTABLE_RTF
+                else "slow" if o["predicted_rtf"] <= ACCEPTABLE_RTF
+                else "too slow"
+            )
 
     # Nothing offline is both accurate-enough AND fast-enough → go online.
     if chosen is not None:

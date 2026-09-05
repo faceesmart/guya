@@ -200,6 +200,17 @@ def paste_text_to_window(target_token, text: str) -> bool:
         log.error(f"Clipboard copy failed: {e}")
         return False
 
+    # Never paste into Guya itself (after a click on the pill or the results
+    # popup Guya can be frontmost). The text stays on the clipboard and the
+    # widget tells the user to press Cmd+V in their document.
+    try:
+        front_now = get_foreground_window()
+    except Exception:
+        front_now = None
+    if front_now in ("com.guya.app", "org.python.python"):
+        log.warning(f"Paste skipped: Guya itself is frontmost ({front_now}); text left on clipboard")
+        return False
+
     # Give the clipboard a moment to settle, then paste into the current app.
     time.sleep(0.05)
     ok = _send_cmd_v()

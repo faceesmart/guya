@@ -156,6 +156,11 @@ def save_config(cfg: dict) -> bool:
         cfg["version"] = CONFIG_VERSION
         with open(CONFIG_PATH, "w", encoding="utf-8") as f:
             json.dump(cfg, f, ensure_ascii=False, indent=2)
+        try:
+            # The file may hold a cloud API key: owner-only.
+            os.chmod(CONFIG_PATH, 0o600)
+        except OSError:
+            pass
         log.info(f"Saved config to {CONFIG_PATH}")
         return True
     except Exception as e:

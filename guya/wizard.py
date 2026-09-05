@@ -1975,7 +1975,11 @@ class WizardWindow(QWidget):
                 cfg["cloud"]["provider"] = "groq"
                 cfg["cloud"]["api_key"] = self.choices.get("cloud_api_key", "")
                 cfg["cloud"]["enabled"] = True
-                cfg["language"] = "en"     # offline does English; online handles the rest
+                # The offline half keeps the language the user chose. It used to
+                # be forced to English, which silently contradicted the Review
+                # page and left a Persian-only user with an English-only offline model.
+                chosen = self.choices.get("language")
+                cfg["language"] = chosen if chosen in ("fa", "en") else "en"
             else:
                 cfg["cloud"]["enabled"] = False
                 cfg["language"] = self.choices["language"]

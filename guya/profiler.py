@@ -215,8 +215,16 @@ def recommend_models(profile: dict) -> list:
         "cons": ["con_needs_internet", "con_privacy"],
     })
 
-    # Guarantee exactly one recommended option.
-    if not any(o["recommended"] for o in options):
+    # Guarantee exactly one recommended option: the first enabled one that is
+    # flagged wins, the rest are cleared (two flags made the wizard badge two
+    # cards and pre-select the wrong one).
+    seen = False
+    for o in options:
+        if o["recommended"] and o["enabled"] and not seen:
+            seen = True
+        else:
+            o["recommended"] = False
+    if not seen:
         for o in options:
             if o["enabled"]:
                 o["recommended"] = True

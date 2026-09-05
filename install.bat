@@ -21,9 +21,7 @@ echo [1/3] Creating virtual environment...
 if not exist venv ( python -m venv venv )
 call venv\Scripts\activate.bat
 
-echo [2/3] Installing PyTorch + CUDA (for GPU acceleration)...
-pip install torch --index-url https://download.pytorch.org/whl/cu121
-if %errorlevel% neq 0 ( echo [WARN] CUDA torch failed, continuing with CPU. )
+echo [2/3] Nothing to download for the GPU: faster-whisper uses CTranslate2, not PyTorch.
 
 echo [3/3] Installing dependencies...
 pip install -r requirements.txt
