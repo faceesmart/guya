@@ -1,0 +1,1179 @@
+{
+ "tag": "before",
+ "n": 219,
+ "summary": {
+  "lang:en": {
+   "n": 122,
+   "intent": 79,
+   "full": 76
+  },
+  "intent:create_word_document": {
+   "n": 10,
+   "intent": 8,
+   "full": 8
+  },
+  "all:all": {
+   "n": 219,
+   "intent": 150,
+   "full": 143
+  },
+  "intent:create_folder": {
+   "n": 7,
+   "intent": 7,
+   "full": 7
+  },
+  "intent:create_text_file": {
+   "n": 6,
+   "intent": 6,
+   "full": 6
+  },
+  "intent:open_app": {
+   "n": 17,
+   "intent": 14,
+   "full": 14
+  },
+  "intent:open_file": {
+   "n": 12,
+   "intent": 9,
+   "full": 9
+  },
+  "intent:open_folder": {
+   "n": 9,
+   "intent": 8,
+   "full": 8
+  },
+  "intent:search": {
+   "n": 13,
+   "intent": 9,
+   "full": 8
+  },
+  "intent:rename": {
+   "n": 12,
+   "intent": 10,
+   "full": 9
+  },
+  "intent:save_current": {
+   "n": 8,
+   "intent": 8,
+   "full": 8
+  },
+  "intent:save_as_unsupported": {
+   "n": 3,
+   "intent": 1,
+   "full": 1
+  },
+  "intent:close_current": {
+   "n": 7,
+   "intent": 7,
+   "full": 7
+  },
+  "intent:browser_navigation": {
+   "n": 71,
+   "intent": 30,
+   "full": 25
+  },
+  "intent:open_website": {
+   "n": 9,
+   "intent": 7,
+   "full": 7
+  },
+  "intent:unknown": {
+   "n": 18,
+   "intent": 17,
+   "full": 17
+  },
+  "intent:sequence": {
+   "n": 8,
+   "intent": 8,
+   "full": 8
+  },
+  "intent:web_search": {
+   "n": 1,
+   "intent": 1,
+   "full": 1
+  },
+  "intent:confirm": {
+   "n": 4,
+   "intent": 0,
+   "full": 0
+  },
+  "intent:cancel": {
+   "n": 4,
+   "intent": 0,
+   "full": 0
+  },
+  "lang:fa": {
+   "n": 97,
+   "intent": 71,
+   "full": 67
+  }
+ },
+ "failures": [
+  {
+   "lang": "en",
+   "text": "I need a word file named budget please",
+   "expected": "create_word_document",
+   "expected_slots": {
+    "name": "budget"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "en",
+   "text": "Open the new folder",
+   "expected": "open_folder",
+   "expected_slots": {
+    "query": "new"
+   },
+   "expected_steps": null,
+   "got": "create_folder",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": "an OPEN request must never create"
+  },
+  {
+   "lang": "en",
+   "text": "Open the new file",
+   "expected": "open_file",
+   "expected_slots": {
+    "query": "new"
+   },
+   "expected_steps": null,
+   "got": "create_text_file",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": "an OPEN request must never create"
+  },
+  {
+   "lang": "en",
+   "text": "Where is my budget file",
+   "expected": "search",
+   "expected_slots": {
+    "query": "budget"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "en",
+   "text": "Find the new folder",
+   "expected": "search",
+   "expected_slots": {
+    "query": "new"
+   },
+   "expected_steps": null,
+   "got": "create_folder",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": "find must never create"
+  },
+  {
+   "lang": "en",
+   "text": "The new name should be clean copy",
+   "expected": "rename",
+   "expected_slots": {
+    "new_name": "clean copy"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": "slot-fill style answer"
+  },
+  {
+   "lang": "en",
+   "text": "Save as final version",
+   "expected": "save_as_unsupported",
+   "expected_slots": null,
+   "expected_steps": null,
+   "got": "save_current",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "en",
+   "text": "Scroll down a bit",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "scroll_down"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "en",
+   "text": "Please scroll down a little",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "scroll_down"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "en",
+   "text": "Let's scroll down",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "scroll_down"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "en",
+   "text": "Again, scroll down",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "scroll_down"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "en",
+   "text": "Scroll down please",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "scroll_down"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "en",
+   "text": "Can you scroll down",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "scroll_down"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "en",
+   "text": "Scroll down the page please",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "scroll_down"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "en",
+   "text": "I scroll down",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "scroll_down"
+   },
+   "expected_steps": null,
+   "got": "browser_navigation",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "slots",
+   "note": null
+  },
+  {
+   "lang": "en",
+   "text": "Just scroll down",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "scroll_down"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "en",
+   "text": "Go down a little",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "scroll_down"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "en",
+   "text": "Scroll down again",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "scroll_down"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "en",
+   "text": "Down",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "scroll_down"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "en",
+   "text": "Scroll further down",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "scroll_down"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "en",
+   "text": "Okay scroll down",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "scroll_down"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "en",
+   "text": "Let's scroll the page up",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "scroll_up"
+   },
+   "expected_steps": null,
+   "got": "browser_navigation",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "slots",
+   "note": null
+  },
+  {
+   "lang": "en",
+   "text": "Scroll up a bit please",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "scroll_up"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "en",
+   "text": "Move up a little",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "scroll_up"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "en",
+   "text": "Scroll up again",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "scroll_up"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "en",
+   "text": "Up",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "scroll_up"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "en",
+   "text": "Top of the page",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "top"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "en",
+   "text": "Jump to the top",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "top"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "en",
+   "text": "Scroll to the top",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "top"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "en",
+   "text": "Scroll to the bottom of the page",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "bottom"
+   },
+   "expected_steps": null,
+   "got": "browser_navigation",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "slots",
+   "note": null
+  },
+  {
+   "lang": "en",
+   "text": "Jump to the end of the page",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "bottom"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "en",
+   "text": "Go back please",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "back"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "en",
+   "text": "Can you go back",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "back"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "en",
+   "text": "Let's go back",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "back"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "en",
+   "text": "Previous page",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "back"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "en",
+   "text": "Go back again",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "back"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "en",
+   "text": "Next page",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "forward"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "en",
+   "text": "Go forward please",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "forward"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "en",
+   "text": "Go to Instagram",
+   "expected": "open_website",
+   "expected_slots": {
+    "target": "instagram"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "en",
+   "text": "Go to the university of tehran website",
+   "expected": "open_website",
+   "expected_slots": {
+    "target": [
+     "university of tehran",
+     "the university of tehran"
+    ]
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "en",
+   "text": "Open note app",
+   "expected": [
+    "open_app",
+    "open_file",
+    "unknown"
+   ],
+   "expected_slots": null,
+   "expected_steps": null,
+   "got": "open_website",
+   "got_slots": {
+    "target": "note app"
+   },
+   "got_steps": null,
+   "kind": "intent",
+   "note": "must NOT become a website (note.app)"
+  },
+  {
+   "lang": "en",
+   "text": "Open the camera app",
+   "expected": [
+    "open_app",
+    "open_file",
+    "unknown"
+   ],
+   "expected_slots": null,
+   "expected_steps": null,
+   "got": "open_website",
+   "got_slots": {
+    "target": "the camera app"
+   },
+   "got_steps": null,
+   "kind": "intent",
+   "note": "must NOT become a website"
+  },
+  {
+   "lang": "en",
+   "text": "Yes please",
+   "expected": "confirm",
+   "expected_slots": null,
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "en",
+   "text": "Sure, go ahead",
+   "expected": "confirm",
+   "expected_slots": null,
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "en",
+   "text": "No thanks",
+   "expected": "cancel",
+   "expected_slots": null,
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "en",
+   "text": "Cancel that",
+   "expected": "cancel",
+   "expected_slots": null,
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "fa",
+   "text": "میشه یه فایل ورد به اسم جزوه بسازی",
+   "expected": "create_word_document",
+   "expected_slots": {
+    "name": "جزوه"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "fa",
+   "text": "ماشین حساب",
+   "expected": "open_app",
+   "expected_slots": {
+    "app": "calculator"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": "bare app name"
+  },
+  {
+   "lang": "fa",
+   "text": "فایل تست شش ورد رو باز کن",
+   "expected": "open_file",
+   "expected_slots": {
+    "query": [
+     "تست شش ورد",
+     "تست 6 docx",
+     "تست شش"
+    ]
+   },
+   "expected_steps": null,
+   "got": "open_app",
+   "got_slots": {
+    "app": "word"
+   },
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "fa",
+   "text": "سند پایان نامه رو باز کن",
+   "expected": "open_file",
+   "expected_slots": {
+    "query": "پایان نامه"
+   },
+   "expected_steps": null,
+   "got": "rename",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "fa",
+   "text": "فایل پایان نامه رو پیدا کن",
+   "expected": "search",
+   "expected_slots": {
+    "query": "پایان نامه"
+   },
+   "expected_steps": null,
+   "got": "rename",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "fa",
+   "text": "گزارش هفتگی رو برام پیدا کن",
+   "expected": "search",
+   "expected_slots": {
+    "query": "گزارش هفتگی"
+   },
+   "expected_steps": null,
+   "got": "search",
+   "got_slots": {
+    "query": "گزارش هفتگی رو"
+   },
+   "got_steps": null,
+   "kind": "slots",
+   "note": null
+  },
+  {
+   "lang": "fa",
+   "text": "پوشه پروژه کجاست",
+   "expected": "search",
+   "expected_slots": {
+    "query": "پروژه"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "fa",
+   "text": "اسمش رو عوض کن به نسخه دوم",
+   "expected": "rename",
+   "expected_slots": {
+    "new_name": [
+     "نسخه دوم",
+     "نسخه 2"
+    ]
+   },
+   "expected_steps": null,
+   "got": "rename",
+   "got_slots": {
+    "new_name": "به نسخه دوم"
+   },
+   "got_steps": null,
+   "kind": "slots",
+   "note": null
+  },
+  {
+   "lang": "fa",
+   "text": "اسم جدیدش بشه نسخه تمیز",
+   "expected": "rename",
+   "expected_slots": {
+    "new_name": "نسخه تمیز"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "fa",
+   "text": "این فایل رو با اسم گزارش روی دسکتاپ ذخیره کن",
+   "expected": "save_as_unsupported",
+   "expected_slots": null,
+   "expected_steps": null,
+   "got": "rename",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "fa",
+   "text": "یه کم برو پایین",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "scroll_down"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "fa",
+   "text": "بیا پایین",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "scroll_down"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "fa",
+   "text": "یه ذره بیا پایین",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "scroll_down"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "fa",
+   "text": "صفحه رو یکم بیار پایین",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "scroll_down"
+   },
+   "expected_steps": null,
+   "got": "browser_navigation",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "slots",
+   "note": null
+  },
+  {
+   "lang": "fa",
+   "text": "دوباره برو پایین",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "scroll_down"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "fa",
+   "text": "برو پایین تر",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "scroll_down"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "fa",
+   "text": "یه کم برو بالا",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "scroll_up"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "fa",
+   "text": "بیا بالا",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "scroll_up"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "fa",
+   "text": "صفحه رو یکم ببر بالا",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "scroll_up"
+   },
+   "expected_steps": null,
+   "got": "browser_navigation",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "slots",
+   "note": null
+  },
+  {
+   "lang": "fa",
+   "text": "دوباره برو بالا",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "scroll_up"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "fa",
+   "text": "برو ابتدای صفحه",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "top"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "fa",
+   "text": "برو ته صفحه",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "bottom"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "fa",
+   "text": "برگرد عقب",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "back"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "fa",
+   "text": "یه صفحه برو عقب",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "back"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "fa",
+   "text": "یه صفحه برو جلو",
+   "expected": "browser_navigation",
+   "expected_slots": {
+    "action": "forward"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "fa",
+   "text": "باشه",
+   "expected": "confirm",
+   "expected_slots": null,
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "fa",
+   "text": "بله لطفا",
+   "expected": "confirm",
+   "expected_slots": null,
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "fa",
+   "text": "نه ممنون",
+   "expected": "cancel",
+   "expected_slots": null,
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "fa",
+   "text": "لغو کن",
+   "expected": "cancel",
+   "expected_slots": null,
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "fa",
+   "text": "فایل گزارش رو پاک کن",
+   "expected": "unknown",
+   "expected_slots": null,
+   "expected_steps": null,
+   "got": "search",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": "no delete intent — must stay unknown"
+  }
+ ]
+}

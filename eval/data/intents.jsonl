@@ -1,0 +1,257 @@
+{"lang": "en", "text": "Create a Word file named Thesis Draft", "intent": "create_word_document", "slots": {"name": "thesis draft"}}
+{"lang": "en", "text": "Make me a new Word document called meeting notes", "intent": "create_word_document", "slots": {"name": "meeting notes"}}
+{"lang": "en", "text": "I need a word file named budget please", "intent": "create_word_document", "slots": {"name": "budget"}}
+{"lang": "en", "text": "Can you create a word document", "intent": "create_word_document"}
+{"lang": "en", "text": "New word document named chapter one", "intent": "create_word_document", "slots": {"name": ["chapter one", "chapter 1"]}}
+{"lang": "en", "text": "Create a folder named photos", "intent": "create_folder", "slots": {"name": "photos"}}
+{"lang": "en", "text": "Make a new folder called university projects", "intent": "create_folder", "slots": {"name": "university projects"}}
+{"lang": "en", "text": "Please make a directory named backup", "intent": "create_folder", "slots": {"name": "backup"}}
+{"lang": "en", "text": "Create a text file named shopping list", "intent": "create_text_file", "slots": {"name": "shopping list"}}
+{"lang": "en", "text": "Make a txt file called todo", "intent": "create_text_file", "slots": {"name": "todo"}}
+{"lang": "en", "text": "Create a file named notes for me", "intent": "create_text_file", "slots": {"name": "notes"}}
+{"lang": "en", "text": "Open the calculator", "intent": "open_app", "slots": {"app": "calculator"}}
+{"lang": "en", "text": "Launch Microsoft Word", "intent": "open_app", "slots": {"app": "word"}}
+{"lang": "en", "text": "Start Google Chrome", "intent": "open_app", "slots": {"app": "chrome"}}
+{"lang": "en", "text": "Open Safari please", "intent": "open_app", "slots": {"app": "safari"}}
+{"lang": "en", "text": "Can you open TextEdit", "intent": "open_app", "slots": {"app": "text_editor"}}
+{"lang": "en", "text": "Open the browser", "intent": "open_app", "slots": {"app": "browser"}}
+{"lang": "en", "text": "Open Finder for me", "intent": "open_app", "slots": {"app": "file_manager"}}
+{"lang": "en", "text": "open calculate", "intent": "open_app", "slots": {"app": "calculator"}, "note": "Whisper often hears 'calculate'"}
+{"lang": "en", "text": "Open Notepad", "intent": "open_app", "slots": {"app": "text_editor"}}
+{"lang": "en", "text": "Open the report file", "intent": "open_file", "slots": {"query": "report"}}
+{"lang": "en", "text": "Open test six docs", "intent": "open_file", "slots": {"query": ["test six docs", "test 6 docx"]}}
+{"lang": "en", "text": "Open my thesis document", "intent": "open_file", "slots": {"query": "thesis"}}
+{"lang": "en", "text": "Open it", "intent": "open_file", "in_pack": true}
+{"lang": "en", "text": "Open it again", "intent": "open_file"}
+{"lang": "en", "text": "Open the projects folder", "intent": "open_folder", "slots": {"query": "projects"}}
+{"lang": "en", "text": "Open my downloads folder", "intent": "open_folder", "slots": {"query": "downloads"}}
+{"lang": "en", "text": "Open the folder called photos", "intent": "open_folder", "slots": {"query": "photos"}}
+{"lang": "en", "text": "Open the new folder", "intent": "open_folder", "slots": {"query": "new"}, "note": "an OPEN request must never create"}
+{"lang": "en", "text": "Open the new file", "intent": "open_file", "slots": {"query": "new"}, "note": "an OPEN request must never create"}
+{"lang": "en", "text": "Find and open the budget file", "intent": "open_file", "slots": {"query": "budget"}}
+{"lang": "en", "text": "Find the report and open it", "intent": "open_file", "slots": {"query": "report"}}
+{"lang": "en", "text": "Open the system folder", "intent": "open_folder", "slots": {"query": "system"}, "note": "action layer refuses; parser is fine"}
+{"lang": "en", "text": "Find my report file", "intent": "search", "slots": {"query": "report"}}
+{"lang": "en", "text": "Search for the thesis folder", "intent": "search", "slots": {"query": "thesis"}}
+{"lang": "en", "text": "Look for photos", "intent": "search", "slots": {"query": "photos"}}
+{"lang": "en", "text": "Where is my budget file", "intent": "search", "slots": {"query": "budget"}}
+{"lang": "en", "text": "Find the new folder", "intent": "search", "slots": {"query": "new"}, "note": "find must never create"}
+{"lang": "en", "text": "Find test six", "intent": "search", "slots": {"query": ["test six", "test 6"]}}
+{"lang": "en", "text": "Search for the guya document on my mac", "intent": "search", "slots": {"query": "guya"}}
+{"lang": "en", "text": "Rename it to final report", "intent": "rename", "slots": {"new_name": "final report"}}
+{"lang": "en", "text": "Change its name to draft two", "intent": "rename", "slots": {"new_name": ["draft two", "draft 2"]}}
+{"lang": "en", "text": "Rename report to final report", "intent": "rename", "slots": {"old_name": "report", "new_name": "final report"}}
+{"lang": "en", "text": "Rename it", "intent": "rename", "in_pack": true}
+{"lang": "en", "text": "Change the name of this file", "intent": "rename"}
+{"lang": "en", "text": "The new name should be clean copy", "intent": "rename", "slots": {"new_name": "clean copy"}, "note": "slot-fill style answer"}
+{"lang": "en", "text": "Rename the file from notes to old notes", "intent": "rename", "slots": {"old_name": "notes", "new_name": "old notes"}}
+{"lang": "en", "text": "Save", "intent": "save_current"}
+{"lang": "en", "text": "Save the file", "intent": "save_current"}
+{"lang": "en", "text": "Please save this", "intent": "save_current"}
+{"lang": "en", "text": "Save it now", "intent": "save_current"}
+{"lang": "en", "text": "Save this file as report on the desktop", "intent": "save_as_unsupported"}
+{"lang": "en", "text": "Save as final version", "intent": "save_as_unsupported"}
+{"lang": "en", "text": "Close", "intent": "close_current"}
+{"lang": "en", "text": "Close the window", "intent": "close_current"}
+{"lang": "en", "text": "Close this document", "intent": "close_current"}
+{"lang": "en", "text": "Close Word", "intent": "close_current"}
+{"lang": "en", "text": "Scroll down", "intent": "browser_navigation", "slots": {"action": "scroll_down"}, "in_pack": true}
+{"lang": "en", "text": "Scroll down a bit", "intent": "browser_navigation", "slots": {"action": "scroll_down"}}
+{"lang": "en", "text": "Please scroll down a little", "intent": "browser_navigation", "slots": {"action": "scroll_down"}}
+{"lang": "en", "text": "Let's scroll down", "intent": "browser_navigation", "slots": {"action": "scroll_down"}}
+{"lang": "en", "text": "Again, scroll down", "intent": "browser_navigation", "slots": {"action": "scroll_down"}}
+{"lang": "en", "text": "Scroll down please", "intent": "browser_navigation", "slots": {"action": "scroll_down"}}
+{"lang": "en", "text": "Can you scroll down", "intent": "browser_navigation", "slots": {"action": "scroll_down"}}
+{"lang": "en", "text": "Scroll down the page please", "intent": "browser_navigation", "slots": {"action": "scroll_down"}}
+{"lang": "en", "text": "I scroll down", "intent": "browser_navigation", "slots": {"action": "scroll_down"}}
+{"lang": "en", "text": "Just scroll down", "intent": "browser_navigation", "slots": {"action": "scroll_down"}}
+{"lang": "en", "text": "Go down a little", "intent": "browser_navigation", "slots": {"action": "scroll_down"}}
+{"lang": "en", "text": "Scroll down again", "intent": "browser_navigation", "slots": {"action": "scroll_down"}}
+{"lang": "en", "text": "Down", "intent": "browser_navigation", "slots": {"action": "scroll_down"}}
+{"lang": "en", "text": "Move down the page", "intent": "browser_navigation", "slots": {"action": "scroll_down"}}
+{"lang": "en", "text": "Scroll further down", "intent": "browser_navigation", "slots": {"action": "scroll_down"}}
+{"lang": "en", "text": "Okay scroll down", "intent": "browser_navigation", "slots": {"action": "scroll_down"}}
+{"lang": "en", "text": "Scroll up", "intent": "browser_navigation", "slots": {"action": "scroll_up"}, "in_pack": true}
+{"lang": "en", "text": "Let's scroll the page up", "intent": "browser_navigation", "slots": {"action": "scroll_up"}}
+{"lang": "en", "text": "Scroll up a bit please", "intent": "browser_navigation", "slots": {"action": "scroll_up"}}
+{"lang": "en", "text": "Go up", "intent": "browser_navigation", "slots": {"action": "scroll_up"}}
+{"lang": "en", "text": "Move up a little", "intent": "browser_navigation", "slots": {"action": "scroll_up"}}
+{"lang": "en", "text": "Scroll up again", "intent": "browser_navigation", "slots": {"action": "scroll_up"}}
+{"lang": "en", "text": "Up", "intent": "browser_navigation", "slots": {"action": "scroll_up"}}
+{"lang": "en", "text": "Go to the top of the page", "intent": "browser_navigation", "slots": {"action": "top"}, "in_pack": true}
+{"lang": "en", "text": "Go to top of the page", "intent": "browser_navigation", "slots": {"action": "top"}}
+{"lang": "en", "text": "Top of the page", "intent": "browser_navigation", "slots": {"action": "top"}}
+{"lang": "en", "text": "Jump to the top", "intent": "browser_navigation", "slots": {"action": "top"}}
+{"lang": "en", "text": "Scroll to the top", "intent": "browser_navigation", "slots": {"action": "top"}}
+{"lang": "en", "text": "Go to the bottom", "intent": "browser_navigation", "slots": {"action": "bottom"}}
+{"lang": "en", "text": "Scroll to the bottom of the page", "intent": "browser_navigation", "slots": {"action": "bottom"}}
+{"lang": "en", "text": "Jump to the end of the page", "intent": "browser_navigation", "slots": {"action": "bottom"}}
+{"lang": "en", "text": "Go back", "intent": "browser_navigation", "slots": {"action": "back"}, "in_pack": true}
+{"lang": "en", "text": "Back", "intent": "browser_navigation", "slots": {"action": "back"}}
+{"lang": "en", "text": "Go back please", "intent": "browser_navigation", "slots": {"action": "back"}}
+{"lang": "en", "text": "Can you go back", "intent": "browser_navigation", "slots": {"action": "back"}}
+{"lang": "en", "text": "Let's go back", "intent": "browser_navigation", "slots": {"action": "back"}}
+{"lang": "en", "text": "Previous page", "intent": "browser_navigation", "slots": {"action": "back"}}
+{"lang": "en", "text": "Go to the previous page", "intent": "browser_navigation", "slots": {"action": "back"}}
+{"lang": "en", "text": "Go back again", "intent": "browser_navigation", "slots": {"action": "back"}}
+{"lang": "en", "text": "Go forward", "intent": "browser_navigation", "slots": {"action": "forward"}, "in_pack": true}
+{"lang": "en", "text": "Forward", "intent": "browser_navigation", "slots": {"action": "forward"}}
+{"lang": "en", "text": "Next page", "intent": "browser_navigation", "slots": {"action": "forward"}}
+{"lang": "en", "text": "Go forward please", "intent": "browser_navigation", "slots": {"action": "forward"}}
+{"lang": "en", "text": "Go to the next page", "intent": "browser_navigation", "slots": {"action": "forward"}}
+{"lang": "en", "text": "Go to YouTube", "intent": "open_website", "slots": {"target": "youtube"}, "in_pack": true}
+{"lang": "en", "text": "Visit github.com", "intent": "open_website", "slots": {"target": "github com"}, "in_pack": true}
+{"lang": "en", "text": "Go to github dot com", "intent": "open_website", "slots": {"target": ["github dot com", "github com"]}}
+{"lang": "en", "text": "Open the website wikipedia", "intent": "open_website", "slots": {"target": "wikipedia"}, "in_pack": true}
+{"lang": "en", "text": "Go to Instagram", "intent": "open_website", "slots": {"target": "instagram"}}
+{"lang": "en", "text": "Open Gmail", "intent": "open_website", "slots": {"target": "gmail"}}
+{"lang": "en", "text": "Go to the university of tehran website", "intent": "open_website", "slots": {"target": ["university of tehran", "the university of tehran"]}}
+{"lang": "en", "text": "Visit wikipedia in Chrome", "intent": "open_website", "slots": {"target": "wikipedia", "app": "chrome"}}
+{"lang": "en", "text": "Open the first website", "intent": ["unknown", "open_website"], "note": "must not click a result; either unknown or open_website with a rejected target"}
+{"lang": "en", "text": "Open site five", "intent": ["unknown", "open_website"], "note": "must not click a result"}
+{"lang": "en", "text": "Open note app", "intent": ["open_app", "open_file", "unknown"], "note": "must NOT become a website (note.app)"}
+{"lang": "en", "text": "Open the camera app", "intent": ["open_app", "open_file", "unknown"], "note": "must NOT become a website"}
+{"lang": "en", "text": "Open the me folder", "intent": "open_folder", "slots": {"query": "me"}, "note": "'me' is a TLD but this is a folder"}
+{"lang": "en", "text": "Open Chrome and search for YouTube", "intent": "sequence", "steps": ["open_app", "web_search"]}
+{"lang": "en", "text": "Open Chrome then go to YouTube", "intent": "sequence", "steps": ["open_app", "open_website"], "in_pack": true}
+{"lang": "en", "text": "Open Chrome and go to github.com", "intent": "sequence", "steps": ["open_app", "open_website"]}
+{"lang": "en", "text": "Open Safari, then search for University of Tehran", "intent": "sequence", "steps": ["open_app", "web_search"]}
+{"lang": "en", "text": "Save the file and close the window", "intent": "sequence", "steps": ["save_current", "close_current"]}
+{"lang": "en", "text": "Open Chrome, search for YouTube, then open the first result", "intent": ["unknown", "sequence"], "note": "third step must not be executed as a click"}
+{"lang": "en", "text": "Search for GitHub on Chrome", "intent": ["web_search", "sequence", "search"], "note": "ideally web search; must not crash"}
+{"lang": "en", "text": "Yes", "intent": "confirm", "in_pack": true}
+{"lang": "en", "text": "Yes please", "intent": "confirm"}
+{"lang": "en", "text": "Sure, go ahead", "intent": "confirm"}
+{"lang": "en", "text": "Okay", "intent": "confirm", "in_pack": true}
+{"lang": "en", "text": "No", "intent": "cancel", "in_pack": true}
+{"lang": "en", "text": "No thanks", "intent": "cancel"}
+{"lang": "en", "text": "Cancel that", "intent": "cancel"}
+{"lang": "en", "text": "Never mind", "intent": "cancel", "in_pack": true}
+{"lang": "en", "text": "Delete the report file", "intent": ["delete_unsupported", "unknown"], "note": "no delete intent exists — must stay unknown"}
+{"lang": "en", "text": "Remove the photos folder", "intent": ["delete_unsupported", "unknown"]}
+{"lang": "en", "text": "Run this shell command", "intent": "unknown"}
+{"lang": "en", "text": "Send all my files to the internet", "intent": "unknown"}
+{"lang": "en", "text": "Tell me the weather", "intent": "unknown"}
+{"lang": "en", "text": "What time is it", "intent": "unknown"}
+{"lang": "en", "text": "Let's cool down", "intent": ["unknown", "browser_navigation"], "note": "real log transcript of 'let's scroll down'; scrolling is a harmless interpretation"}
+{"lang": "en", "text": "Turn off the computer", "intent": "unknown"}
+{"lang": "fa", "text": "یه فایل ورد به اسم پایان نامه بساز", "intent": "create_word_document", "slots": {"name": "پایان نامه"}}
+{"lang": "fa", "text": "برام یک سند ورد به نام گزارش هفتگی درست کن", "intent": "create_word_document", "slots": {"name": "گزارش هفتگی"}}
+{"lang": "fa", "text": "لطفا یه فایل ورد جدید ایجاد کن", "intent": "create_word_document"}
+{"lang": "fa", "text": "یه ورد بساز اسمش رو بذار نامه", "intent": "create_word_document", "slots": {"name": "نامه"}}
+{"lang": "fa", "text": "میشه یه فایل ورد به اسم جزوه بسازی", "intent": "create_word_document", "slots": {"name": "جزوه"}}
+{"lang": "fa", "text": "یه پوشه به اسم عکس ها بساز", "intent": "create_folder", "slots": {"name": ["عکس ها", "عکس‌ها"]}}
+{"lang": "fa", "text": "یک فولدر جدید به نام دانشگاه درست کن", "intent": "create_folder", "slots": {"name": "دانشگاه"}}
+{"lang": "fa", "text": "برام یه پوشه بساز", "intent": "create_folder"}
+{"lang": "fa", "text": "پوشه ای به اسم پروژه نهایی ایجاد کن", "intent": "create_folder", "slots": {"name": "پروژه نهایی"}}
+{"lang": "fa", "text": "یه فایل متنی به اسم یادداشت بساز", "intent": "create_text_file", "slots": {"name": "یادداشت"}}
+{"lang": "fa", "text": "یک تکست فایل به نام لیست خرید درست کن", "intent": "create_text_file", "slots": {"name": "لیست خرید"}}
+{"lang": "fa", "text": "یه فایل به اسم تست بساز", "intent": "create_text_file", "slots": {"name": "تست"}}
+{"lang": "fa", "text": "ماشین حساب رو باز کن", "intent": "open_app", "slots": {"app": "calculator"}, "in_pack": true}
+{"lang": "fa", "text": "ورد رو اجرا کن", "intent": "open_app", "slots": {"app": "word"}}
+{"lang": "fa", "text": "کروم رو باز کن", "intent": "open_app", "slots": {"app": "chrome"}}
+{"lang": "fa", "text": "لطفا سافاری رو باز کن", "intent": "open_app", "slots": {"app": "safari"}}
+{"lang": "fa", "text": "مرورگر رو باز کن", "intent": "open_app", "slots": {"app": "browser"}}
+{"lang": "fa", "text": "فایندر رو باز کن", "intent": "open_app", "slots": {"app": "file_manager"}, "in_pack": true}
+{"lang": "fa", "text": "تکست ادیت رو باز کن", "intent": "open_app", "slots": {"app": "text_editor"}}
+{"lang": "fa", "text": "ماشین حساب", "intent": "open_app", "slots": {"app": "calculator"}, "note": "bare app name"}
+{"lang": "fa", "text": "فایل گزارش رو باز کن", "intent": "open_file", "slots": {"query": "گزارش"}, "in_pack": true}
+{"lang": "fa", "text": "فایل تست شش ورد رو باز کن", "intent": "open_file", "slots": {"query": ["تست شش ورد", "تست 6 docx", "تست شش"]}}
+{"lang": "fa", "text": "سند پایان نامه رو باز کن", "intent": "open_file", "slots": {"query": "پایان نامه"}}
+{"lang": "fa", "text": "بازش کن", "intent": "open_file", "in_pack": true}
+{"lang": "fa", "text": "دوباره بازش کن", "intent": "open_file"}
+{"lang": "fa", "text": "پوشه عکس ها رو باز کن", "intent": "open_folder", "slots": {"query": ["عکس ها", "عکس‌ها"]}}
+{"lang": "fa", "text": "فولدر دانلود رو باز کن", "intent": "open_folder", "slots": {"query": "دانلود"}}
+{"lang": "fa", "text": "پوشه جدید رو باز کن", "intent": "open_folder", "slots": {"query": "جدید"}, "note": "must not create"}
+{"lang": "fa", "text": "فایل گزارش رو پیدا کن و باز کن", "intent": "open_file", "slots": {"query": "گزارش"}}
+{"lang": "fa", "text": "گزارش رو پیدا کن و بازش کن", "intent": "open_file", "slots": {"query": "گزارش"}}
+{"lang": "fa", "text": "فایل پایان نامه رو پیدا کن", "intent": "search", "slots": {"query": "پایان نامه"}}
+{"lang": "fa", "text": "دنبال پوشه عکس ها بگرد", "intent": "search", "slots": {"query": ["عکس ها", "عکس‌ها"]}}
+{"lang": "fa", "text": "گزارش هفتگی رو برام پیدا کن", "intent": "search", "slots": {"query": "گزارش هفتگی"}}
+{"lang": "fa", "text": "فایل تست رو سرچ کن", "intent": "search", "slots": {"query": "تست"}}
+{"lang": "fa", "text": "یادداشت رو جستجو کن", "intent": "search", "slots": {"query": "یادداشت"}}
+{"lang": "fa", "text": "پوشه پروژه کجاست", "intent": "search", "slots": {"query": "پروژه"}}
+{"lang": "fa", "text": "اسمش رو بذار گزارش نهایی", "intent": "rename", "slots": {"new_name": "گزارش نهایی"}}
+{"lang": "fa", "text": "اسمش رو عوض کن به نسخه دوم", "intent": "rename", "slots": {"new_name": ["نسخه دوم", "نسخه 2"]}}
+{"lang": "fa", "text": "تغییر نامش بده به نمونه آخر", "intent": "rename", "slots": {"new_name": "نمونه آخر"}}
+{"lang": "fa", "text": "اسم فایل رو از گزارش به گزارش قدیمی تغییر بده", "intent": "rename", "slots": {"old_name": "گزارش", "new_name": "گزارش قدیمی"}}
+{"lang": "fa", "text": "اسمش رو بکن جمشید جای قاسم", "intent": "rename", "slots": {"new_name": "جمشید", "old_name": "قاسم"}, "in_pack": true}
+{"lang": "fa", "text": "اسمش رو عوض کن", "intent": "rename", "in_pack": true}
+{"lang": "fa", "text": "اسم این فایل رو تغییر بده", "intent": "rename"}
+{"lang": "fa", "text": "اسم جدیدش بشه نسخه تمیز", "intent": "rename", "slots": {"new_name": "نسخه تمیز"}}
+{"lang": "fa", "text": "ذخیره کن", "intent": "save_current"}
+{"lang": "fa", "text": "فایل رو سیو کن", "intent": "save_current"}
+{"lang": "fa", "text": "این فایل رو ذخیره کن", "intent": "save_current"}
+{"lang": "fa", "text": "لطفا ذخیره ش کن", "intent": "save_current"}
+{"lang": "fa", "text": "این فایل رو با اسم گزارش روی دسکتاپ ذخیره کن", "intent": "save_as_unsupported"}
+{"lang": "fa", "text": "ببند", "intent": "close_current"}
+{"lang": "fa", "text": "پنجره رو ببند", "intent": "close_current"}
+{"lang": "fa", "text": "این فایل رو ببند", "intent": "close_current", "in_pack": true}
+{"lang": "fa", "text": "ورد رو ببند", "intent": "close_current"}
+{"lang": "fa", "text": "صفحه رو پایین ببر", "intent": "browser_navigation", "slots": {"action": "scroll_down"}, "in_pack": true}
+{"lang": "fa", "text": "برو پایین", "intent": "browser_navigation", "slots": {"action": "scroll_down"}}
+{"lang": "fa", "text": "یه کم برو پایین", "intent": "browser_navigation", "slots": {"action": "scroll_down"}}
+{"lang": "fa", "text": "لطفا صفحه رو ببر پایین", "intent": "browser_navigation", "slots": {"action": "scroll_down"}}
+{"lang": "fa", "text": "اسکرول کن پایین", "intent": "browser_navigation", "slots": {"action": "scroll_down"}, "in_pack": true}
+{"lang": "fa", "text": "بیا پایین", "intent": "browser_navigation", "slots": {"action": "scroll_down"}}
+{"lang": "fa", "text": "یه ذره بیا پایین", "intent": "browser_navigation", "slots": {"action": "scroll_down"}}
+{"lang": "fa", "text": "صفحه رو یکم بیار پایین", "intent": "browser_navigation", "slots": {"action": "scroll_down"}}
+{"lang": "fa", "text": "پایین", "intent": "browser_navigation", "slots": {"action": "scroll_down"}}
+{"lang": "fa", "text": "دوباره برو پایین", "intent": "browser_navigation", "slots": {"action": "scroll_down"}}
+{"lang": "fa", "text": "اسکرول دان", "intent": "browser_navigation", "slots": {"action": "scroll_down"}}
+{"lang": "fa", "text": "صفحه رو بکش پایین", "intent": "browser_navigation", "slots": {"action": "scroll_down"}}
+{"lang": "fa", "text": "برو پایین تر", "intent": "browser_navigation", "slots": {"action": "scroll_down"}}
+{"lang": "fa", "text": "صفحه رو بالا ببر", "intent": "browser_navigation", "slots": {"action": "scroll_up"}, "in_pack": true}
+{"lang": "fa", "text": "برو بالا", "intent": "browser_navigation", "slots": {"action": "scroll_up"}}
+{"lang": "fa", "text": "یه کم برو بالا", "intent": "browser_navigation", "slots": {"action": "scroll_up"}}
+{"lang": "fa", "text": "بیا بالا", "intent": "browser_navigation", "slots": {"action": "scroll_up"}}
+{"lang": "fa", "text": "اسکرول کن بالا", "intent": "browser_navigation", "slots": {"action": "scroll_up"}, "in_pack": true}
+{"lang": "fa", "text": "بالا", "intent": "browser_navigation", "slots": {"action": "scroll_up"}}
+{"lang": "fa", "text": "صفحه رو یکم ببر بالا", "intent": "browser_navigation", "slots": {"action": "scroll_up"}}
+{"lang": "fa", "text": "دوباره برو بالا", "intent": "browser_navigation", "slots": {"action": "scroll_up"}}
+{"lang": "fa", "text": "برو اول صفحه", "intent": "browser_navigation", "slots": {"action": "top"}, "in_pack": true}
+{"lang": "fa", "text": "برو بالای صفحه", "intent": "browser_navigation", "slots": {"action": "top"}}
+{"lang": "fa", "text": "برو ابتدای صفحه", "intent": "browser_navigation", "slots": {"action": "top"}}
+{"lang": "fa", "text": "برو به اول صفحه", "intent": "browser_navigation", "slots": {"action": "top"}}
+{"lang": "fa", "text": "برو آخر صفحه", "intent": "browser_navigation", "slots": {"action": "bottom"}, "in_pack": true}
+{"lang": "fa", "text": "برو ته صفحه", "intent": "browser_navigation", "slots": {"action": "bottom"}}
+{"lang": "fa", "text": "برو انتهای صفحه", "intent": "browser_navigation", "slots": {"action": "bottom"}}
+{"lang": "fa", "text": "برو به آخر صفحه", "intent": "browser_navigation", "slots": {"action": "bottom"}}
+{"lang": "fa", "text": "برو عقب", "intent": "browser_navigation", "slots": {"action": "back"}, "in_pack": true}
+{"lang": "fa", "text": "برگرد", "intent": "browser_navigation", "slots": {"action": "back"}}
+{"lang": "fa", "text": "برگرد عقب", "intent": "browser_navigation", "slots": {"action": "back"}}
+{"lang": "fa", "text": "برو صفحه قبل", "intent": "browser_navigation", "slots": {"action": "back"}}
+{"lang": "fa", "text": "یه صفحه برو عقب", "intent": "browser_navigation", "slots": {"action": "back"}}
+{"lang": "fa", "text": "لطفا برگرد", "intent": "browser_navigation", "slots": {"action": "back"}}
+{"lang": "fa", "text": "عقب", "intent": "browser_navigation", "slots": {"action": "back"}}
+{"lang": "fa", "text": "برو جلو", "intent": "browser_navigation", "slots": {"action": "forward"}, "in_pack": true}
+{"lang": "fa", "text": "برو صفحه بعد", "intent": "browser_navigation", "slots": {"action": "forward"}}
+{"lang": "fa", "text": "جلو", "intent": "browser_navigation", "slots": {"action": "forward"}}
+{"lang": "fa", "text": "یه صفحه برو جلو", "intent": "browser_navigation", "slots": {"action": "forward"}}
+{"lang": "fa", "text": "برو به سایت یوتیوب", "intent": "open_website", "slots": {"target": "یوتیوب"}, "in_pack": true}
+{"lang": "fa", "text": "سایت ویکی پدیا رو باز کن", "intent": "open_website", "slots": {"target": "ویکی پدیا"}, "in_pack": true}
+{"lang": "fa", "text": "برو یوتیوب", "intent": "open_website", "slots": {"target": "یوتیوب"}}
+{"lang": "fa", "text": "گوگل رو باز کن", "intent": "open_website", "slots": {"target": "گوگل"}}
+{"lang": "fa", "text": "برو به گیت هاب", "intent": "open_website", "slots": {"target": "گیت هاب"}}
+{"lang": "fa", "text": "برو به سایت اینستاگرام", "intent": "open_website", "slots": {"target": "اینستاگرام"}}
+{"lang": "fa", "text": "برو به دانشگاه تهران", "intent": "open_website", "slots": {"target": "دانشگاه تهران"}, "in_pack": true}
+{"lang": "fa", "text": "سایت اول رو باز کن", "intent": ["unknown", "open_website"], "note": "must not click a result"}
+{"lang": "fa", "text": "کروم رو باز کن بعد یوتیوب رو سرچ کن", "intent": "sequence", "steps": ["open_app", "web_search"]}
+{"lang": "fa", "text": "کروم رو باز کن و بعد برو به سایت یوتیوب", "intent": "sequence", "steps": ["open_app", "open_website"]}
+{"lang": "fa", "text": "فایل رو ذخیره کن و پنجره رو ببند", "intent": "sequence", "steps": ["save_current", "close_current"]}
+{"lang": "fa", "text": "سافاری رو باز کن سپس دانشگاه تهران رو جستجو کن", "intent": "sequence", "steps": ["open_app", "web_search"]}
+{"lang": "fa", "text": "بله", "intent": "confirm", "in_pack": true}
+{"lang": "fa", "text": "آره", "intent": "confirm", "in_pack": true}
+{"lang": "fa", "text": "باشه", "intent": "confirm"}
+{"lang": "fa", "text": "اوکی", "intent": "confirm", "in_pack": true}
+{"lang": "fa", "text": "بله لطفا", "intent": "confirm"}
+{"lang": "fa", "text": "نه", "intent": "cancel", "in_pack": true}
+{"lang": "fa", "text": "نه ممنون", "intent": "cancel"}
+{"lang": "fa", "text": "لغو کن", "intent": "cancel"}
+{"lang": "fa", "text": "بیخیال", "intent": "cancel", "in_pack": true}
+{"lang": "fa", "text": "فایل گزارش رو پاک کن", "intent": ["delete_unsupported", "unknown"], "note": "no delete intent — must stay unknown"}
+{"lang": "fa", "text": "پوشه عکس ها رو حذف کن", "intent": ["delete_unsupported", "unknown"]}
+{"lang": "fa", "text": "هوا چطوره", "intent": "unknown"}
+{"lang": "fa", "text": "ساعت چنده", "intent": "unknown"}
+{"lang": "fa", "text": "کامپیوتر رو خاموش کن", "intent": "unknown"}
+{"lang": "fa", "text": "یه آهنگ پخش کن", "intent": "unknown"}

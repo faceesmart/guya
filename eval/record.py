@@ -65,20 +65,35 @@ def main():
     os.makedirs(args.out, exist_ok=True)
     manifest = os.path.join(args.out, "manifest.jsonl")
 
+    # Re-running for the same speaker replaces that speaker's rows instead of
+    # appending duplicates that point at the overwritten wav files.
+    existing = []
+    if os.path.exists(manifest):
+        with open(manifest, encoding="utf-8") as mf:
+            existing = [json.loads(line) for line in mf if line.strip()]
+        existing = [row for row in existing if row.get("speaker") != args.speaker]
+
     pa = pyaudio.PyAudio()
     print(f"\nRecording {len(SENTENCES)} clips (speaker: {args.speaker}).")
-    print("Read each sentence clearly. Ctrl+C to stop early.\n")
-    with open(manifest, "a", encoding="utf-8") as mf:
+    print("Read each sentence clearly. Ctrl+C to stop early.")
+    print("Privacy: the recordings stay on this computer unless you later score them with --cloud.\n")
+    rows = []
+    try:
         for i, (text, lang) in enumerate(SENTENCES):
             print(f"[{i+1}/{len(SENTENCES)}] ({lang})  {text}")
             input("   Press Enter to START… ")
             fn = f"{args.speaker}_{i:02d}.wav"
             record_clip(pa, os.path.join(args.out, fn))
-            mf.write(json.dumps({"audio": fn, "text": text, "lang": lang,
-                                 "speaker": args.speaker}, ensure_ascii=False) + "\n")
+            rows.append({"audio": fn, "text": text, "lang": lang, "speaker": args.speaker})
             print("   ✓ saved\n")
-    pa.terminate()
-    print(f"✓ wrote clips + {manifest}")
+    except KeyboardInterrupt:
+        print("\nStopped early; keeping the clips recorded so far.")
+    finally:
+        pa.terminate()
+    with open(manifest, "w", encoding="utf-8") as mf:
+        for row in existing + rows:
+            mf.write(json.dumps(row, ensure_ascii=False) + "\n")
+    print(f"✓ wrote {len(rows)} clips + {manifest} ({len(existing) + len(rows)} rows)")
 
 
 if __name__ == "__main__":

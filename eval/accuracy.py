@@ -2,30 +2,48 @@
 Guya accuracy evaluation harness.
 
 Runs each offline model tier (and optionally the free cloud model) over a test
-manifest, and reports corpus-level WER + CER per language, plus the real-time
-factor (RTF) — the headline results table for the thesis.
+manifest and reports corpus-level WER + CER per language, plus the real-time
+factor (RTF) — the headline results table for the report.
+
+Two pipelines can be measured:
+
+  --pipeline raw   stock faster-whisper: model.transcribe(audio, language, beam_size=5)
+  --pipeline guya  the pipeline the desktop widget actually runs (guya/stt.py):
+                   RMS normalisation, VAD, per-language vocabulary prompt,
+                   best-of/beam 5, repetition penalty, hallucination filter and
+                   Persian post-processing.
 
 Manifest: a .jsonl file, one object per line:
-    {"audio": "data/clip1.wav", "text": "the reference transcript", "lang": "fa"}
-    {"audio": "data/clip2.wav", "text": "another one", "lang": "en"}
+    {"audio": "fa_ir/clip1.wav", "text": "the reference transcript", "lang": "fa"}
 (audio paths are relative to the manifest's folder; lang is "fa" or "en".)
 
 Usage:
-    python eval/accuracy.py --manifest eval/data/say_manifest.jsonl \
-        --models tiny,base,small,large-v3-turbo --device cpu --compute int8
-    # add --cloud to also score the free Groq model (uses the key in ~/.guya/config.json)
+    python eval/accuracy.py --manifest eval/data/fleurs/manifest.jsonl \
+        --models tiny,base,small,medium,large-v3-turbo --pipeline raw
+    python eval/accuracy.py --manifest ... --models small,large-v3-turbo --pipeline guya
+    python eval/accuracy.py --report eval/results/a.json,eval/results/b.json --out eval/results/all
+
+Outputs <out>.md, <out>.csv (the table) and <out>.json (every clip: reference,
+hypothesis, per-clip WER, seconds of audio, seconds of compute) so the error
+analysis in the report can be reproduced. --report re-scores the stored
+hypotheses with the current normaliser, so a scorer fix never needs the
+transcriptions to be run again. The "Clips" column shows how many clips per
+language actually contributed (a clip that fails to decode is skipped and
+would otherwise silently shrink the denominator).
+
+Privacy: --cloud sends every clip to the Groq API. Do not use it on
+recordings of a person who has not agreed to that.
 """
 
 import argparse
 import json
 import os
+import statistics
 import sys
 import time
 
-from faster_whisper import WhisperModel
-from faster_whisper.audio import decode_audio
-
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from wer import wer_counts, cer_counts  # noqa: E402
 
 
@@ -43,125 +61,235 @@ def load_manifest(path):
     return items
 
 
-def transcribe_offline(model, path, lang):
-    segments, _info = model.transcribe(path, language=lang, beam_size=5)
-    return " ".join(s.text for s in segments).strip()
+# ---------------------------------------------------------------- transcribers
+
+def make_raw(model):
+    def run(audio, lang):
+        segments, _info = model.transcribe(audio, language=lang, beam_size=5)
+        return " ".join(s.text for s in segments).strip()
+    return run
 
 
-def transcribe_cloud(path, lang, api_key):
-    from guya import cloud_engine
-    audio = decode_audio(path, sampling_rate=16000)
-    return cloud_engine.transcribe(audio, lang, api_key).strip()
+# Each ablation switches ONE production setting back to the stock value, so
+# the difference to the full "guya" row is that setting's contribution.
+ABLATIONS = {
+    "no_prompt":     {"overrides": {"initial_prompt": None}},
+    "no_vad":        {"overrides": {"vad_filter": False}},
+    "no_penalty":    {"overrides": {"repetition_penalty": 1.0}},
+    "no_speech_thr": {"overrides": {"no_speech_threshold": 0.6}},
+    "no_postprocess": {"postprocess": False},
+    "no_rms":        {"rms": False},
+    "no_cond":       {"overrides": {"condition_on_previous_text": False}},
+}
 
 
-def evaluate(model_name, transcribe_fn, items):
-    """Return (name, per-lang aggregates, rtf, per-clip details)."""
+def make_guya(model, ablation=None):
+    from guya import stt
+    extra = ABLATIONS.get(ablation, {}) if ablation else {}
+
+    def run(audio, lang):
+        return stt.transcribe_audio(model, audio, lang, audio_duration=len(audio) / 16000.0, **extra)
+    return run
+
+
+def make_cloud(api_key, pipeline):
+    from guya import cloud_engine, stt
+    if pipeline == "guya":
+        model = stt.CloudModel("groq", api_key)
+        return lambda audio, lang: stt.transcribe_audio(model, audio, lang, audio_duration=len(audio) / 16000.0)
+    return lambda audio, lang: cloud_engine.transcribe(audio, lang, api_key).strip()
+
+
+# ---------------------------------------------------------------- evaluation
+
+def evaluate(name, pipeline, transcribe_fn, items, decode_audio, quiet=False):
+    """Return a result row: aggregates per language + per-clip details."""
     agg = {}
     details = []
-    audio_sec = 0.0
-    t0 = time.time()
-    for it in items:
+    for k, it in enumerate(items, 1):
         lang = it["lang"]
         try:
             audio = decode_audio(it["audio"], sampling_rate=16000)
-            audio_sec += len(audio) / 16000.0
-            hyp = transcribe_fn(it["audio"], lang)
-        except Exception as e:
+            seconds = len(audio) / 16000.0
+            t0 = time.perf_counter()
+            hyp = transcribe_fn(audio, lang)
+            compute = time.perf_counter() - t0
+        except Exception as e:  # noqa: BLE001 — one bad clip must not kill a 2-hour run
             print(f"   ! {os.path.basename(it['audio'])}: {e}")
             continue
         we, wn = wer_counts(it["text"], hyp, lang)
         ce, cn = cer_counts(it["text"], hyp, lang)
-        a = agg.setdefault(lang, {"we": 0, "wn": 0, "ce": 0, "cn": 0, "n": 0})
+        a = agg.setdefault(lang, {"we": 0, "wn": 0, "ce": 0, "cn": 0, "n": 0, "audio": 0.0, "compute": 0.0})
         a["we"] += we; a["wn"] += wn; a["ce"] += ce; a["cn"] += cn; a["n"] += 1
+        a["audio"] += seconds; a["compute"] += compute
         details.append({"audio": os.path.basename(it["audio"]), "lang": lang,
                         "ref": it["text"], "hyp": hyp,
-                        "wer": (100.0 * we / wn if wn else 0.0)})
-    elapsed = time.time() - t0
-    rtf = (elapsed / audio_sec) if audio_sec else 0.0
-    return model_name, agg, rtf, details
+                        "wer": round(100.0 * we / wn, 1) if wn else 0.0,
+                        "seconds": round(seconds, 2), "compute": round(compute, 3)})
+        if not quiet and (k % 10 == 0 or k == len(items)):
+            print(f"   {k}/{len(items)}", flush=True)
+    return {"model": name, "pipeline": pipeline, "agg": agg, "details": details}
+
+
+def rescore(result):
+    """Recompute the aggregates of a stored result from its per-clip details
+    with the CURRENT normaliser, so a scorer fix never requires re-running
+    hours of transcription."""
+    agg = {}
+    for d in result["details"]:
+        lang = d["lang"]
+        we, wn = wer_counts(d["ref"], d["hyp"], lang)
+        ce, cn = cer_counts(d["ref"], d["hyp"], lang)
+        a = agg.setdefault(lang, {"we": 0, "wn": 0, "ce": 0, "cn": 0, "n": 0, "audio": 0.0, "compute": 0.0})
+        a["we"] += we; a["wn"] += wn; a["ce"] += ce; a["cn"] += cn; a["n"] += 1
+        a["audio"] += d.get("seconds", 0.0); a["compute"] += d.get("compute", 0.0)
+        d["wer"] = round(100.0 * we / wn, 1) if wn else 0.0
+    result["agg"] = agg
+    return result
+
+
+def table_rows(results, langs):
+    header = (["Model", "Pipeline", "Clips"]
+              + [f"{l.upper()}-WER" for l in langs]
+              + [f"{l.upper()}-CER" for l in langs]
+              + [f"{l.upper()}-RTF" for l in langs]
+              + ["RTF"])
+    rows = [header]
+    for r in results:
+        agg = r["agg"]
+        n_clips = "+".join(str(agg.get(l, {}).get("n", 0)) for l in langs)
+        row = [r["model"], r["pipeline"], n_clips]
+        for l in langs:
+            a = agg.get(l, {})
+            row.append(fmt_pct(a.get("we", 0), a.get("wn", 0)))
+        for l in langs:
+            a = agg.get(l, {})
+            row.append(fmt_pct(a.get("ce", 0), a.get("cn", 0)))
+        for l in langs:
+            a = agg.get(l, {})
+            row.append(fmt_rtf(a.get("compute", 0.0), a.get("audio", 0.0)))
+        tot_c = sum(a.get("compute", 0.0) for a in agg.values())
+        tot_a = sum(a.get("audio", 0.0) for a in agg.values())
+        row.append(fmt_rtf(tot_c, tot_a))
+        rows.append(row)
+    return rows
 
 
 def fmt_pct(e, n):
     return f"{100.0 * e / n:.1f}%" if n else "—"
 
 
+def fmt_rtf(compute, audio):
+    return f"{compute / audio:.2f}x" if audio else "—"
+
+
+def write_outputs(results, langs, out):
+    rows = table_rows(results, langs)
+    widths = [max(len(row[i]) for row in rows) for i in range(len(rows[0]))]
+    print("\n" + "=" * (sum(widths) + 3 * len(widths)))
+    for ri, row in enumerate(rows):
+        print("  ".join(c.ljust(widths[i]) for i, c in enumerate(row)))
+        if ri == 0:
+            print("-" * (sum(widths) + 3 * len(widths)))
+
+    os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
+    with open(out + ".md", "w", encoding="utf-8") as f:
+        f.write("| " + " | ".join(rows[0]) + " |\n")
+        f.write("|" + "|".join(["---"] * len(rows[0])) + "|\n")
+        for row in rows[1:]:
+            f.write("| " + " | ".join(row) + " |\n")
+    with open(out + ".csv", "w", encoding="utf-8") as f:
+        for row in rows:
+            f.write(",".join(row) + "\n")
+    with open(out + ".json", "w", encoding="utf-8") as f:
+        json.dump({"langs": langs, "results": results}, f, ensure_ascii=False, indent=1)
+    print(f"\n✓ wrote {out}.md, {out}.csv and {out}.json")
+
+
+def print_examples(results, n):
+    for r in results:
+        worst = sorted(r["details"], key=lambda d: -d["wer"])[:n]
+        print(f"\n── {r['model']} / {r['pipeline']}: {n} worst clips ──")
+        for d in worst:
+            print(f"  WER {d['wer']:.0f}%  [{d['lang']}] {d['audio']}")
+            print(f"    ref: {d['ref']}")
+            print(f"    hyp: {d['hyp']}")
+        med = statistics.median(d["compute"] for d in r["details"]) if r["details"] else 0
+        print(f"  median compute per clip: {med:.2f}s")
+
+
+# ---------------------------------------------------------------- main
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--manifest", required=True)
+    ap.add_argument("--manifest")
     ap.add_argument("--models", default="tiny,base,small,large-v3-turbo")
+    ap.add_argument("--pipeline", default="raw", choices=["raw", "guya"])
+    ap.add_argument("--ablate", default=None, choices=sorted(ABLATIONS),
+                    help="with --pipeline guya: switch one production setting back to stock")
     ap.add_argument("--device", default="cpu")
     ap.add_argument("--compute", default="int8")
     ap.add_argument("--cloud", action="store_true")
-    ap.add_argument("--limit", type=int, default=0)
-    ap.add_argument("--examples", type=int, default=0,
-                    help="print the N worst clips per model (ref vs hyp)")
-    ap.add_argument("--out", default="eval/results")
+    ap.add_argument("--limit", type=int, default=0, help="first N clips overall")
+    ap.add_argument("--per-lang-limit", type=int, default=0, help="first N clips of each language")
+    ap.add_argument("--examples", type=int, default=0, help="print the N worst clips per model")
+    ap.add_argument("--report", default=None, help="comma-separated .json results to merge into one table (no models run)")
+    ap.add_argument("--out", default="eval/results/results")
     args = ap.parse_args()
 
+    if args.report:
+        merged, langs = [], set()
+        for path in [p.strip() for p in args.report.split(",") if p.strip()]:
+            with open(path, encoding="utf-8") as f:
+                d = json.load(f)
+            merged.extend(rescore(r) for r in d["results"]); langs.update(d["langs"])
+        write_outputs(merged, sorted(langs), args.out)
+        if args.examples:
+            print_examples(merged, args.examples)
+        return
+
+    if not args.manifest:
+        ap.error("--manifest is required unless --report is given")
+
+    from faster_whisper import WhisperModel
+    from faster_whisper.audio import decode_audio
+
     items = load_manifest(args.manifest)
+    if args.per_lang_limit:
+        kept, seen = [], {}
+        for it in items:
+            if seen.get(it["lang"], 0) < args.per_lang_limit:
+                kept.append(it); seen[it["lang"]] = seen.get(it["lang"], 0) + 1
+        items = kept
     if args.limit:
         items = items[:args.limit]
     langs = sorted({it["lang"] for it in items})
     counts = ", ".join(f"{l}:{sum(1 for i in items if i['lang'] == l)}" for l in langs)
-    print(f"Loaded {len(items)} clips ({counts})\n")
+    total_audio = sum(len(decode_audio(it["audio"], sampling_rate=16000)) / 16000.0 for it in items)
+    print(f"Loaded {len(items)} clips ({counts}), {total_audio/60:.1f} min of audio, pipeline={args.pipeline}\n")
 
-    rows = []
+    results = []
     for size in [m.strip() for m in args.models.split(",") if m.strip()]:
-        print(f"▶ {size} ({args.device}/{args.compute}) …")
+        print(f"▶ {size} ({args.device}/{args.compute}, {args.pipeline}) …", flush=True)
         model = WhisperModel(size, device=args.device, compute_type=args.compute)
-        rows.append(evaluate(size, lambda p, l: transcribe_offline(model, p, l), items))
+        fn = make_guya(model, args.ablate) if args.pipeline == "guya" else make_raw(model)
+        label = args.pipeline + (f"-{args.ablate}" if args.ablate else "")
+        results.append(evaluate(size, label, fn, items, decode_audio))
         del model
+        write_outputs(results, langs, args.out)   # checkpoint after every model
 
     if args.cloud:
         from guya import config as gc
         key = (gc.load_config().get("cloud", {}) or {}).get("api_key")
         if key:
-            print("▶ cloud (groq) …")
-            rows.append(evaluate("cloud", lambda p, l: transcribe_cloud(p, l, key), items))
+            print("▶ cloud (groq whisper-large-v3) …")
+            results.append(evaluate("cloud", args.pipeline, make_cloud(key, args.pipeline), items, decode_audio))
+            write_outputs(results, langs, args.out)
         else:
             print("   (skipping cloud: no API key in ~/.guya/config.json)")
 
-    # ---- print + write table ----
-    header = ["Model"] + [f"{l.upper()}-WER" for l in langs] + [f"{l.upper()}-CER" for l in langs] + ["RTF"]
-    table = [header]
-    for name, agg, rtf, _details in rows:
-        r = [name]
-        for l in langs:
-            a = agg.get(l, {})
-            r.append(fmt_pct(a.get("we", 0), a.get("wn", 0)))
-        for l in langs:
-            a = agg.get(l, {})
-            r.append(fmt_pct(a.get("ce", 0), a.get("cn", 0)))
-        r.append(f"{rtf:.2f}x")
-        table.append(r)
-
-    widths = [max(len(row[i]) for row in table) for i in range(len(header))]
-    print("\n" + "=" * (sum(widths) + 3 * len(widths)))
-    for ri, row in enumerate(table):
-        print("  ".join(c.ljust(widths[i]) for i, c in enumerate(row)))
-        if ri == 0:
-            print("-" * (sum(widths) + 3 * len(widths)))
-
-    os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
-    with open(args.out + ".md", "w", encoding="utf-8") as f:
-        f.write("| " + " | ".join(header) + " |\n")
-        f.write("|" + "|".join(["---"] * len(header)) + "|\n")
-        for row in table[1:]:
-            f.write("| " + " | ".join(row) + " |\n")
-    with open(args.out + ".csv", "w", encoding="utf-8") as f:
-        for row in table:
-            f.write(",".join(row) + "\n")
-    print(f"\n✓ wrote {args.out}.md and {args.out}.csv")
-
-    # ---- error examples (qualitative analysis) ----
     if args.examples:
-        for name, _agg, _rtf, details in rows:
-            worst = sorted(details, key=lambda d: -d["wer"])[:args.examples]
-            print(f"\n── {name}: {args.examples} worst clips ──")
-            for d in worst:
-                print(f"  WER {d['wer']:.0f}%  [{d['lang']}] {d['audio']}")
-                print(f"    ref: {d['ref']}")
-                print(f"    hyp: {d['hyp']}")
+        print_examples(results, args.examples)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,758 @@
+[
+ {
+  "transcript": "Open Chrome, then go to YouTube.",
+  "stt_language": "en",
+  "response_language": "en",
+  "intent": "sequence",
+  "slots": {},
+  "steps": [
+   {
+    "intent": "open_app",
+    "slots": {
+     "app": "chrome"
+    }
+   },
+   {
+    "intent": "open_website",
+    "slots": {
+     "target": "youtube",
+     "app": "chrome"
+    }
+   }
+  ],
+  "status": "success",
+  "message": "Completed 2 steps. Opened Google Chrome. Opened https://www.youtube.com.",
+  "path": null,
+  "options": [],
+  "target_app": "com.openai.codex",
+  "audio_seconds": 3.008,
+  "transcription_ms": 3023,
+  "command_ms": 390
+ },
+ {
+  "transcript": "Open Chrome and go to YouTube.",
+  "stt_language": "en",
+  "response_language": "en",
+  "intent": "sequence",
+  "slots": {},
+  "steps": [
+   {
+    "intent": "open_app",
+    "slots": {
+     "app": "chrome"
+    }
+   },
+   {
+    "intent": "open_website",
+    "slots": {
+     "target": "youtube",
+     "app": "chrome"
+    }
+   }
+  ],
+  "status": "success",
+  "message": "Completed 2 steps. Opened Google Chrome. Opened https://www.youtube.com.",
+  "path": null,
+  "options": [],
+  "target_app": "com.google.Chrome",
+  "audio_seconds": 2.048,
+  "transcription_ms": 2863,
+  "command_ms": 226
+ },
+ {
+  "transcript": "Let's cool down.",
+  "stt_language": "en",
+  "response_language": "en",
+  "intent": "unknown",
+  "slots": {},
+  "steps": [],
+  "status": "error",
+  "message": "I did not understand. Try create, open, find, rename, or a browser command.",
+  "path": null,
+  "options": [],
+  "target_app": "com.google.Chrome",
+  "audio_seconds": 1.536,
+  "transcription_ms": 2940,
+  "command_ms": 4
+ },
+ {
+  "transcript": "Scroll down.",
+  "stt_language": "en",
+  "response_language": "en",
+  "intent": "browser_navigation",
+  "slots": {
+   "action": "scroll_down"
+  },
+  "steps": [],
+  "status": "success",
+  "message": "Scrolled down.",
+  "path": null,
+  "options": [],
+  "target_app": "com.google.Chrome",
+  "audio_seconds": 2.176,
+  "transcription_ms": 2700,
+  "command_ms": 36
+ },
+ {
+  "transcript": "Again, scroll down.",
+  "stt_language": "en",
+  "response_language": "en",
+  "intent": "unknown",
+  "slots": {},
+  "steps": [],
+  "status": "error",
+  "message": "I did not understand. Try create, open, find, rename, or a browser command.",
+  "path": null,
+  "options": [],
+  "target_app": "com.google.Chrome",
+  "audio_seconds": 1.6,
+  "transcription_ms": 2747,
+  "command_ms": 3
+ },
+ {
+  "transcript": "Again, scroll down.",
+  "stt_language": "en",
+  "response_language": "en",
+  "intent": "unknown",
+  "slots": {},
+  "steps": [],
+  "status": "error",
+  "message": "I did not understand. Try create, open, find, rename, or a browser command.",
+  "path": null,
+  "options": [],
+  "target_app": "com.google.Chrome",
+  "audio_seconds": 2.432,
+  "transcription_ms": 2762,
+  "command_ms": 3
+ },
+ {
+  "transcript": "Scroll down.",
+  "stt_language": "en",
+  "response_language": "en",
+  "intent": "browser_navigation",
+  "slots": {
+   "action": "scroll_down"
+  },
+  "steps": [],
+  "status": "success",
+  "message": "Scrolled down.",
+  "path": null,
+  "options": [],
+  "target_app": "com.google.Chrome",
+  "audio_seconds": 2.24,
+  "transcription_ms": 2729,
+  "command_ms": 30
+ },
+ {
+  "transcript": "Go to the top of the page.",
+  "stt_language": "en",
+  "response_language": "en",
+  "intent": "browser_navigation",
+  "slots": {
+   "action": "top"
+  },
+  "steps": [],
+  "status": "success",
+  "message": "Moved to the top of the page.",
+  "path": null,
+  "options": [],
+  "target_app": "com.google.Chrome",
+  "audio_seconds": 2.176,
+  "transcription_ms": 3031,
+  "command_ms": 58
+ },
+ {
+  "transcript": "Go forward.",
+  "stt_language": "en",
+  "response_language": "en",
+  "intent": "browser_navigation",
+  "slots": {
+   "action": "forward"
+  },
+  "steps": [],
+  "status": "success",
+  "message": "Went forward one page.",
+  "path": null,
+  "options": [],
+  "target_app": "com.google.Chrome",
+  "audio_seconds": 1.92,
+  "transcription_ms": 2937,
+  "command_ms": 55
+ },
+ {
+  "transcript": "Go back.",
+  "stt_language": "en",
+  "response_language": "en",
+  "intent": "browser_navigation",
+  "slots": {
+   "action": "back"
+  },
+  "steps": [],
+  "status": "error",
+  "message": "Focus a supported browser, then try the command again.",
+  "path": null,
+  "options": [],
+  "target_app": "com.openai.codex",
+  "audio_seconds": 1.664,
+  "transcription_ms": 2698,
+  "command_ms": 1
+ },
+ {
+  "transcript": "Go back.",
+  "stt_language": "en",
+  "response_language": "en",
+  "intent": "browser_navigation",
+  "slots": {
+   "action": "back"
+  },
+  "steps": [],
+  "status": "success",
+  "message": "Went back one page.",
+  "path": null,
+  "options": [],
+  "target_app": "com.google.Chrome",
+  "audio_seconds": 2.112,
+  "transcription_ms": 2809,
+  "command_ms": 55
+ },
+ {
+  "transcript": "Search for GitHub.",
+  "stt_language": "en",
+  "response_language": "en",
+  "intent": "search",
+  "slots": {
+   "query": "github"
+  },
+  "steps": [],
+  "status": "needs_selection",
+  "message": "I found 3 close matches: 1. github-dark-B7OkmUXw.js in assets; 2. github-dark-DYNcS38O.js in assets; 3. github-mark-CEP7_PEr.js in assets. Say first, second, third, or cancel.",
+  "path": null,
+  "options": [
+   "/Users/mohammadreza/Downloads/Microsoft.VisualStudio.Services/extension/webview/assets/github-dark-B7OkmUXw.js",
+   "/Users/mohammadreza/Downloads/Microsoft.VisualStudio.Services/extension/webview/assets/github-dark-DYNcS38O.js",
+   "/Users/mohammadreza/Downloads/Microsoft.VisualStudio.Services/extension/webview/assets/github-mark-CEP7_PEr.js"
+  ],
+  "target_app": "com.google.Chrome",
+  "audio_seconds": 1.344,
+  "transcription_ms": 2672,
+  "command_ms": 198
+ },
+ {
+  "transcript": "Cancer.",
+  "stt_language": "en",
+  "response_language": "en",
+  "intent": "search",
+  "slots": {
+   "query": "github"
+  },
+  "steps": [],
+  "status": "needs_selection",
+  "message": "Please choose first through 3, or say cancel.",
+  "path": null,
+  "options": [
+   "/Users/mohammadreza/Downloads/Microsoft.VisualStudio.Services/extension/webview/assets/github-dark-B7OkmUXw.js",
+   "/Users/mohammadreza/Downloads/Microsoft.VisualStudio.Services/extension/webview/assets/github-dark-DYNcS38O.js",
+   "/Users/mohammadreza/Downloads/Microsoft.VisualStudio.Services/extension/webview/assets/github-mark-CEP7_PEr.js"
+  ],
+  "target_app": "org.python.python",
+  "audio_seconds": 1.216,
+  "transcription_ms": 2625,
+  "command_ms": 4
+ },
+ {
+  "transcript": "Cancel.",
+  "stt_language": "en",
+  "response_language": "en",
+  "intent": "search",
+  "slots": {
+   "query": "github"
+  },
+  "steps": [],
+  "status": "cancelled",
+  "message": "Selection cancelled. Nothing was opened.",
+  "path": null,
+  "options": [],
+  "target_app": "org.python.python",
+  "audio_seconds": 1.856,
+  "transcription_ms": 2679,
+  "command_ms": 7
+ },
+ {
+  "transcript": "Search for GitHub on Chrome.",
+  "stt_language": "en",
+  "response_language": "en",
+  "intent": "search",
+  "slots": {
+   "query": "github on chrome"
+  },
+  "steps": [],
+  "status": "error",
+  "message": "I could not find github on chrome.",
+  "path": null,
+  "options": [],
+  "target_app": "org.python.python",
+  "audio_seconds": 2.048,
+  "transcription_ms": 2695,
+  "command_ms": 185
+ },
+ {
+  "transcript": "Search GitHub on Chrome.",
+  "stt_language": "en",
+  "response_language": "en",
+  "intent": "search",
+  "slots": {
+   "query": "github on chrome"
+  },
+  "steps": [],
+  "status": "error",
+  "message": "I could not find github on chrome.",
+  "path": null,
+  "options": [],
+  "target_app": "org.python.python",
+  "audio_seconds": 2.432,
+  "transcription_ms": 2708,
+  "command_ms": 191
+ },
+ {
+  "transcript": "Open Chrome and search GitHub.",
+  "stt_language": "en",
+  "response_language": "en",
+  "intent": "sequence",
+  "slots": {},
+  "steps": [
+   {
+    "intent": "open_app",
+    "slots": {
+     "app": "chrome"
+    }
+   },
+   {
+    "intent": "web_search",
+    "slots": {
+     "query": "github",
+     "app": "chrome"
+    }
+   }
+  ],
+  "status": "success",
+  "message": "Completed 2 steps. Opened Google Chrome. Searched the web for github.",
+  "path": null,
+  "options": [],
+  "target_app": "com.google.Chrome",
+  "audio_seconds": 2.944,
+  "transcription_ms": 2959,
+  "command_ms": 169
+ },
+ {
+  "transcript": "Open the first website.",
+  "stt_language": "en",
+  "response_language": "en",
+  "intent": "open_website",
+  "slots": {
+   "target": "the first"
+  },
+  "steps": [],
+  "status": "error",
+  "message": "Please say a known website name or a complete domain, such as YouTube or github dot com.",
+  "path": null,
+  "options": [],
+  "target_app": "com.google.Chrome",
+  "audio_seconds": 2.112,
+  "transcription_ms": 2787,
+  "command_ms": 2
+ },
+ {
+  "transcript": "Go to github.com",
+  "stt_language": "en",
+  "response_language": "en",
+  "intent": "open_website",
+  "slots": {
+   "target": "github com"
+  },
+  "steps": [],
+  "status": "success",
+  "message": "Opened https://github.com.",
+  "path": null,
+  "options": [],
+  "target_app": "com.google.Chrome",
+  "audio_seconds": 1.856,
+  "transcription_ms": 2698,
+  "command_ms": 89
+ },
+ {
+  "transcript": "Went back.",
+  "stt_language": "en",
+  "response_language": "en",
+  "intent": "unknown",
+  "slots": {},
+  "steps": [],
+  "status": "error",
+  "message": "I did not understand. Try create, open, find, rename, or a browser command.",
+  "path": null,
+  "options": [],
+  "target_app": "com.google.Chrome",
+  "audio_seconds": 1.152,
+  "transcription_ms": 2693,
+  "command_ms": 2
+ },
+ {
+  "transcript": "Go to YouTube.",
+  "stt_language": "en",
+  "response_language": "en",
+  "intent": "open_website",
+  "slots": {
+   "target": "youtube"
+  },
+  "steps": [],
+  "status": "success",
+  "message": "Opened https://www.youtube.com.",
+  "path": null,
+  "options": [],
+  "target_app": "com.google.Chrome",
+  "audio_seconds": 1.344,
+  "transcription_ms": 2931,
+  "command_ms": 89
+ },
+ {
+  "transcript": "Go to Instagram.",
+  "stt_language": "en",
+  "response_language": "en",
+  "intent": "unknown",
+  "slots": {},
+  "steps": [],
+  "status": "error",
+  "message": "I did not understand. Try create, open, find, rename, or a browser command.",
+  "path": null,
+  "options": [],
+  "target_app": "com.google.Chrome",
+  "audio_seconds": 1.664,
+  "transcription_ms": 2820,
+  "command_ms": 3
+ },
+ {
+  "transcript": "Go to Instagram.",
+  "stt_language": "en",
+  "response_language": "en",
+  "intent": "unknown",
+  "slots": {},
+  "steps": [],
+  "status": "error",
+  "message": "I did not understand. Try create, open, find, rename, or a browser command.",
+  "path": null,
+  "options": [],
+  "target_app": "com.google.Chrome",
+  "audio_seconds": 2.752,
+  "transcription_ms": 2731,
+  "command_ms": 3
+ },
+ {
+  "transcript": "Visit Instagram.com",
+  "stt_language": "en",
+  "response_language": "en",
+  "intent": "open_website",
+  "slots": {
+   "target": "instagram com"
+  },
+  "steps": [],
+  "status": "success",
+  "message": "Opened https://instagram.com.",
+  "path": null,
+  "options": [],
+  "target_app": "com.google.Chrome",
+  "audio_seconds": 2.752,
+  "transcription_ms": 2694,
+  "command_ms": 88
+ },
+ {
+  "transcript": "Let's cool down.",
+  "stt_language": "en",
+  "response_language": "en",
+  "intent": "unknown",
+  "slots": {},
+  "steps": [],
+  "status": "error",
+  "message": "I did not understand. Try create, open, find, rename, or a browser command.",
+  "path": null,
+  "options": [],
+  "target_app": "com.google.Chrome",
+  "audio_seconds": 1.536,
+  "transcription_ms": 2860,
+  "command_ms": 3
+ },
+ {
+  "transcript": "I scroll down.",
+  "stt_language": "en",
+  "response_language": "en",
+  "intent": "browser_navigation",
+  "slots": {},
+  "steps": [],
+  "status": "error",
+  "message": "Please say how to move in the browser.",
+  "path": null,
+  "options": [],
+  "target_app": "com.google.Chrome",
+  "audio_seconds": 2.24,
+  "transcription_ms": 2926,
+  "command_ms": 3
+ },
+ {
+  "transcript": "Scroll down.",
+  "stt_language": "en",
+  "response_language": "en",
+  "intent": "browser_navigation",
+  "slots": {
+   "action": "scroll_down"
+  },
+  "steps": [],
+  "status": "success",
+  "message": "Scrolled down.",
+  "path": null,
+  "options": [],
+  "target_app": "com.google.Chrome",
+  "audio_seconds": 3.136,
+  "transcription_ms": 2714,
+  "command_ms": 29
+ },
+ {
+  "transcript": "Go to top of the page.",
+  "stt_language": "en",
+  "response_language": "en",
+  "intent": "browser_navigation",
+  "slots": {
+   "action": "top"
+  },
+  "steps": [],
+  "status": "success",
+  "message": "Moved to the top of the page.",
+  "path": null,
+  "options": [],
+  "target_app": "com.google.Chrome",
+  "audio_seconds": 2.112,
+  "transcription_ms": 2852,
+  "command_ms": 54
+ },
+ {
+  "transcript": "Go back.",
+  "stt_language": "en",
+  "response_language": "en",
+  "intent": "browser_navigation",
+  "slots": {
+   "action": "back"
+  },
+  "steps": [],
+  "status": "success",
+  "message": "Went back one page.",
+  "path": null,
+  "options": [],
+  "target_app": "com.google.Chrome",
+  "audio_seconds": 1.536,
+  "transcription_ms": 2776,
+  "command_ms": 52
+ },
+ {
+  "transcript": "Go to YouTube.",
+  "stt_language": "en",
+  "response_language": "en",
+  "intent": "open_website",
+  "slots": {
+   "target": "youtube"
+  },
+  "steps": [],
+  "status": "success",
+  "message": "Opened https://www.youtube.com.",
+  "path": null,
+  "options": [],
+  "target_app": "org.python.python",
+  "audio_seconds": 1.856,
+  "transcription_ms": 2788,
+  "command_ms": 310
+ },
+ {
+  "transcript": "Go to GitHub.",
+  "stt_language": "en",
+  "response_language": "en",
+  "intent": "open_website",
+  "slots": {
+   "target": "github"
+  },
+  "steps": [],
+  "status": "success",
+  "message": "Opened https://github.com.",
+  "path": null,
+  "options": [],
+  "target_app": "com.google.Chrome",
+  "audio_seconds": 1.408,
+  "transcription_ms": 2694,
+  "command_ms": 471
+ },
+ {
+  "transcript": "Go back.",
+  "stt_language": "en",
+  "response_language": "en",
+  "intent": "browser_navigation",
+  "slots": {
+   "action": "back"
+  },
+  "steps": [],
+  "status": "success",
+  "message": "Went back one page.",
+  "path": null,
+  "options": [],
+  "target_app": "com.google.Chrome",
+  "audio_seconds": 1.088,
+  "transcription_ms": 2678,
+  "command_ms": 54
+ },
+ {
+  "transcript": "Go forward.",
+  "stt_language": "en",
+  "response_language": "en",
+  "intent": "browser_navigation",
+  "slots": {
+   "action": "forward"
+  },
+  "steps": [],
+  "status": "success",
+  "message": "Went forward one page.",
+  "path": null,
+  "options": [],
+  "target_app": "com.google.Chrome",
+  "audio_seconds": 1.088,
+  "transcription_ms": 2884,
+  "command_ms": 52
+ },
+ {
+  "transcript": "برگیار داکات",
+  "stt_language": "fa",
+  "response_language": "fa",
+  "intent": "unknown",
+  "slots": {},
+  "steps": [],
+  "status": "error",
+  "message": "متوجه نشدم. دستور ساختن، باز کردن، پیدا کردن، تغییر نام یا کنترل مرورگر را بگویید.",
+  "path": null,
+  "options": [],
+  "target_app": "com.google.Chrome",
+  "audio_seconds": 1.472,
+  "transcription_ms": 2879,
+  "command_ms": 3
+ },
+ {
+  "transcript": "بارگرد، اغاب",
+  "stt_language": "fa",
+  "response_language": "fa",
+  "intent": "unknown",
+  "slots": {},
+  "steps": [],
+  "status": "error",
+  "message": "متوجه نشدم. دستور ساختن، باز کردن، پیدا کردن، تغییر نام یا کنترل مرورگر را بگویید.",
+  "path": null,
+  "options": [],
+  "target_app": "org.python.python",
+  "audio_seconds": 1.984,
+  "transcription_ms": 2832,
+  "command_ms": 3
+ },
+ {
+  "transcript": "Go back.",
+  "stt_language": "en",
+  "response_language": "en",
+  "intent": "browser_navigation",
+  "slots": {
+   "action": "back"
+  },
+  "steps": [],
+  "status": "success",
+  "message": "Went back one page.",
+  "path": null,
+  "options": [],
+  "target_app": "com.google.Chrome",
+  "audio_seconds": 1.28,
+  "transcription_ms": 2653,
+  "command_ms": 51
+ },
+ {
+  "transcript": "Let's scroll down.",
+  "stt_language": "en",
+  "response_language": "en",
+  "intent": "unknown",
+  "slots": {},
+  "steps": [],
+  "status": "error",
+  "message": "I did not understand. Try create, open, find, rename, or a browser command.",
+  "path": null,
+  "options": [],
+  "target_app": "com.google.Chrome",
+  "audio_seconds": 1.024,
+  "transcription_ms": 2932,
+  "command_ms": 3
+ },
+ {
+  "transcript": "Scroll down.",
+  "stt_language": "en",
+  "response_language": "en",
+  "intent": "browser_navigation",
+  "slots": {
+   "action": "scroll_down"
+  },
+  "steps": [],
+  "status": "success",
+  "message": "Scrolled down.",
+  "path": null,
+  "options": [],
+  "target_app": "com.google.Chrome",
+  "audio_seconds": 2.112,
+  "transcription_ms": 2752,
+  "command_ms": 29
+ },
+ {
+  "transcript": "Let's scroll the page up.",
+  "stt_language": "en",
+  "response_language": "en",
+  "intent": "browser_navigation",
+  "slots": {},
+  "steps": [],
+  "status": "error",
+  "message": "Please say how to move in the browser.",
+  "path": null,
+  "options": [],
+  "target_app": "com.google.Chrome",
+  "audio_seconds": 1.664,
+  "transcription_ms": 2858,
+  "command_ms": 2
+ },
+ {
+  "transcript": "I screwed the page up.",
+  "stt_language": "en",
+  "response_language": "en",
+  "intent": "unknown",
+  "slots": {},
+  "steps": [],
+  "status": "error",
+  "message": "I did not understand. Try create, open, find, rename, or a browser command.",
+  "path": null,
+  "options": [],
+  "target_app": "com.google.Chrome",
+  "audio_seconds": 2.112,
+  "transcription_ms": 2718,
+  "command_ms": 2
+ },
+ {
+  "transcript": "Scroll the page up.",
+  "stt_language": "en",
+  "response_language": "en",
+  "intent": "browser_navigation",
+  "slots": {
+   "action": "scroll_up"
+  },
+  "steps": [],
+  "status": "success",
+  "message": "Scrolled up.",
+  "path": null,
+  "options": [],
+  "target_app": "com.google.Chrome",
+  "audio_seconds": 3.648,
+  "transcription_ms": 2760,
+  "command_ms": 28
+ }
+]

@@ -31,6 +31,10 @@ Start Guya.bat
 Start Guya.vbs
 Guya.app/
 
-# Eval generated data + results (regenerable / large)
-eval/data/
-eval/results.*
+# Eval audio is regenerable/large; manifests and result tables ARE committed
+eval/data/*
+!eval/data/fleurs/
+eval/data/fleurs/*
+!eval/data/fleurs/manifest.jsonl
+!eval/data/say_manifest.jsonl
+!eval/data/intents.jsonl
