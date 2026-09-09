@@ -649,6 +649,7 @@ class RecordingThread(threading.Thread):
         self._lock = threading.Lock()
         self._pa = None
         self._stream = None
+        self.error = None   # set when the microphone could not be opened
 
     def run(self):
         log.info("Recording started")
@@ -672,6 +673,7 @@ class RecordingThread(threading.Thread):
                     break
         except Exception as e:
             log.error(f"Recording init error: {e}")
+            self.error = str(e)
             self.is_recording = False
         finally:
             if self._stream:
@@ -1076,6 +1078,9 @@ def thread_exception_handler(args):
 # MAIN — PyQt6 imports happen HERE, AFTER model loading
 # ============================================================
 
+_PARENT_PID = os.getppid()
+
+
 def main():
     os.environ.setdefault("QT_ENABLE_HIGHDPI_SCALING", "1")
     os.environ.setdefault("CT2_VERBOSE", "0")
@@ -1132,8 +1137,16 @@ def main():
         QWidget,
     )
     from PyQt6.QtCore import (
-        Qt, QObject, QTimer, QPoint, QPointF, QRect, QRectF, pyqtSignal, QThread
+        Qt, QObject, QTimer, QPoint, QPointF, QRect, QRectF, pyqtSignal, QThread, QLockFile
     )
+    # Two widgets would both hook the hotkeys and both open the microphone
+    # (PortAudio then fails for both). Only one may run.
+    _widget_lock = QLockFile(os.path.join(guya_config.CONFIG_DIR, "widget.lock"))
+    _widget_lock.setStaleLockTime(10_000)
+    if not _widget_lock.tryLock(100):
+        if not _widget_lock.removeStaleLockFile() or not _widget_lock.tryLock(100):
+            log.error("Another Guya widget is already running; this one exits")
+            return
     from PyQt6.QtGui import (
         QPainter, QColor, QLinearGradient, QFont, QFontMetrics,
         QPen, QBrush, QRadialGradient, QPainterPath, QAction, QCursor
@@ -1573,6 +1586,12 @@ def main():
 
         def _runtime_sync(self):
             """Publish live state for the Control Panel, and apply its commands."""
+            if os.getppid() != _PARENT_PID:
+                # The panel that started this widget is gone; an orphan would keep
+                # the hotkeys and the microphone and fight the next launch.
+                log.warning("Control panel is gone; the widget exits with it")
+                QApplication.quit()
+                return
             try:
                 guya_runtime.write_state({
                     "pid": os.getpid(), "ts": time.time(),
@@ -1873,8 +1892,15 @@ def main():
                 self._recording_thread.stop_recording()
                 self._recording_thread.join(timeout=2)
                 audio_data = self._recording_thread.get_audio_data()
+                mic_error = self._recording_thread.error
                 self._recording_thread = None
 
+                if mic_error:
+                    # Another Guya holding the microphone, a revoked permission,
+                    # or a device that vanished after sleep: say so, not "too short".
+                    self._show_notice("Microphone error — check that only one Guya is running", "error",
+                                      DONE_STATE_DURATION * 3)
+                    return
                 if audio_data is None:
                     log.info("Recording too short, ignoring")
                     self._show_notice("Too short — hold the key while you speak", "warn")
