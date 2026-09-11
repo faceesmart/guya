@@ -214,5 +214,19 @@ class PersianWebSearchTests(unittest.TestCase):
         self.assertEqual(("open_website", {"target": "youtube", "app": "chrome"}), (command.intent, command.slots))
 
 
+class ThirdManualTestTests(unittest.TestCase):
+    def test_search_after_open_chrome_uses_chrome(self):
+        command = CommandParser().parse("کروم رو باز کن و سیچ کن هوای تهران")
+        self.assertEqual("chrome", command.steps[1].slots.get("app"))
+
+    def test_misheard_choice_word_picks_the_option(self):
+        parser = CommandParser()
+        self.assertEqual(0, parser.fuzzy_selection_index("عوال"))
+        self.assertEqual(0, parser.fuzzy_selection_index("آبال"))
+        self.assertEqual(1, parser.fuzzy_selection_index("دومی"))
+        self.assertIsNone(parser.fuzzy_selection_index("گزارش"))
+        self.assertIsNone(parser.fuzzy_selection_index("open the second file"))
+
+
 if __name__ == "__main__":
     unittest.main()

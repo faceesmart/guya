@@ -411,6 +411,14 @@ ASSISTANT_PROMPT = {
     ),
 }
 ASSISTANT_PROMPT["dual"] = ASSISTANT_PROMPT["fa"] + " " + ASSISTANT_PROMPT["en"]
+# While a result list or a yes/no question is on screen, the answer is one of
+# a handful of words; priming with only those words makes «اول» far more
+# likely than «عوال».
+ANSWER_PROMPT = {
+    "fa": "اول، دوم، سوم، یک، دو، سه، لغو، بله، نه.",
+    "en": "First, second, third, one, two, three, cancel, yes, no.",
+}
+ANSWER_PROMPT["dual"] = ANSWER_PROMPT["fa"] + " " + ANSWER_PROMPT["en"]
 
 
 def transcribe_audio(model, audio_data, language, audio_duration=None, sample_rate=16000,
@@ -522,6 +530,8 @@ def transcribe_audio(model, audio_data, language, audio_duration=None, sample_ra
     )
     if mode == "assistant" and language in ASSISTANT_PROMPT:
         decode_kwargs["initial_prompt"] = ASSISTANT_PROMPT[language]
+    elif mode == "answer" and language in ANSWER_PROMPT:
+        decode_kwargs["initial_prompt"] = ANSWER_PROMPT[language]
     if overrides:
         decode_kwargs.update(overrides)
     segments, info = model.transcribe(audio_data, **decode_kwargs)

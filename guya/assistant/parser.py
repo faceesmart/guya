@@ -225,7 +225,8 @@ class CommandParser:
                         step.intent = "web_search"
                         step.slots["app"] = steps[index - 1].slots["app"]
                     if (
-                        step.intent == "open_website"
+                        step.intent in ("open_website", "web_search")
+                        and step.slots.get("app") in (None, "browser")
                         and index > 0
                         and steps[index - 1].intent == "open_app"
                         and steps[index - 1].slots.get("app")
@@ -434,6 +435,29 @@ class CommandParser:
             for phrase in sorted(phrases, key=len, reverse=True):
                 if value == phrase or value.startswith(phrase + " "):
                     return kind
+        return None
+
+    SELECTION_WORDS = {
+        0: ("first", "one", "اول", "اولی", "یک"),
+        1: ("second", "two", "دوم", "دومی", "دو"),
+        2: ("third", "three", "سوم", "سومی", "سه"),
+    }
+
+    def fuzzy_selection_index(self, text: str) -> Optional[int]:
+        """While a result list is showing, a ONE-word utterance close to one
+        choice word is that choice (Whisper wrote «عوال» and «آبال» for «اول»).
+        Requires a clear winner; two similar candidates return None."""
+        language = detect_language(text)
+        value = self._strip_fillers(normalize(text), language)
+        if not value or " " in value or len(value) > 6:
+            return None
+        scores = []
+        for index, words in self.SELECTION_WORDS.items():
+            best = max(SequenceMatcher(None, value, normalize(w)).ratio() for w in words)
+            scores.append((best, index))
+        scores.sort(reverse=True)
+        if scores[0][0] >= 0.5 and scores[0][0] - scores[1][0] >= 0.1:
+            return scores[0][1]
         return None
 
     def fuzzy_answer(self, text: str) -> Optional[str]:

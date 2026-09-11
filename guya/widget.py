@@ -1994,7 +1994,10 @@ def main():
             lang = self._language
             self._last_assistant_language = lang
             self._transcription_started_at = time.time()
-            self._transcription_thread = TranscriptionThread(self._model, audio_data, lang, mode=mode)
+            stt_mode = mode
+            if mode == "assistant" and self._assistant.context.has_pending:
+                stt_mode = "answer"   # a list or a yes/no question is on screen
+            self._transcription_thread = TranscriptionThread(self._model, audio_data, lang, mode=stt_mode)
             self._transcription_thread.finished.connect(self._on_transcription_done)
             self._transcription_thread.error.connect(self._on_transcription_error)
             self._transcription_thread.start()

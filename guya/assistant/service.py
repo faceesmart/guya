@@ -529,6 +529,8 @@ class AssistantService:
 
         index = self.parser.selection_index(text)
         if index is None:
+            index = self.parser.fuzzy_selection_index(text)
+        if index is None:
             choice_text = text
             choice_command = self.parser.parse(text)
             if choice_command.intent in ("open_file", "open_folder"):
