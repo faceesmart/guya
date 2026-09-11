@@ -325,7 +325,8 @@ class ControlPanel(QWidget):
             "Open report docs  ·  فایل گزارش رو باز کن\n"
             "Rename it to final report  ·  اسمش رو بذار گزارش نهایی\n"
             "Save it  ·  فایل فعلی رو ذخیره کن\n"
-            "Close it  ·  پنجره فعلی رو ببند",
+            "Close it  ·  پنجره فعلی رو ببند\n"
+            "Switch to Persian  ·  برو انگلیسی  ·  دو زبانه",
         ))
         help_col.addWidget(self._help_card(
             "🌐  Browser / مرورگر",

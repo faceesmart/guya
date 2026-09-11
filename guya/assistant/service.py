@@ -65,8 +65,10 @@ class AssistantService:
             if self.context.pending_slot is not None:
                 return self._fill_pending_slot(text, language)
             # "yes, rename it" / «نه اسمش رو عوض نکن»: an answer that carries
-            # extra words is still an answer, never a new command.
-            answer = self.parser.leading_answer(text)
+            # extra words is still an answer, never a new command. A single
+            # short word close to yes/no («بیلی» for «بله») is also an answer:
+            # the question was just asked and nothing else is likely.
+            answer = self.parser.leading_answer(text) or self.parser.fuzzy_answer(text)
             if answer == "confirm" or self.parser.is_confirmation(text):
                 return self._execute_pending()
             if answer == "cancel" or self.parser.is_cancellation(text):
@@ -104,6 +106,20 @@ class AssistantService:
 
     def _dispatch(self, command: ParsedCommand, language: str) -> AssistantResponse:
         intent = command.intent
+        if intent == "set_language":
+            target = command.slots.get("language")
+            names_en = {"fa": "Persian", "en": "English", "dual": "Persian and English"}
+            names_fa = {"fa": "فارسی", "en": "انگلیسی", "dual": "فارسی و انگلیسی"}
+            # Reply in the language being switched TO, since that is what the
+            # user will hear and read from now on.
+            reply_language = "fa" if target == "fa" else ("en" if target == "en" else language)
+            return self._response(
+                "success",
+                reply_language,
+                f"Switched to {names_en.get(target, target)}.",
+                f"زبان به {names_fa.get(target, target)} تغییر کرد.",
+                command,
+            )
         if intent == "delete_unsupported":
             return self._response(
                 "error",

@@ -133,3 +133,45 @@ class ServiceRegressionTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class LanguageSwitchAndAnswerTests(unittest.TestCase):
+    """From the first manual test: short Persian words were misheard («بازش کن» →
+    «بازشگو», «بله» → «بیلی»), and the user asked to switch languages by voice."""
+
+    def setUp(self):
+        self.parser = CommandParser()
+        self.temp = tempfile.TemporaryDirectory()
+        self.root = Path(self.temp.name).resolve()
+        self.service = AssistantService(roots=[self.root], default_directory=self.root, platform="darwin")
+        self.service.actions = FakeDesktopActions(roots=[self.root], default_directory=self.root)
+
+    def tearDown(self):
+        self.temp.cleanup()
+
+    def test_language_switch_phrasings(self):
+        for text, code in (("switch to persian", "fa"), ("persian mode", "fa"), ("use english please", "en"),
+                           ("switch to dual", "dual"), ("both languages", "dual"),
+                           ("برو فارسی", "fa"), ("زبان رو انگلیسی کن", "en"), ("دو زبانه", "dual")):
+            command = self.parser.parse(text)
+            self.assertEqual(("set_language", code), (command.intent, command.slots.get("language")), text)
+
+    def test_a_bare_language_name_is_not_a_switch(self):
+        self.assertEqual("unknown", self.parser.parse("english").intent)
+        self.assertEqual("open_file", self.parser.parse("open the english file").intent)
+
+    def test_switch_reply_is_in_the_new_language(self):
+        response = self.service.handle("switch to persian")
+        self.assertEqual(("success", "fa"), (response.status, response.language))
+        self.assertEqual("set_language", response.command.intent)
+
+    def test_misheard_single_word_answers_a_pending_question(self):
+        self.service.handle("create a text file named memo")
+        response = self.service.handle("بیلی")   # Whisper's rendering of «بله»
+        self.assertEqual("success", response.status)
+        self.assertEqual("open_path", self.service.actions.calls[-1][0])
+
+    def test_misheard_answer_is_never_used_without_a_question(self):
+        response = self.service.handle("بیلی")
+        self.assertEqual("error", response.status)
+        self.assertEqual([], self.service.actions.calls)

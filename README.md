@@ -77,10 +77,11 @@ recognised. The control panel's **Help** tab lists the commands in both language
 | Open Chrome, then search for YouTube | کروم رو باز کن بعد یوتیوب رو جستجو کن |
 | Go to YouTube · Visit github.com | برو به سایت یوتیوب |
 | Scroll down · Go back · Go to the top | یه کم برو پایین · برگرد · برو اول صفحه |
+| Switch to Persian · Switch to dual | برو انگلیسی · دو زبانه |
 
-After creating something Guya asks whether to open it. If several files match a
-spoken name, up to three choices appear; click one or say *first / second /
-third / cancel*. A new command can be spoken at any time; it replaces the
+After creating something Guya asks whether to open it; answer by voice or click
+Yes / No in the bubble. If several files match a spoken name, up to three
+choices appear; click one or say *first / second / third / cancel*. A new command can be spoken at any time; it replaces the
 question. English replies are spoken and shown; Persian replies are shown on
 the pill and in a bubble (macOS has no Persian voice, and an Arabic accent
 was judged worse than silence). Press the assistant key while Guya is speaking

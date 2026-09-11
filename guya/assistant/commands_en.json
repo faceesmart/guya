@@ -116,5 +116,12 @@
     "don't do it",
     "forget it",
     "leave it"
+  ],
+  "set_language": [
+    "switch to persian",
+    "switch to english",
+    "switch to dual",
+    "persian mode",
+    "english mode"
   ]
 }

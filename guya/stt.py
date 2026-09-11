@@ -393,8 +393,28 @@ def transcribe_cloud(cloud_model, audio_data, language, sample_rate=16000) -> st
     return re.sub(r"  +", " ", text).strip()
 
 
+# Assistant mode: bias the decoder toward the command vocabulary. Short
+# commands are where Whisper misheard most in use («بازش کن» → «بازشگو»,
+# «بله» → «بیلی»); the dictation prompt (project vocabulary) does not help there.
+ASSISTANT_PROMPT = {
+    "fa": (
+        "بله، نه، لغو، اول، دوم، سوم، بازش کن، باز کن، ببند، ذخیره کن، پیدا کن، "
+        "بساز، فایل، پوشه، ورد، اسمش رو بذار، تغییر نام، برو پایین، برو بالا، "
+        "برگرد، برو جلو، اول صفحه، آخر صفحه، سایت، کروم، سافاری، ماشین حساب، "
+        "فارسی، انگلیسی، دو زبانه، دوباره، گزارش، آزمون."
+    ),
+    "en": (
+        "Yes, no, cancel, first, second, third, open it, open, close, save, find, "
+        "create, file, folder, Word, rename it to, scroll down, scroll up, go back, "
+        "go forward, top of the page, website, Chrome, Safari, calculator, "
+        "Persian, English, dual, again, report, test."
+    ),
+}
+ASSISTANT_PROMPT["dual"] = ASSISTANT_PROMPT["fa"] + " " + ASSISTANT_PROMPT["en"]
+
+
 def transcribe_audio(model, audio_data, language, audio_duration=None, sample_rate=16000,
-                     overrides=None, postprocess=True, rms=True):
+                     overrides=None, postprocess=True, rms=True, mode="dictation"):
     """Run transcription and return cleaned text.
 
     Language modes:
@@ -404,6 +424,8 @@ def transcribe_audio(model, audio_data, language, audio_duration=None, sample_ra
 
     If `model` is a CloudModel, transcription is delegated to the online provider.
 
+    `mode` is "dictation" (project vocabulary prompt) or "assistant" (command
+    vocabulary prompt, see ASSISTANT_PROMPT).
     `overrides` (dict) replaces individual model.transcribe() keyword arguments,
     `postprocess=False` skips the Persian text post-processing and `rms=False`
     skips volume normalisation. These exist for the evaluation harness, which
@@ -498,6 +520,8 @@ def transcribe_audio(model, audio_data, language, audio_duration=None, sample_ra
         temperature=temperature_val,
         multilingual=multilingual_flag,
     )
+    if mode == "assistant" and language in ASSISTANT_PROMPT:
+        decode_kwargs["initial_prompt"] = ASSISTANT_PROMPT[language]
     if overrides:
         decode_kwargs.update(overrides)
     segments, info = model.transcribe(audio_data, **decode_kwargs)

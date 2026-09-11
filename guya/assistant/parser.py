@@ -270,6 +270,11 @@ class CommandParser:
         if bare_app:
             return ParsedCommand("open_app", slots={"app": bare_app}, **base)
 
+        # "switch to Persian" / «برو انگلیسی»: changes the recognition language.
+        target_language = self._language_switch(core, language)
+        if target_language:
+            return ParsedCommand("set_language", slots={"language": target_language}, **base)
+
         # Creation phrases may contain "name it", so detect them before rename.
         if self._has_any(value, self.CREATE_WORD_WORDS) and wants_creation:
             name = self._create_name(value, language)
@@ -425,6 +430,24 @@ class CommandParser:
                     return kind
         return None
 
+    def fuzzy_answer(self, text: str) -> Optional[str]:
+        """For a ONE-word utterance while a question is pending: 'confirm' or
+        'cancel' if it is close to a yes/no word (Whisper writes «بیلی» for
+        «بله»). Multi-word utterances are never guessed."""
+        language = detect_language(text)
+        value = self._strip_fillers(normalize(text), language)
+        if not value or " " in value or len(value) < 2:
+            return None
+        best, best_kind = 0.0, None
+        for kind, phrases in (("confirm", self._confirm[language]), ("cancel", self._cancel[language])):
+            for phrase in phrases:
+                if " " in phrase:
+                    continue
+                score = SequenceMatcher(None, value, phrase).ratio()
+                if score > best:
+                    best, best_kind = score, kind
+        return best_kind if best >= 0.75 else None
+
     @staticmethod
     def _first_match_pos(value: str, candidates: Iterable[str]) -> Optional[int]:
         best = None
@@ -484,6 +507,43 @@ class CommandParser:
         for canonical, aliases in self.APP_ALIASES.items():
             if self._has_any(value, aliases):
                 return canonical
+        return None
+
+    LANGUAGE_NAMES = {
+        "fa": ("persian", "farsi", "فارسی", "پارسی"),
+        "en": ("english", "انگلیسی", "اینگلیسی"),
+        "dual": ("dual", "both", "bilingual", "both languages", "دو زبانه", "دوزبانه",
+                 "هر دو", "هر دو زبان", "دو زبان"),
+    }
+
+    @classmethod
+    def _language_switch(cls, value: str, language: str) -> Optional[str]:
+        """'switch to persian', 'persian mode', «برو فارسی», «زبان رو انگلیسی کن»."""
+        if not value or len(value.split()) > 6:
+            return None
+        if language == "fa":
+            frame = re.fullmatch(
+                r"(?:(?:زبان|زبون)(?: رو| را)?\s+)?(?:برو\s+|بشه\s+|بشو\s+|کن\s+)?(.+?)"
+                r"(?:\s+(?:کن|بشه|بشو|شو|باشه))?(?:\s+زبان)?",
+                value,
+            )
+        else:
+            frame = re.fullmatch(
+                r"(?:(?:switch|change|go|set|turn)\s+(?:the\s+)?(?:language\s+)?(?:to\s+)?"
+                r"|(?:speak|use|language)\s+)?(.+?)(?:\s+(?:mode|language|please))?",
+                value,
+            )
+        if not frame:
+            return None
+        name = frame.group(1).strip()
+        for code, names in cls.LANGUAGE_NAMES.items():
+            if name in {normalize(n) for n in names}:
+                # A bare language name alone ("english") is too easily a
+                # dictated word; require a verb or the word mode/language/زبان.
+                bare = value == name
+                if bare and code != "dual":
+                    return None
+                return code
         return None
 
     def _exact_app_name(self, value: str) -> Optional[str]:

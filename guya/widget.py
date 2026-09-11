@@ -1134,6 +1134,7 @@ def main():
         QMenu,
         QPushButton,
         QVBoxLayout,
+        QHBoxLayout,
         QWidget,
     )
     from PyQt6.QtCore import (
@@ -1170,17 +1171,19 @@ def main():
         finished = pyqtSignal(str)
         error = pyqtSignal(str)
 
-        def __init__(self, model, audio_data, language):
+        def __init__(self, model, audio_data, language, mode="dictation"):
             super().__init__()
             self.model = model
             self.audio_data = audio_data
             self.language = language
+            self.mode = mode
 
         def run(self):
             try:
                 t0 = time.time()
                 dur = len(self.audio_data) / SAMPLE_RATE
-                text = transcribe_audio(self.model, self.audio_data, self.language, audio_duration=dur, sample_rate=SAMPLE_RATE)
+                text = transcribe_audio(self.model, self.audio_data, self.language, audio_duration=dur,
+                                        sample_rate=SAMPLE_RATE, mode=self.mode)
                 elapsed = time.time() - t0
                 log.info(f"Final transcription ({elapsed:.1f}s): {text[:80]}")
                 self.finished.emit(text)
@@ -1346,6 +1349,8 @@ def main():
         hidden when the pill returns to idle.
         """
 
+        answer_chosen = pyqtSignal(str)
+
         def __init__(self):
             super().__init__()
             flags = (
@@ -1363,6 +1368,12 @@ def main():
                 """
                 QWidget#replyBubble { background: #15191f; border: 1px solid #38414d; border-radius: 12px; }
                 QLabel { color: #f1f5f9; background: transparent; border: none; font-size: 14px; }
+                QPushButton#answer { color: #f1f5f9; background: #20262e; border: 1px solid #323b46;
+                                     border-radius: 9px; padding: 8px 18px; font-size: 14px; min-width: 96px; }
+                QPushButton#answer:hover { border-color: #2dd4bf; background: #26333a; }
+                QPushButton#answerYes { color: #04211d; background: #2dd4bf; border: 1px solid #2dd4bf;
+                                        border-radius: 9px; padding: 8px 18px; font-size: 14px; min-width: 96px; font-weight: 600; }
+                QPushButton#answerYes:hover { background: #5eead4; }
                 """
             )
             layout = QVBoxLayout(self)
@@ -1372,11 +1383,36 @@ def main():
             self._label.setFont(QFont(UI_FONT, 13))
             self._label.setTextInteractionFlags(Qt.TextInteractionFlag.NoTextInteraction)
             layout.addWidget(self._label)
+            # Yes / No for confirmation questions: the same words a voice answer
+            # uses, so a click and a spoken answer take one path.
+            self._buttons = QWidget()
+            row = QHBoxLayout(self._buttons)
+            row.setContentsMargins(0, 8, 0, 0)
+            row.setSpacing(10)
+            self._yes = QPushButton("")
+            self._yes.setObjectName("answerYes")
+            self._no = QPushButton("")
+            self._no.setObjectName("answer")
+            for button, word in ((self._yes, "yes"), (self._no, "no")):
+                button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+                button.setCursor(Qt.CursorShape.PointingHandCursor)
+                button.clicked.connect(lambda _=False, w=word: self.answer_chosen.emit(w))
+                row.addWidget(button)
+            row.addStretch(1)
+            layout.addWidget(self._buttons)
+            self._buttons.hide()
 
-        def show_message(self, text: str, anchor, tone: str = "ok", rtl: bool = False):
+        def show_message(self, text: str, anchor, tone: str = "ok", rtl: bool = False, ask: bool = False):
             colour = {"ok": "#b7f7cf", "warn": "#ffe0a3", "error": "#ffb4b4"}.get(tone, "#f1f5f9")
             self._label.setStyleSheet(f"color: {colour};")
             self._label.setText(text)
+            if ask:
+                self._yes.setText("بله" if rtl else "Yes")
+                self._no.setText("نه" if rtl else "No")
+                self._yes.setAccessibleName("Yes"); self._no.setAccessibleName("No")
+                self._buttons.show()
+            else:
+                self._buttons.hide()
             # AlignLeading follows the text direction (right edge for Persian);
             # AlignRight on RTL text would resolve to the LEFT edge.
             self._label.setAlignment(Qt.AlignmentFlag.AlignLeading | Qt.AlignmentFlag.AlignVCenter)
@@ -1387,7 +1423,7 @@ def main():
             text_height = self._label.heightForWidth(width - 28)
             if text_height <= 0:
                 text_height = self._label.sizeHint().height()
-            height = max(48, text_height + 20)
+            height = max(48, text_height + 20 + (54 if ask else 0))
             self.setFixedSize(width, height)
             screen = QApplication.primaryScreen()
             available = screen.availableGeometry() if screen else anchor
@@ -1434,6 +1470,7 @@ def main():
             self._assistant_thread = None
             self._results_popup = SearchResultsPopup()
             self._reply_bubble = ReplyBubble()
+            self._reply_bubble.answer_chosen.connect(self._submit_answer)
             self._results_popup.option_selected.connect(
                 self._on_result_option_clicked
             )
@@ -1678,12 +1715,28 @@ def main():
                 if self._g_pressed:
                     return
                 self._g_pressed = True
+                # Guya's own English voice was being recorded during dictation.
+                self._assistant.stop_speaking()
             self._start_recording(mode)
 
         def _on_result_option_clicked(self, index: int):
             words = ("first", "second", "third")
             if 0 <= index < len(words):
                 self._submit_result_choice(words[index])
+
+        def _submit_answer(self, word: str):
+            """A click on Yes/No in the bubble is the spoken word, nothing more."""
+            if self._is_recording or self._is_processing:
+                return
+            if self._assistant.context.pending_command is None:
+                self._reply_bubble.hide()
+                return
+            log.info("Assistant visual answer: %s", word)
+            self._assistant.stop_speaking()
+            self._reply_bubble.hide()
+            self._is_processing = True
+            self._set_state("processing")
+            self._start_assistant_command(word)
 
         def _submit_result_choice(self, choice: str):
             if self._is_recording or self._is_processing:
@@ -1941,7 +1994,7 @@ def main():
             lang = self._language
             self._last_assistant_language = lang
             self._transcription_started_at = time.time()
-            self._transcription_thread = TranscriptionThread(self._model, audio_data, lang)
+            self._transcription_thread = TranscriptionThread(self._model, audio_data, lang, mode=mode)
             self._transcription_thread.finished.connect(self._on_transcription_done)
             self._transcription_thread.error.connect(self._on_transcription_error)
             self._transcription_thread.start()
@@ -2028,11 +2081,14 @@ def main():
             self.update()
             # The pill shows ~30 characters. Anything longer, and every question
             # or error, is shown in full in a wrapped bubble under the pill.
+            command = getattr(response, "command", None)
+            if command is not None and command.intent == "set_language" and status == "success":
+                self._apply_language(command.slots.get("language"))
             if not response.options and (status != "success" or len(response.message) > 28):
                 try:
                     self._reply_bubble.show_message(
                         response.message, self.frameGeometry(), tone=self._done_tone,
-                        rtl=(response.language == "fa"),
+                        rtl=(response.language == "fa"), ask=(status == "needs_confirmation"),
                     )
                 except Exception as exc:  # never let a display problem block the action
                     log.warning(f"Reply bubble failed: {exc}")
