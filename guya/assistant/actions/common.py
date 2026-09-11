@@ -200,7 +200,10 @@ class SafeDesktopActions:
             return []
         started_at = time.perf_counter()
         full_key, stem_key, extension = filename_keys(query)
-        if len(stem_key) < 2 or stem_key in GENERIC_SEARCH_KEYS:
+        # A spoken number («پنج», "five") folds to one digit; that is a real
+        # query for files such as «آزمون پنج.docx», not a generic word.
+        too_short = len(stem_key) < 2 and not stem_key.isdigit()
+        if not stem_key or too_short or stem_key in GENERIC_SEARCH_KEYS:
             log.info(
                 "Assistant file search rejected: query=%r canonical=%r reason=too_generic",
                 query,

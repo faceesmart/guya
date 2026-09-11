@@ -1,11 +1,11 @@
 {
  "tag": "after",
- "n": 211,
+ "n": 221,
  "summary": {
   "lang:en": {
-   "n": 118,
-   "intent": 118,
-   "full": 118
+   "n": 120,
+   "intent": 120,
+   "full": 120
   },
   "intent:create_word_document": {
    "n": 10,
@@ -13,9 +13,9 @@
    "full": 10
   },
   "all:all": {
-   "n": 211,
-   "intent": 211,
-   "full": 211
+   "n": 221,
+   "intent": 221,
+   "full": 221
   },
   "intent:create_folder": {
    "n": 7,
@@ -43,9 +43,9 @@
    "full": 9
   },
   "intent:search": {
-   "n": 13,
-   "intent": 13,
-   "full": 13
+   "n": 15,
+   "intent": 15,
+   "full": 15
   },
   "intent:rename": {
    "n": 12,
@@ -73,9 +73,9 @@
    "full": 71
   },
   "intent:open_website": {
-   "n": 9,
-   "intent": 9,
-   "full": 9
+   "n": 10,
+   "intent": 10,
+   "full": 10
   },
   "intent:unknown": {
    "n": 14,
@@ -83,14 +83,14 @@
    "full": 14
   },
   "intent:sequence": {
-   "n": 8,
-   "intent": 8,
-   "full": 8
+   "n": 9,
+   "intent": 9,
+   "full": 9
   },
   "intent:web_search": {
-   "n": 1,
-   "intent": 1,
-   "full": 1
+   "n": 6,
+   "intent": 6,
+   "full": 6
   },
   "intent:delete_unsupported": {
    "n": 4,
@@ -98,9 +98,14 @@
    "full": 4
   },
   "lang:fa": {
-   "n": 93,
-   "intent": 93,
-   "full": 93
+   "n": 101,
+   "intent": 101,
+   "full": 101
+  },
+  "intent:set_language": {
+   "n": 1,
+   "intent": 1,
+   "full": 1
   }
  },
  "failures": []

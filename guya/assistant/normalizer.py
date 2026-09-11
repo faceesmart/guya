@@ -65,8 +65,10 @@ _FA_SMALL_NUMBERS = {
     "دو": 2,
     "سه": 3,
     "چهار": 4,
+    "چار": 4,
     "پنج": 5,
     "شش": 6,
+    "شیش": 6,
     "هفت": 7,
     "هشت": 8,
     "نه": 9,
@@ -76,9 +78,13 @@ _FA_SMALL_NUMBERS = {
     "سیزده": 13,
     "چهارده": 14,
     "پانزده": 15,
+    "پونزده": 15,
     "شانزده": 16,
+    "شونزده": 16,
     "هفده": 17,
+    "هیفده": 17,
     "هجده": 18,
+    "هیجده": 18,
     "نوزده": 19,
 }
 _FA_TENS = {
@@ -217,7 +223,7 @@ def normalize_spoken_filename(text: str) -> str:
     # item literally named "docs" or "text" keeps its name.
     if len(tokens) >= 2 and tokens[-2:] == ["doc", "x"]:
         tokens[-2:] = ["docx"]
-    elif len(tokens) >= 2 and tokens[-1] in {"docs", "docks", "docx", "ورد"}:
+    elif len(tokens) >= 2 and tokens[-1] in {"docs", "docks", "docx", "ورد", "دکس", "داکس", "داکیومنت"}:
         tokens[-1] = "docx"
     elif len(tokens) >= 2 and tokens[-1] in {"text", "تکست", "txt"}:
         tokens[-1] = "txt"

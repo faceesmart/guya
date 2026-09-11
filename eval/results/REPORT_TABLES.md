@@ -49,8 +49,8 @@
 
 | Parser | rows | intent | intent + slots | English | Persian | browser navigation |
 |---|---:|---:|---:|---:|---:|---:|
-| before | 211 | 71.1% | 67.8% | 66.9% | 76.3% | 42.3% |
-| after | 211 | 100.0% | 100.0% | 100.0% | 100.0% | 100.0% |
+| before | 221 | 69.2% | 66.1% | 65.8% | 73.3% | 42.3% |
+| after | 221 | 100.0% | 100.0% | 100.0% | 100.0% | 100.0% |
 
 ## Worst Persian clips, large-v3-turbo, stock
 

@@ -96,7 +96,7 @@ class CommandParser:
     )
     SEARCH_VERBS = (
         "search", "find", "look for", "where is", "where s", "where are",
-        "جستجو", "سرچ", "پیدا کن", "بگرد", "کجاست", "کجا هست", "کجاس",
+        "جستجو", "سرچ", "سیرچ", "سیچ", "گوگل کن", "پیدا کن", "بگرد", "کجاست", "کجا هست", "کجاس",
     )
     RENAME_VERBS = (
         "rename", "change its name", "change the name",
@@ -112,6 +112,7 @@ class CommandParser:
         "university of tehran", "tehran university",
         "instagram", "twitter", "facebook", "linkedin", "telegram", "whatsapp",
         "aparat", "digikala", "divar", "stackoverflow", "stack overflow",
+        "spotify", "netflix", "reddit", "amazon", "bing", "duckduckgo",
         "گوگل", "یوتیوب", "ویکی پدیا", "ویکیپدیا", "گیت هاب", "گیتهاب",
         "جی میل", "جیمیل", "دانشگاه تهران", "چت جی پی تی",
         "اینستاگرام", "اینستا", "توییتر", "فیسبوک", "فیس بوک", "لینکدین",
@@ -394,6 +395,11 @@ class CommandParser:
                 if not target:
                     return ParsedCommand("unknown", **base)
                 return ParsedCommand(corpus_intent, slots={"target": target}, **base)
+            if corpus_intent == "set_language":
+                for code, names in self.LANGUAGE_NAMES.items():
+                    if any(re.search(r"(?<!\w)" + re.escape(normalize(name)) + r"(?!\w)", core) for name in names):
+                        return ParsedCommand("set_language", slots={"language": code}, **base)
+                return ParsedCommand("unknown", **base)
             if corpus_intent == "sequence":
                 return ParsedCommand("unknown", **base)
             return ParsedCommand(corpus_intent, **base)
@@ -463,7 +469,7 @@ class CommandParser:
         if language == "fa":
             pattern = (
                 r"\s+(?:و\s+بعد(?:ش)?|بعد(?:ش)?|سپس)\s+"
-                r"|\s+و\s+(?=(?:ذخیره|سیو|ببند|جستجو|سرچ|پنجره|برو|سایت)\b)"
+                r"|\s+و\s+(?=(?:ذخیره|سیو|ببند|جستجو|سرچ|سیرچ|سیچ|گوگل|پنجره|برو|سایت)\b)"
             )
         else:
             pattern = (
@@ -511,7 +517,7 @@ class CommandParser:
 
     LANGUAGE_NAMES = {
         "fa": ("persian", "farsi", "فارسی", "پارسی"),
-        "en": ("english", "انگلیسی", "اینگلیسی"),
+        "en": ("english", "انگلیسی", "اینگلیسی", "انگلیش", "اینگلیش"),
         "dual": ("dual", "both", "bilingual", "both languages", "دو زبانه", "دوزبانه",
                  "هر دو", "هر دو زبان", "دو زبان"),
     }
@@ -523,7 +529,8 @@ class CommandParser:
             return None
         if language == "fa":
             frame = re.fullmatch(
-                r"(?:(?:زبان|زبون)(?: رو| را)?\s+)?(?:برو\s+|بشه\s+|بشو\s+|کن\s+)?(.+?)"
+                r"(?:(?:زبان|زبون)(?: رو| را)?\s+)?(?:برو\s+(?:به\s+|با\s+|بی\s+)?|بشه\s+|بشو\s+|کن\s+"
+                r"|(?:سویچ|سوییچ|سویش)\s+(?:به\s+|تو\s+|دو\s+)?)?(.+?)"
                 r"(?:\s+(?:کن|بشه|بشو|شو|باشه))?(?:\s+زبان)?",
                 value,
             )
@@ -754,7 +761,7 @@ class CommandParser:
     def _clean_website_target(value: str) -> str:
         result = clean_slot(value)
         result = re.sub(
-            r"\s+(?:in|with)\s+(?:chrome|safari|the browser)$",
+            r"\s+(?:in|with|on|using)\s+(?:chrome|safari|the browser|google chrome)$",
             "",
             result,
         )
@@ -910,22 +917,30 @@ class CommandParser:
                 return None
             query = self._strip_type_words(clean_slot(match.group(1)))
         else:
-            match = re.search(
-                r"^(?:لطفا )?(?:تو|توی|در|با)\s+(?:گوگل|اینترنت|وب|مرورگر|کروم|سافاری)\s+"
-                r"(?:دنبال\s+)?(.+?)(?: رو| را)?\s+(?:بگرد|سرچ کن|جستجو کن|پیدا کن)$",
-                value,
+            web = r"(?:گوگل|اینترنت|وب|مرورگر|کروم|سافاری)"
+            verb = r"(?:بگرد|سرچ کن|سیرچ کن|سیچ کن|جستجو کن|پیدا کن|سرچ|سیرچ|جستجو)"
+            patterns = (
+                # «توی گوگل سرچ کن مدل موی پسرانه» / «برو گوگل سرچ کن X» / «گوگل رو باز کن و سرچ کن X»
+                r"^(?:لطفا )?(?:برو\s+)?(?:به\s+)?(?:تو|توی|در|با)?\s*" + web +
+                r"(?: رو| را)?(?:\s+باز کن)?(?:\s+و)?\s+(?:دنبال\s+)?" + verb + r"\s+(.+)$",
+                # «توی گوگل دنبال X بگرد»
+                r"^(?:لطفا )?(?:تو|توی|در|با)\s+" + web + r"\s+(?:دنبال\s+)?(.+?)(?: رو| را)?\s+" + verb + r"$",
+                # «X رو توی گوگل سرچ کن»
+                r"^(?:لطفا )?(.+?)(?: رو| را)?\s+(?:تو|توی|در|با)\s+" + web + r"\s+" + verb + r"$",
+                # «X رو گوگل کن»
+                r"^(?:لطفا )?(.+?)(?: رو| را)?\s+گوگل کن$",
+                # «سرچ کن X» when the browser is already in front
+                r"^(?:لطفا )?(?:سرچ|سیرچ|سیچ|جستجو)\s+کن\s+(.+)$",
             )
-            if not match:
-                match = re.search(
-                    r"^(?:لطفا )?(.+?)(?: رو| را)?\s+(?:تو|توی|در|با)\s+(?:گوگل|اینترنت|وب|مرورگر|کروم|سافاری)"
-                    r"\s+(?:بگرد|سرچ کن|جستجو کن|پیدا کن)$",
-                    value,
-                )
-            if not match:
-                match = re.search(r"^(?:لطفا )?(.+?)(?: رو| را)?\s+گوگل کن$", value)
+            match = None
+            for pattern in patterns:
+                match = re.search(pattern, value)
+                if match:
+                    break
             if not match:
                 return None
             query = self._strip_type_words(clean_slot(match.group(1)))
+            query = re.sub(r"^(?:دنبال|برای)\s+", "", query)
         if not query:
             return None
         app = "chrome" if re.search(r"(?<!\w)(?:chrome|کروم)(?!\w)", value) else (

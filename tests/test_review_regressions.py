@@ -173,5 +173,46 @@ class LanguageSwitchAndAnswerTests(unittest.TestCase):
         self.assertEqual("error", response.status)
         self.assertEqual([], self.service.actions.calls)
 
+class PersianWebSearchTests(unittest.TestCase):
+    """From the second manual test: Persian puts the query after the verb."""
+
+    def setUp(self):
+        self.parser = CommandParser()
+
+    def test_query_after_the_verb(self):
+        for text in ("توی گوگل سرچ کن مدل موی پسرانه", "برو گوگل سرچ کن مدل موی پسرانه", "توی کروم سیچ کن مدل موی پسرانه"):
+            command = self.parser.parse(text)
+            self.assertEqual(("web_search", "مدل موی پسرانه"), (command.intent, command.slots.get("query")), text)
+        self.assertEqual("chrome", self.parser.parse("توی کروم سرچ کن هوا").slots.get("app"))
+
+    def test_google_as_a_verb(self):
+        self.assertEqual(("web_search", "مدل موی پسرانه"),
+                         (lambda c: (c.intent, c.slots.get("query")))(self.parser.parse("مدل موی پسرانه رو گوگل کن")))
+
+    def test_open_browser_then_search_is_a_sequence(self):
+        command = self.parser.parse("کروم رو باز کن و سیرچ کن مدل موی پسرونه")
+        self.assertEqual(["open_app", "web_search"], [s.intent for s in command.steps])
+        self.assertEqual("مدل موی پسرونه", command.steps[1].slots.get("query"))
+
+    def test_colloquial_numbers_and_docx_in_filenames(self):
+        from guya.assistant.normalizer import normalize_spoken_filename, filename_match_score
+        self.assertEqual("ازمون 6 docx", normalize_spoken_filename("آزمون شیش دکس").replace("آ", "ا"))
+        self.assertGreaterEqual(filename_match_score("شیش", "آزمون شیش.docx")[0], 0.58)
+
+    def test_a_spoken_number_alone_is_a_real_query(self):
+        temp = tempfile.TemporaryDirectory()
+        root = Path(temp.name).resolve()
+        (root / "آزمون پنج.docx").touch()
+        service = AssistantService(roots=[root], default_directory=root, platform="darwin")
+        service.actions = FakeDesktopActions(roots=[root], default_directory=root)
+        response = service.handle("فایل ورد پنج رو پیدا کن")
+        self.assertIn(response.status, ("success", "needs_selection"))
+        temp.cleanup()
+
+    def test_youtube_on_chrome_is_a_website(self):
+        command = self.parser.parse("Open YouTube on Chrome")
+        self.assertEqual(("open_website", {"target": "youtube", "app": "chrome"}), (command.intent, command.slots))
+
+
 if __name__ == "__main__":
     unittest.main()

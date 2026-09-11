@@ -1,9 +1,9 @@
 {
  "tag": "before",
- "n": 211,
+ "n": 221,
  "summary": {
   "lang:en": {
-   "n": 118,
+   "n": 120,
    "intent": 79,
    "full": 76
   },
@@ -13,9 +13,9 @@
    "full": 8
   },
   "all:all": {
-   "n": 211,
-   "intent": 150,
-   "full": 143
+   "n": 221,
+   "intent": 153,
+   "full": 146
   },
   "intent:create_folder": {
    "n": 7,
@@ -43,9 +43,9 @@
    "full": 8
   },
   "intent:search": {
-   "n": 13,
-   "intent": 9,
-   "full": 8
+   "n": 15,
+   "intent": 11,
+   "full": 10
   },
   "intent:rename": {
    "n": 12,
@@ -73,7 +73,7 @@
    "full": 25
   },
   "intent:open_website": {
-   "n": 9,
+   "n": 10,
    "intent": 7,
    "full": 7
   },
@@ -83,12 +83,12 @@
    "full": 14
   },
   "intent:sequence": {
-   "n": 8,
-   "intent": 8,
-   "full": 8
+   "n": 9,
+   "intent": 9,
+   "full": 9
   },
   "intent:web_search": {
-   "n": 1,
+   "n": 6,
    "intent": 1,
    "full": 1
   },
@@ -98,9 +98,14 @@
    "full": 3
   },
   "lang:fa": {
-   "n": 93,
-   "intent": 71,
-   "full": 67
+   "n": 101,
+   "intent": 74,
+   "full": 70
+  },
+  "intent:set_language": {
+   "n": 1,
+   "intent": 0,
+   "full": 0
   }
  },
  "failures": [
@@ -1076,6 +1081,111 @@
    "got_steps": null,
    "kind": "intent",
    "note": "no delete intent — must stay unknown"
+  },
+  {
+   "lang": "fa",
+   "text": "توی گوگل سرچ کن مدل موی پسرانه",
+   "expected": "web_search",
+   "expected_slots": {
+    "query": "مدل موی پسرانه"
+   },
+   "expected_steps": null,
+   "got": "search",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": "real use: query after the verb"
+  },
+  {
+   "lang": "fa",
+   "text": "برو گوگل، سرچ کن، مدل موی پسرانه",
+   "expected": "web_search",
+   "expected_slots": {
+    "query": "مدل موی پسرانه"
+   },
+   "expected_steps": null,
+   "got": "search",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": "real use"
+  },
+  {
+   "lang": "fa",
+   "text": "توی کروم سیچ کن مدل موی پسرونه",
+   "expected": "web_search",
+   "expected_slots": {
+    "query": "مدل موی پسرونه",
+    "app": "chrome"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": "real use: Whisper wrote سیچ for سرچ"
+  },
+  {
+   "lang": "fa",
+   "text": "مدل موی پسرانه رو گوگل کن",
+   "expected": "web_search",
+   "expected_slots": {
+    "query": "مدل موی پسرانه"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": null
+  },
+  {
+   "lang": "fa",
+   "text": "برو بی انگلیسی",
+   "expected": "set_language",
+   "expected_slots": {
+    "language": "en"
+   },
+   "expected_steps": null,
+   "got": "unknown",
+   "got_slots": {},
+   "got_steps": null,
+   "kind": "intent",
+   "note": "real use: Whisper wrote بی for به"
+  },
+  {
+   "lang": "en",
+   "text": "Open YouTube on Chrome",
+   "expected": "open_website",
+   "expected_slots": {
+    "target": "youtube",
+    "app": "chrome"
+   },
+   "expected_steps": null,
+   "got": "open_app",
+   "got_slots": {
+    "app": "chrome"
+   },
+   "got_steps": null,
+   "kind": "intent",
+   "note": "real use"
+  },
+  {
+   "lang": "en",
+   "text": "Search for Spotify.com on Chrome",
+   "expected": "web_search",
+   "expected_slots": {
+    "query": "spotify com",
+    "app": "chrome"
+   },
+   "expected_steps": null,
+   "got": "search",
+   "got_slots": {
+    "query": "spotify com on chrome"
+   },
+   "got_steps": null,
+   "kind": "intent",
+   "note": "real use"
   }
  ]
 }

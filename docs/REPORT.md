@@ -14,7 +14,7 @@
 
 Guya is a desktop application for people who can speak but find sustained typing and repeated mouse and keyboard work difficult. It has two push-to-talk modes on two separate keys: dictation, which types what the user says into whatever application is in front, and a small assistant, which carries out a fixed set of safe desktop actions such as creating, finding, opening and renaming files, opening applications, saving and closing, and simple browser navigation. Both modes work in Persian and English, run entirely on the user's own computer with free software, and cost nothing to use. A setup wizard measures the computer's speed and recommends a speech model that will run at usable speed on that machine, with a free online model as the fallback for weak hardware.
 
-This report describes the design and implementation, and evaluates the system with reproducible measurements: word error rate of six Whisper model tiers on a fixed Persian and English test set, an ablation of Guya's own decoding settings, a held-out test of the command parser, and the assistant's real-use log. The main findings are that Persian needs a model at least the size of `large-v3-turbo` to be usable while English is already good with `small`; that several of the hand-tuned decoding settings inherited from earlier prototypes actually reduced accuracy and were measured, explained and corrected; that the rule-based parser generalises well to unseen phrasings once filler words are handled (71% → 100% on a held-out set); and that almost all of the latency the user feels is the speech model itself, not the assistant.
+This report describes the design and implementation, and evaluates the system with reproducible measurements: word error rate of six Whisper model tiers on a fixed Persian and English test set, an ablation of Guya's own decoding settings, a held-out test of the command parser, and the assistant's real-use log. The main findings are that Persian needs a model at least the size of `large-v3-turbo` to be usable while English is already good with `small`; that several of the hand-tuned decoding settings inherited from earlier prototypes actually reduced accuracy and were measured, explained and corrected; that the rule-based parser generalises well to unseen phrasings once filler words are handled (69% → 100% on a held-out set); and that almost all of the latency the user feels is the speech model itself, not the assistant.
 
 چکیده: گویا یک برنامهٔ رومیزی برای افرادی است که می‌توانند صحبت کنند اما تایپ طولانی و کار مکرر با موس و کیبورد برایشان دشوار است. با نگه‌داشتن یک کلید، گفتار به متن تبدیل و در برنامهٔ فعال نوشته می‌شود؛ با کلید دوم، یک دستیار محدود کارهای ساده و امنی مانند ساختن، پیدا کردن، باز کردن و تغییر نام فایل‌ها، باز کردن برنامه‌ها، ذخیره و بستن، و پیمایش ساده در مرورگر را انجام می‌دهد. هر دو حالت به فارسی و انگلیسی و به‌طور کامل روی رایانهٔ کاربر و بدون هزینه اجرا می‌شوند. این گزارش طراحی و پیاده‌سازی سیستم را شرح می‌دهد و آن را با اندازه‌گیری‌های قابل تکرار ارزیابی می‌کند: نرخ خطای واژه برای شش اندازهٔ مدل Whisper روی یک مجموعهٔ آزمون ثابت فارسی و انگلیسی، بررسی تک‌تک تنظیمات رمزگشایی گویا، آزمون تعمیم‌پذیری تحلیل‌گر فرمان‌ها روی جمله‌های دیده‌نشده، و گزارش استفادهٔ واقعی از دستیار.
 
@@ -44,7 +44,7 @@ What this report adds beyond the running software is evidence. Specifically:
 
 1. A reproducible accuracy and speed measurement of six Whisper model tiers on Persian and English read speech, on consumer hardware, which is the data behind the wizard's model recommendation (Section 6.2).
 2. An ablation showing what each of Guya's own decoding settings does to accuracy, which corrected several settings that had been carried over from earlier prototypes on faith (Section 6.3).
-3. A held-out test set of 257 natural Persian and English command phrasings and an evaluator for the parser, which turned a 71% intent accuracy into 100% and fixed nine of thirteen real misunderstandings found in the usage log (Section 6.5).
+3. A held-out test set of 267 natural Persian and English command phrasings and an evaluator for the parser, which turned a 69% intent accuracy into 100% and fixed nine of thirteen real misunderstandings found in the usage log (Section 6.5).
 4. A structured per-command log record that makes daily use of the assistant an evaluation dataset (Section 6.6).
 
 ### 1.4 Scope of this report
@@ -225,7 +225,7 @@ Python 3.11, PyQt6 for the interfaces, faster-whisper 1.2.1 on CTranslate2 4.8.1
 | `guya/assistant/normalizer.py` | ~280 | text and spoken-filename normalisation |
 | `guya/benchmark.py`, `profiler.py` | ~450 | device profile, benchmark, recommendation |
 | `eval/` | ~900 | accuracy, ablation, intent and log evaluators |
-| `tests/` | 117 tests | parser, normaliser, service, actions, platform, scorer, regressions |
+| `tests/` | 134 tests | parser, normaliser, service, actions, platform, scorer, regressions |
 
 The tests need no microphone, no model and no network, and run in a quarter of a second. Several of them assert the *absence* of side effects: that nothing was opened before "yes", that nothing was renamed on "no", that a delete request touched nothing.
 
@@ -257,7 +257,7 @@ Every number in this chapter is produced by a script in `eval/` from data in the
 
 **Speech.** Google FLEURS is read speech from Wikipedia sentences, recorded by native speakers, with human transcripts, and it is the only Persian speech corpus that can be downloaded without an account, so anyone marking this report can re-run the evaluation. `eval/import_fleurs.py` samples 60 Persian and 60 English clips from the development split, one clip per sentence, with a fixed seed: 14.8 minutes of Persian (1,355 words) and 9.4 minutes of English (1,211 words). Persian sentences are long (median 21 words, 14 seconds), formal, and full of numbers and proper names; this is harder than the short colloquial commands Guya is built for, and the absolute Persian error rates should be read with that in mind. Ten clean English sentences from the macOS speech synthesiser were also kept as a smoke test; they are too easy to rank models and are not used below.
 
-**Commands.** `eval/data/intents.jsonl` holds 257 Persian and English command phrasings written to be natural rather than to match the parser, each labelled with the intended action and arguments. The evaluator computes which of them coincide with a phrase in the parser's own example lists (46, after the yes/no vocabulary was widened) and reports those separately, so the headline number is on 211 phrasings the parser had never seen.
+**Commands.** `eval/data/intents.jsonl` holds 267 Persian and English command phrasings written to be natural rather than to match the parser (the last ten are taken verbatim from the first manual test sessions), each labelled with the intended action and arguments. The evaluator computes which of them coincide with a phrase in the parser's own example lists (46, after the yes/no vocabulary was widened) and reports those separately, so the headline number is on 221 phrasings the parser had never seen.
 
 **Real use.** Every assistant command Guya has handled writes one JSON record to the log. At the time of the audit the log held 41 commands from four sessions of my own use in July and August.
 
@@ -342,8 +342,8 @@ The guesses were too pessimistic by a factor of two to three, and the benchmark 
 
 | Parser | phrasings | intent correct | intent and arguments | English | Persian | browser movement |
 |---|---:|---:|---:|---:|---:|---:|
-| before this work | 211 | 71.1% | 67.8% | 66.9% | 76.3% | 42.3% |
-| after | 211 | 100.0% | 100.0% | 100.0% | 100.0% | 100.0% |
+| before this work | 221 | 69.2% | 66.1% | 65.8% | 73.3% | 42.3% |
+| after | 221 | 100.0% | 100.0% | 100.0% | 100.0% | 100.0% |
 
 *Table 5. Held-out phrasings, `eval/intent_accuracy.py`. The 46 phrasings that coincide with the parser's own examples are excluded from both rows.*
 
@@ -416,7 +416,7 @@ What remains is the part that needs other people: the session with the target us
 ## Appendix A. Reproducing the results
 
 ```bash
-./install.sh && ./venv/bin/python -m unittest discover -s tests -t .      # 117 tests
+./install.sh && ./venv/bin/python -m unittest discover -s tests -t .      # 134 tests
 python eval/import_fleurs.py                                              # data (once)
 python eval/accuracy.py --manifest eval/data/fleurs/manifest.jsonl \
     --models tiny,base,small,medium,large-v3-turbo,large-v3 --pipeline raw --out eval/results/fleurs_raw

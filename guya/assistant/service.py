@@ -108,6 +108,13 @@ class AssistantService:
         intent = command.intent
         if intent == "set_language":
             target = command.slots.get("language")
+            if target not in ("fa", "en", "dual"):
+                return self._response(
+                    "error", language,
+                    "Which language: Persian, English, or dual?",
+                    "کدام زبان: فارسی، انگلیسی یا دو زبانه؟",
+                    command,
+                )
             names_en = {"fa": "Persian", "en": "English", "dual": "Persian and English"}
             names_fa = {"fa": "فارسی", "en": "انگلیسی", "dual": "فارسی و انگلیسی"}
             # Reply in the language being switched TO, since that is what the

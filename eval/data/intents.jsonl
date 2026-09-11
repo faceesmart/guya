@@ -255,3 +255,13 @@
 {"lang": "fa", "text": "ساعت چنده", "intent": "unknown"}
 {"lang": "fa", "text": "کامپیوتر رو خاموش کن", "intent": "unknown"}
 {"lang": "fa", "text": "یه آهنگ پخش کن", "intent": "unknown"}
+{"lang": "fa", "text": "توی گوگل سرچ کن مدل موی پسرانه", "intent": "web_search", "slots": {"query": "مدل موی پسرانه"}, "note": "real use: query after the verb"}
+{"lang": "fa", "text": "برو گوگل، سرچ کن، مدل موی پسرانه", "intent": "web_search", "slots": {"query": "مدل موی پسرانه"}, "note": "real use"}
+{"lang": "fa", "text": "توی کروم سیچ کن مدل موی پسرونه", "intent": "web_search", "slots": {"query": "مدل موی پسرونه", "app": "chrome"}, "note": "real use: Whisper wrote سیچ for سرچ"}
+{"lang": "fa", "text": "مدل موی پسرانه رو گوگل کن", "intent": "web_search", "slots": {"query": "مدل موی پسرانه"}}
+{"lang": "fa", "text": "کروم رو باز کن و سرچ کن مدل موی پسرونه", "intent": "sequence", "steps": ["open_app", "web_search"], "note": "real use"}
+{"lang": "fa", "text": "فایل ورد شیش رو پیدا کن", "intent": "search", "slots": {"query": ["شیش", "6"]}, "note": "real use: colloquial six"}
+{"lang": "fa", "text": "فایل دکس شیش رو پیدا کن", "intent": "search", "slots": {"query": ["دکس شیش", "6 docx", "شیش docx"]}, "note": "real use: دکس = docx"}
+{"lang": "fa", "text": "برو بی انگلیسی", "intent": "set_language", "slots": {"language": "en"}, "note": "real use: Whisper wrote بی for به"}
+{"lang": "en", "text": "Open YouTube on Chrome", "intent": "open_website", "slots": {"target": "youtube", "app": "chrome"}, "note": "real use"}
+{"lang": "en", "text": "Search for Spotify.com on Chrome", "intent": "web_search", "slots": {"query": "spotify com", "app": "chrome"}, "note": "real use"}
