@@ -131,9 +131,6 @@ class ServiceRegressionTests(unittest.TestCase):
         self.assertEqual(("open_app", "word"), self.service.actions.calls[-1])
 
 
-if __name__ == "__main__":
-    unittest.main()
-
 
 class LanguageSwitchAndAnswerTests(unittest.TestCase):
     """From the first manual test: short Persian words were misheard («بازش کن» →
@@ -175,3 +172,6 @@ class LanguageSwitchAndAnswerTests(unittest.TestCase):
         response = self.service.handle("بیلی")
         self.assertEqual("error", response.status)
         self.assertEqual([], self.service.actions.calls)
+
+if __name__ == "__main__":
+    unittest.main()
