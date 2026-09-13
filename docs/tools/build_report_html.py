@@ -6,6 +6,7 @@ embedded, mermaid diagrams left as <pre class="mermaid"> blocks.
     pip install markdown            # the only dependency
     python docs/tools/build_report_html.py docs/REPORT.md out/guya-report.html
     python docs/tools/build_report_html.py docs/REPORT-FA.md out/guya-report-fa.html --rtl
+    # add --title "Name" to set the browser-tab name; the H1 is used otherwise
 """
 
 import base64
@@ -62,6 +63,7 @@ body.rtl th,body.rtl td{text-align:right}
 th{font-family:var(--f-head);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);background:var(--card2);white-space:nowrap}
 td{font-variant-numeric:tabular-nums} tbody tr:last-child td{border-bottom:0}
 td[align=right],th[align=right]{text-align:right}
+body.rtl ol.refs{padding-left:1.3em;padding-right:0;text-align:left;font-family:var(--f-body);font-size:15px;line-height:1.6}
 p.cap{font-family:var(--f-head);font-size:13px;color:var(--dim);margin:6px 0 26px}
 figure{margin:0 0 22px;background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:10px}
 figure img{display:block;max-width:100%;height:auto;margin:0 auto;border-radius:4px}
@@ -90,16 +92,25 @@ def build(md_path, out_path, rtl=False, title=None):
         return f'<figure><img src="data:image/png;base64,{data}" alt="{alt}"><figcaption>{alt}</figcaption></figure>'
 
     src = re.sub(r"!\[([^\]]*)\]\(([^)]+)\)", embed, src)
+    toc = {"toc_depth": "2-3"}
+    try:                                   # readable anchors for Persian headings
+        from markdown.extensions.toc import slugify_unicode
+        toc["slugify"] = slugify_unicode
+    except ImportError:
+        pass
     body = markdown.markdown(src, extensions=["tables", "fenced_code", "toc"],
-                             extension_configs={"toc": {"toc_depth": "2-3"}})
+                             extension_configs={"toc": toc})
     body = re.sub(r'<pre><code class="language-mermaid">(.*?)</code></pre>',
                   lambda m: '<pre class="mermaid">' + m.group(1) + '</pre>', body, flags=re.S)
     body = body.replace("<table>", '<div class="tw"><table>').replace("</table>", "</table></div>")
     body = re.sub(r'</div>\s*<p><em>((?:Table|جدول) [^<]*?)</em></p>', r'</div><p class="cap">\1</p>', body, flags=re.S)
+    # the reference list is English in both versions and stays left-to-right
+    body = re.sub(r'(<h2 id="[^"]*">مراجع</h2>\s*)<ol>', r'\1<ol class="refs" dir="ltr" lang="en">', body)
     body = body.replace("<p>چکیده:", '<p class="fa" dir="rtl" lang="fa">چکیده:')
     body = body.replace("<p>Abstract:", '<p class="en" dir="ltr" lang="en">Abstract:')
     # the markdown Contents section is replaced by the rail
     body = re.sub(r'<h2 id="[^"]*">(?:Contents|فهرست)</h2>.*?(?=<hr\s*/?>)', '', body, flags=re.S)
+    body = re.sub(r"<hr\s*/?>\s*(?=<h2)", "", body)      # chapter headings draw their own rule
     items = [(m.group(1), re.sub(r"<[^>]+>", "", m.group(2))) for m in re.finditer(r'<h2 id="([^"]+)">(.*?)</h2>', body)]
     rail = "<ul>" + "".join(f'<li><a href="#{i}">{t}</a></li>' for i, t in items) + "</ul>"
     h1 = re.search(r"<h1[^>]*>(.*?)</h1>", body, re.S)
@@ -114,7 +125,11 @@ def build(md_path, out_path, rtl=False, title=None):
 
 
 if __name__ == "__main__":
-    args = [a for a in sys.argv[1:] if not a.startswith("--")]
-    rtl = "--rtl" in sys.argv
-    size, n = build(args[0], args[1], rtl=rtl)
+    argv = sys.argv[1:]
+    title = None
+    if "--title" in argv:                      # short page name; the H1 is used otherwise
+        i = argv.index("--title"); title = argv[i + 1]; del argv[i:i + 2]
+    args = [a for a in argv if not a.startswith("--")]
+    rtl = "--rtl" in argv
+    size, n = build(args[0], args[1], rtl=rtl, title=title)
     print(f"wrote {args[1]}: {size} bytes, {n} chapters")

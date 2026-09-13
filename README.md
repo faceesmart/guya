@@ -15,7 +15,7 @@ double-click every day. Weak computers can use a free online model instead.
 
 > Final-year Computer Engineering project, University of Tehran (Farabi Campus).
 > Built on [faster-whisper](https://github.com/SYSTRAN/faster-whisper) (OpenAI Whisper).
-> Full report: [`docs/REPORT.md`](docs/REPORT.md). Proposal: [`docs/PROPOSAL.md`](docs/PROPOSAL.md).
+> Full report: [`docs/REPORT.md`](docs/REPORT.md) (English) · [`docs/REPORT-FA.md`](docs/REPORT-FA.md) (فارسی). Proposal: [`docs/PROPOSAL.md`](docs/PROPOSAL.md).
 
 ![Control panel](docs/img/panel-controls.png)
 
@@ -105,7 +105,7 @@ Guya.app → control panel → dictation widget (hotkeys, microphone, Whisper, a
 - **Config:** `~/.guya/config.json` — model, device, language, keys, allowed folders.
 - **Logs:** `~/.guya/logs/guya.log` — every assistant command is one JSON record.
 - **Models:** `~/.cache/huggingface` (downloaded once).
-- **Architecture, design decisions and results:** [`docs/REPORT.md`](docs/REPORT.md).
+- **Architecture, design decisions and results:** [`docs/REPORT.md`](docs/REPORT.md), in Persian [`docs/REPORT-FA.md`](docs/REPORT-FA.md).
 - **Scope and definition of done:** [`docs/V1_SCOPE_AND_ROADMAP.md`](docs/V1_SCOPE_AND_ROADMAP.md).
 - **Spoken test checklist:** [`docs/ASSISTANT_EVALUATION.md`](docs/ASSISTANT_EVALUATION.md).
 - **Evaluation scripts and how to reproduce every number:** [`eval/README.md`](eval/README.md).
