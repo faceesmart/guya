@@ -130,10 +130,10 @@ in the repository:
 1. Speech accuracy and speed of six Whisper model sizes measured on a fixed
    Persian and English test set (Google FLEURS, 60 + 60 clips), plus an
    ablation of Guya's own decoding settings — `eval/results/`.
-2. A held-out test of the command parser on 219 unseen Persian and English
-   phrasings, before and after fixes (68.5% → 99.5% intent accuracy).
+2. A held-out test of the command parser on 221 unseen Persian and English
+   phrasings, before and after fixes (69.2% → 100% intent accuracy).
 3. The assistant's real-use log turned into task-outcome and latency tables.
-4. 104 automated tests.
+4. 136 automated tests.
 5. The final report, `docs/REPORT.md`.
 
 Remaining:

@@ -65,6 +65,7 @@ td{font-variant-numeric:tabular-nums} tbody tr:last-child td{border-bottom:0}
 td[align=right],th[align=right]{text-align:right}
 body.rtl ol.refs{padding-left:1.3em;padding-right:0;text-align:left;font-family:var(--f-body);font-size:15px;line-height:1.6}
 p.cap{font-family:var(--f-head);font-size:13px;color:var(--dim);margin:6px 0 26px}
+figure+p.cap,pre.mermaid+p.cap{margin-top:-12px;text-align:center}
 figure{margin:0 0 22px;background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:10px}
 figure img{display:block;max-width:100%;height:auto;margin:0 auto;border-radius:4px}
 figcaption{font-family:var(--f-head);font-size:12.5px;color:var(--dim);text-align:center;margin-top:8px}
@@ -103,7 +104,9 @@ def build(md_path, out_path, rtl=False, title=None):
     body = re.sub(r'<pre><code class="language-mermaid">(.*?)</code></pre>',
                   lambda m: '<pre class="mermaid">' + m.group(1) + '</pre>', body, flags=re.S)
     body = body.replace("<table>", '<div class="tw"><table>').replace("</table>", "</table></div>")
-    body = re.sub(r'</div>\s*<p><em>((?:Table|جدول) [^<]*?)</em></p>', r'</div><p class="cap">\1</p>', body, flags=re.S)
+    # captions may contain inline code, so match up to the closing tags rather than the next '<'
+    body = re.sub(r'</div>\s*<p><em>((?:Table|جدول) .*?)</em></p>', r'</div><p class="cap">\1</p>', body, flags=re.S)
+    body = re.sub(r'<p><em>((?:Figure|شکل) .*?)</em></p>', r'<p class="cap">\1</p>', body, flags=re.S)
     # the reference list is English in both versions and stays left-to-right
     body = re.sub(r'(<h2 id="[^"]*">مراجع</h2>\s*)<ol>', r'\1<ol class="refs" dir="ltr" lang="en">', body)
     body = body.replace("<p>چکیده:", '<p class="fa" dir="rtl" lang="fa">چکیده:')

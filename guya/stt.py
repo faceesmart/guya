@@ -410,7 +410,18 @@ ASSISTANT_PROMPT = {
         "Persian, English, dual, again, report, test."
     ),
 }
-ASSISTANT_PROMPT["dual"] = ASSISTANT_PROMPT["fa"] + " " + ASSISTANT_PROMPT["en"]
+# Dual mode cannot simply join the two lists: fa + en is 247 tokens and
+# faster-whisper keeps only the last 223, so the first Persian items (yes, no,
+# cancel, the ordinals) were silently dropped. This shorter union measures
+# 194 tokens with the large-v3 tokenizer; re-measure before adding words.
+ASSISTANT_PROMPT["dual"] = (
+    "بله، نه، لغو، اول، دوم، سوم، بازش کن، باز کن، ببند، ذخیره کن، پیدا کن، بساز، "
+    "فایل، پوشه، ورد، اسمش رو بذار، برو پایین، برگرد، اول صفحه، سایت، کروم، "
+    "ماشین حساب، فارسی، انگلیسی، دو زبانه، گزارش. "
+    "Yes, no, cancel, first, second, third, open it, open, close, save, find, "
+    "create, file, folder, Word, rename it to, scroll down, go back, "
+    "top of the page, website, Chrome, calculator, Persian, English, dual, report."
+)
 # While a result list or a yes/no question is on screen, the answer is one of
 # a handful of words; priming with only those words makes «اول» far more
 # likely than «عوال».

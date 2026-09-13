@@ -26,7 +26,7 @@ double-click every day. Weak computers can use a free online model instead.
 | Dictation (fa / en / both), offline, online and dual modes | done |
 | Assistant: create, find, open, rename (with confirmation), save, close, websites, web search, browser navigation | done |
 | Setup wizard with device benchmark, control panel, help, logs | done |
-| Automated tests | 134, all passing, no microphone or model needed |
+| Automated tests | 136, all passing, no microphone or model needed |
 | Speech accuracy and speed measurements (Persian + English, six model sizes) | done, see [`eval/results/`](eval/results/) |
 | Held-out command-parser evaluation | done, 100% intent accuracy on 221 unseen phrasings (69% before this work) |
 | macOS | tested daily |
@@ -125,7 +125,7 @@ guya/
 │   ├── platform_macos.py    # hotkeys, paste, permissions (macOS)
 │   └── assistant/           # bilingual parser, context, safe actions (macOS / Windows)
 ├── eval/                    # accuracy, ablation, intent and log evaluators + results
-├── tests/                   # 134 unit tests
+├── tests/                   # 136 unit tests
 └── docs/                    # report, proposal, scope, checklists, screenshots
 ```
 

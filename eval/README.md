@@ -20,7 +20,7 @@ service; the optional `--cloud` flag is the only thing that leaves the machine.
 - `import_fleurs.py` — downloads Google FLEURS (CC-BY-4.0) and samples a fixed Persian + English set.
 - `record.py` — record your own test set with the microphone (the target user's voice is the most relevant data).
 - `make_say_samples.py` — ten clean English TTS clips; a smoke test of the pipeline only.
-- `intent_accuracy.py` + `data/intents.jsonl` — held-out command phrasings (257 rows, 38 of which coincide with the phrase packs and are reported separately).
+- `intent_accuracy.py` + `data/intents.jsonl` — held-out command phrasings (267 rows, 46 of which coincide with the phrase packs and are reported separately).
 - `assistant_report.py` — turns the `Assistant evaluation: {...}` lines in `~/.guya/logs/guya.log` into tables.
 - `results/` — every table the report cites. `*.json` files hold the per-clip references and hypotheses.
 
