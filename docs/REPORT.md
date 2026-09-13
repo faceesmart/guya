@@ -14,9 +14,9 @@
 
 1. Introduction: problem, motivation, objectives, approach, deliverables, contributions
 2. Background and related work: Whisper, faster-whisper, metrics, Persian, VAD, command understanding, accessibility, existing tools, Persian ASR research
-3. Requirements analysis: users, use cases, functional, non-functional and safety requirements, constraints, scope
+3. Requirements analysis: users, use cases, a walkthrough of everyday use, functional, non-functional and safety requirements, constraints, scope
 4. System design: architecture, processes, dictation path, speech pipeline, command understanding, model choice, safety model, feedback, platform abstraction, configuration, logging
-5. Implementation: technology, code organisation, threads, speech module, filenames, parser, service, actions, widget, wizard, control panel, installer, tests, history
+5. Implementation: technology, code organisation, threads, speech module, filenames, parser, service, actions, widget, wizard, control panel, installer, tests, history, course concepts
 6. User guide
 7. Evaluation: data, model size, pipeline ablation, benchmark calibration, parser generalisation, real use, review, manual sessions, limits, objectives
 8. Discussion
@@ -26,7 +26,7 @@ Appendix A. Reproducing the results · B. The command set · C. Configuration ·
 
 **Figures.** 4.1 Layered architecture · 4.2 The three processes · 4.3 Dictation sequence · 4.4 The transcription pipeline · 4.5 The assistant path · 4.6 Pending-question states · 4.7 Pill states and tones · 5.1 Settings tab · 5.2 Help tab · 6.1 Wizard welcome · 6.2 Wizard language choice · 6.3 Control panel
 
-**Tables.** 1.1 Objectives · 1.2 Deliverables · 2.1 Whisper model sizes · 2.2 Existing tools · 3.1 Use cases · 3.2 Functional requirements · 3.3 Non-functional requirements · 3.4 Safety requirements · 4.1 Module responsibilities · 4.2 Response statuses · 4.3 Safety enforcement · 4.4 Pill states · 4.5 Platform interface · 4.6 Log record · 5.1 Dependencies · 5.2 Module sizes · 5.3 Threads and timers · 5.4 Decoding settings · 5.5 Filename match scale · 5.6 Parser rules · 5.7 Benchmark constants · 5.8 Test suite · 5.9 Development timeline · 6.1 Spoken commands · 7.1 Accuracy per model · 7.2 Ablation on small · 7.3 Ablation on large-v3-turbo · 7.4 Cost ratios · 7.5 Held-out intent accuracy · 7.6 Usage outcomes · 7.7 Review defects · 7.8 Manual sessions · 7.9 Objectives status · B.1 Command set · C.1 Configuration · F.1 Glossary
+**Tables.** 1.1 Objectives · 1.2 Deliverables · 2.1 Whisper model sizes · 2.2 Existing tools · 3.1 Use cases · 3.2 Functional requirements · 3.3 Non-functional requirements · 3.4 Safety requirements · 4.1 Module responsibilities · 4.2 Response statuses · 4.3 Safety enforcement · 4.4 Pill states · 4.5 Platform interface · 4.6 Log record · 5.1 Dependencies · 5.2 Module sizes · 5.3 Threads and timers · 5.4 Decoding settings · 5.5 Filename match scale · 5.6 Parser rules · 5.7 Benchmark constants · 5.8 Test suite · 5.9 Development timeline · 5.10 Curriculum concepts · 6.1 Spoken commands · 7.1 Accuracy per model · 7.2 Ablation on small · 7.3 Ablation on large-v3-turbo · 7.4 Cost ratios · 7.5 Held-out intent accuracy · 7.6 Usage outcomes · 7.7 Review defects · 7.8 Manual sessions · 7.9 Objectives status · B.1 Command set · C.1 Configuration · F.1 Glossary
 
 ---
 
@@ -238,7 +238,27 @@ Table 3.1 lists the use cases the system supports. Each was written before the c
 
 *Table 3.1. Use cases.*
 
-### 3.3 Functional requirements
+### 3.3 A walkthrough of everyday use
+
+The use cases above are easier to judge as one continuous day. What follows is the intended journey of the primary user after the helper has installed Guya; every screen text quoted is the one the software shows.
+
+**Morning.** He double-clicks Guya. The control panel opens, its power button turns teal, the status line reads "Guya is on", and a small grey circle appears at the top centre of the screen. He does not touch the panel again; it can be minimised. He opens Word, places the cursor, holds the Right Option key and starts a Persian sentence. The circle expands into a pill, turns red, and shows "● Dictation listening…" followed by the first words as they are recognised. When he releases the key the pill turns blue ("Processing…"), then green ("✓ Done"), and the sentence appears at the cursor with Persian spacing and colloquial forms as he spoke them. He continues sentence by sentence. Nothing has left the computer; the model is running on the laptop.
+
+**An English email.** He needs to reply in English. He says, on the assistant key, "switch to English"; the pill answers "Switched to English." in a spoken voice and the badge changes from FA to EN. He dictates the reply the same way, then says «برو فارسی» to switch back. Persian replies are not spoken, so this one appears on the pill and in the bubble beneath it.
+
+**A new document.** He holds the Right Command key and says «یه فایل ورد به اسم گزارش هفتگی بساز». The pill turns amber and the bubble shows «گزارش هفتگی.docx ساخته شد. الان بازش کنم؟ بگویید بله یا نه.» with two buttons, بله and نه. He says «بله» (or clicks) and the document opens in Word. Had he said nothing, the question would have expired after two minutes and the file would have stayed closed.
+
+**Finding a file from last week.** Later he says «فایل گزارش رو باز کن». There are two candidates, so the pill asks and a popup lists them: "1. گزارش هفتگی.docx in Documents" and "2. گزارش.docx in Desktop", with the hint «روی گزینه بزنید یا بگویید اول، دوم، سوم یا لغو». He says «دومی»; it opens. He decides the name is wrong and says «اسمش رو بذار گزارش قدیمی». The bubble asks «نام گزارش.docx به گزارش قدیمی.docx تغییر کند؟ بگویید بله یا نه.» Only after his «بله» is the file renamed, and if a file of that name had existed the assistant would have refused.
+
+**The browser.** He clicks inside Chrome and says "go to YouTube". The page opens in the current tab. He says "let's scroll down a bit", then "go back". Each command is answered on the pill ("Scrolled down.", "Went back one page."). If he had said "scroll down" while Word was in front, the reply would have been "Focus a supported browser, then try the command again."
+
+**When something goes wrong.** He clicks the pill by mistake and then dictates a sentence: the pill shows "Copied! Press ⌘V to paste", because Guya itself is now the application in front and the text has been left on the clipboard. He pastes it. Another time the pill says "Too short — hold the key while you speak", because he released the key before the first word. If he asked for something outside the list, "delete the old report", the bubble would explain that Guya never deletes or removes files.
+
+**Evening.** He closes Word and the browser as usual, then clicks the power button on the panel or closes the panel window. The pill disappears with it; no process is left holding the microphone.
+
+The walkthrough is the basis of the demonstration script in `docs/DEMO.md` and of the task list used in the user study (Appendix D).
+
+### 3.4 Functional requirements
 
 Table 3.2 lists the functional requirements as implemented in version 1. The last column names where each is verified: an automated test file, an evaluation section, or the manual test sessions of Section 7.8.
 
@@ -269,7 +289,7 @@ Table 3.2 lists the functional requirements as implemented in version 1. The las
 
 *Table 3.2. Functional requirements.*
 
-### 3.4 Non-functional requirements
+### 3.5 Non-functional requirements
 
 | ID | Requirement | How it is met |
 |---|---|---|
@@ -286,7 +306,7 @@ Table 3.2 lists the functional requirements as implemented in version 1. The las
 
 *Table 3.3. Non-functional requirements.*
 
-### 3.5 Safety requirements
+### 3.6 Safety requirements
 
 The safety requirements were fixed early and are enforced in code rather than by convention. Section 4.7 explains where each is implemented.
 
@@ -305,11 +325,11 @@ The safety requirements were fixed early and are enforced in code rather than by
 
 *Table 3.4. Safety requirements.*
 
-### 3.6 Constraints
+### 3.7 Constraints
 
 The project was carried out by one student in one term, alongside other courses, with no budget. Development and all measurements were done on one machine, an Apple M1 Pro laptop with 16 GB of memory and no CUDA GPU. The target Windows machine belongs to the user's family and was not available for testing during the term. Persian text-to-speech is not available on macOS at all, which constrains how Persian replies can be delivered (Section 4.9).
 
-### 3.7 Out of scope
+### 3.8 Out of scope
 
 The following were excluded from version 1 in the proposal and remain excluded: a general conversational assistant; arbitrary shell commands or unrestricted control of the computer; deleting or overwriting files or bypassing confirmation; reading or understanding arbitrary web pages, clicking results, or downloading; application-specific workflows such as Save As in every editor; wake-word listening; support for every accent, filename and application; and app-store distribution. These limits are deliberate. They keep the safety argument of Section 4.7 small enough to be read in full.
 
@@ -555,7 +575,7 @@ Two things about the earlier design were found wrong during the evaluation and f
 
 ### 4.7 The safety model
 
-The assistant's safety does not rest on the parser being right. Table 4.3 maps each safety requirement of Section 3.5 to the mechanism that enforces it and the module that implements it.
+The assistant's safety does not rest on the parser being right. Table 4.3 maps each safety requirement of Section 3.6 to the mechanism that enforces it and the module that implements it.
 
 | Requirement | Mechanism | Where |
 |---|---|---|
@@ -971,6 +991,28 @@ The project was developed in four phases between June and September 2026 (Table 
 *Table 5.9. Development timeline.*
 
 Three iterations changed the design rather than just fixing it. The first was the discovery, in June, that a Finder-launched application could not read a virtual environment on the Desktop, which produced the runtime copy and the bundle of Section 4.10. The second was the usage log of July and August, which showed that a good share of the failures were not misrecognition at all: six of 41 commands were refused because Guya itself was the frontmost application, and users moved on from unanswered questions instead of answering them. That led to the non-modal question design of Section 4.5 and the target fallback of Section 5.9. The third was the evaluation of September, which turned several beliefs into measurements and reversed two of them: the repetition penalty was hurting, and the benchmark was measuring the wrong thing. Chapter 7 gives the numbers.
+
+### 5.15 Course concepts applied
+
+Guya is an application project, but almost every part of it rests on material from the computer engineering curriculum. Table 5.10 lists the concepts that were actually used, with the section where each appears, so that the connection between the coursework and the code is explicit.
+
+| Course area | Concept | Where it is used in Guya |
+|---|---|---|
+| Operating systems | processes and child processes; inter-process communication; threads and a lock-protected buffer; lock files for mutual exclusion; the platform permission model | the panel–widget split and its file-based IPC with sequence numbers (4.2); the recorder thread and the Qt worker threads (5.3); `widget.lock` and `control-panel.lock`; the macOS privacy controls that forced the runtime copy (4.10) |
+| Computer architecture and performance | CPU-bound inference; 8-bit quantisation; using all cores; measuring with warm-up and best-of-n; real-time factor as a throughput measure | CTranslate2 int8 on the CPU (2.2); the benchmark's warm-up pass and best of two runs (5.10); the cost-ratio calibration (7.4) |
+| Algorithms and data structures | edit distance by dynamic programming; sequence similarity; ranking with tie-breaks; bounded tree traversal | WER and CER (2.3, `eval/wer.py`); the filename match scale and the fuzzy fallbacks built on `SequenceMatcher` (5.5, 5.6); result ranking with a recency bonus (5.7); the depth- and count-bounded search walk (5.8) |
+| Formal languages and automata | regular expressions as a grammar; tokenisation and normalisation; an ordered rule chain as a priority grammar; finite state machines | the parser's 18 rules and their slot extractors (5.6); the normaliser (5.5); the pending-question and pill state machines (4.5, 4.8) |
+| Artificial intelligence and machine learning | encoder–decoder transformers; language and task tokens; beam search and temperature sampling; prompts as prior context; a small neural voice activity detector; evaluation with a held-out set, ablation and corpus-level metrics | Whisper through faster-whisper (2.1); the decoding settings (5.4); the Silero VAD (2.5); the whole of chapter 7 |
+| Signal processing | sampling at 16 kHz, 16-bit mono PCM; RMS level and gain with clipping; the log-mel spectrogram front end | audio capture (5.3); loudness normalisation (5.4); Whisper's input (2.1) |
+| Software engineering | requirements with identifiers and traceability; layered architecture with one-way dependencies; fakes at the boundary and absence assertions; regression tests from real failures; configuration merging; logging designed for diagnosis; version control history | chapter 3; 4.1; 5.13; 4.10; 4.11; 5.14 |
+| Programming languages and systems programming | foreign-function calls into the Win32 API through `ctypes`; the Objective-C bridge for macOS APIs; writing a file format from its specification with the standard library | the Windows adapter (5.8); PyObjC and Quartz key events (5.8); the three-part DOCX package (5.8) |
+| Computer networks | HTTP multipart upload; timeouts and error classes; API keys and their protection | the online backend (5.4); the owner-only configuration file (4.10) |
+| Human–computer interaction | push-to-talk against wake words; feedback states that pair colour with text; target size; non-modal questions; the System Usability Scale | 2.7; 4.8; 4.5; Appendix D |
+| Security | allow-lists over free text; path containment with symbolic-link resolution; no shell execution; least privilege | the safety model (4.7) |
+
+*Table 5.10. Concepts from the curriculum and where they are applied.*
+
+Two of these deserve a comment. The evaluation methodology of chapter 7 (a fixed held-out set, one variable changed at a time, corpus-level metrics with the same normalisation on both sides) was the part of the coursework that changed the project most, because it reversed two decisions that had been taken on intuition. And the operating-systems material turned out to matter in a desktop application more than expected: the two hardest bugs of the term, the orphaned widget holding the microphone and the Finder-launched application denied its own environment, were process-model and permission problems, not speech problems.
 
 ---
 ## 6. User guide
@@ -1429,7 +1471,7 @@ Scoring follows Brooke: for odd items use (answer − 1), for even items (5 − 
 
 ## Appendix E. Project history
 
-**The proposal.** The first draft, written in June 2026 and kept in `docs/archive/`, described a dictation-only project with a four-week timeline. The proposal approved in July 2026 (`docs/PROPOSAL.md`) added the assistant and the five objectives of Table 1.1, and listed as excluded everything in Section 3.7. Its expected outputs were a runnable application with installers for macOS and Windows, both modes on separate keys, the wizard, control panel, widget, spoken feedback, help and logs, automated tests, structured user-evaluation results, documented limitations, this report, and a repeatable demonstration.
+**The proposal.** The first draft, written in June 2026 and kept in `docs/archive/`, described a dictation-only project with a four-week timeline. The proposal approved in July 2026 (`docs/PROPOSAL.md`) added the assistant and the five objectives of Table 1.1, and listed as excluded everything in Section 3.8. Its expected outputs were a runnable application with installers for macOS and Windows, both modes on separate keys, the wizard, control panel, widget, spoken feedback, help and logs, automated tests, structured user-evaluation results, documented limitations, this report, and a repeatable demonstration.
 
 **The commits.** The repository holds the following commits (hash, date, message), in order.
 
