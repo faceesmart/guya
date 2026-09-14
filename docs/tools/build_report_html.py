@@ -90,7 +90,8 @@ def build(md_path, out_path, rtl=False, title=None):
         if not os.path.exists(full):
             return m.group(0)
         data = base64.b64encode(open(full, "rb").read()).decode()
-        return f'<figure><img src="data:image/png;base64,{data}" alt="{alt}"><figcaption>{alt}</figcaption></figure>'
+        mime = "image/jpeg" if full.lower().endswith((".jpg", ".jpeg")) else "image/png"
+        return f'<figure><img src="data:{mime};base64,{data}" alt="{alt}"><figcaption>{alt}</figcaption></figure>'
 
     src = re.sub(r"!\[([^\]]*)\]\(([^)]+)\)", embed, src)
     toc = {"toc_depth": "2-3"}

@@ -24,7 +24,7 @@
 References
 Appendix A. Reproducing the results · B. The command set · C. Configuration · D. Evaluation instruments · E. Project history · F. Glossary
 
-**Figures.** 4.1 Layered architecture · 4.2 The three processes · 4.3 Dictation sequence · 4.4 The transcription pipeline · 4.5 The assistant path · 4.6 Pending-question states · 4.7 Pill states and tones · 5.1 Settings tab · 5.2 Help tab · 6.1 Wizard welcome · 6.2 Wizard language choice · 6.3 Control panel
+**Figures.** 4.1 Layered architecture · 4.2 The three processes · 4.3 Dictation sequence · 4.4 The transcription pipeline · 4.5 The assistant path · 4.6 Pending-question states · 4.7 Pill states and tones · 4.8 The pill on screen · 4.9 The reply bubble · 4.10 The results popup · 5.1 Settings tab · 5.2 Help tab · 5.3 The panel in dual mode · 6.1 Wizard welcome · 6.2 Wizard language choice · 6.3 Control panel
 
 **Tables.** 1.1 Objectives · 1.2 Deliverables · 2.1 Whisper model sizes · 2.2 Existing tools · 3.1 Use cases · 3.2 Functional requirements · 3.3 Non-functional requirements · 3.4 Safety requirements · 4.1 Module responsibilities · 4.2 Response statuses · 4.3 Safety enforcement · 4.4 Pill states · 4.5 Platform interface · 4.6 Log record · 5.1 Dependencies · 5.2 Module sizes · 5.3 Threads and timers · 5.4 Decoding settings · 5.5 Filename match scale · 5.6 Parser rules · 5.7 Benchmark constants · 5.8 Test suite · 5.9 Development timeline · 5.10 Curriculum concepts · 6.1 Spoken commands · 7.1 Accuracy per model · 7.2 Ablation on small · 7.3 Ablation on large-v3-turbo · 7.4 Cost ratios · 7.5 Held-out intent accuracy · 7.6 Usage outcomes · 7.7 Review defects · 7.8 Manual sessions · 7.9 Session outcomes · 7.10 Objectives status · B.1 Command set · C.1 Configuration · F.1 Glossary
 
@@ -658,9 +658,25 @@ stateDiagram-v2
 
 *Table 4.4. Pill states, tones and labels.*
 
+![The pill while listening on the assistant key](img/pill-assistant-listening.jpg)
+
+![The idle pill in dual mode with the OFFLINE badge](img/pill-idle-offline.jpg)
+
+![The idle pill in dual mode with the ONLINE badge](img/pill-idle-online.jpg)
+
+*Figure 4.8. The pill on screen: listening on the assistant key (red, pulsing dot), and idle in dual mode with the OFFLINE and ONLINE backend badges; the language badge shows EN.*
+
 Every state pairs its colour with a text label, and every label change is mirrored into the pill's accessible description so that a screen reader can read it. While idle the pill is collapsed to a 40-pixel circle at the top centre of the screen and it expands only while listening, processing or showing a reply, so that it takes almost nothing from the document and draws the eye only when something is happening; it stays on top of every window, never takes keyboard focus, and can be dragged aside if it covers something. A single reusable idle timer returns the pill to idle after a delay that depends on what was shown: 1.5 s for a plain "Done", 2.5 s for a notice, 4.5 s for an error notice on the dictation path, 3 s for a successful assistant reply and 6 s for any other assistant reply (question, refusal, error or cancellation). The timer is re-armed on every change, because an earlier design with one fire-and-forget timer per reply let an old timer wipe a new reply early.
 
 The pill's label holds about thirty characters and cannot wrap. Any reply longer than 28 characters, and any reply that is not a plain success, is therefore repeated in full in a **reply bubble** under the pill: a 420-pixel wrapped panel that follows the text direction (right-to-left for Persian), coloured by tone, with Yes and No buttons when a confirmation is pending. The buttons emit the literal words "yes" and "no" into the same path a spoken answer takes, so a click and a voice answer are handled by one piece of code. Search results that need a choice appear in a similar popup with up to three buttons and a Cancel. Neither window ever takes keyboard focus, so the user's document keeps it.
+
+![The reply bubble with a yes/no question](img/bubble-question.jpg)
+
+*Figure 4.9. The reply bubble after a file was created: the amber pill carries the short form of the question and the bubble repeats it in full with the Yes and No buttons.*
+
+![The results popup with three close matches](img/popup-choices.jpg)
+
+*Figure 4.10. The results popup for a spoken name with three close matches; each option shows the file name over its folder, and the pill shows the beginning of the spoken reply.*
 
 English replies are also spoken with the system voice. Persian replies are shown only. macOS ships 184 voices and none for Persian; the only Arabic-script voice reads Persian with an Arabic accent, and after a trial, the decision was to show Persian replies silently rather than have them read with an Arabic accent. Because Persian replies cannot be spoken, the on-screen text has to carry them in full. The audit found that a Persian confirmation question had been truncated to its first three words on the pill, so the user was confirming a question that was not readable; the reply bubble was added in response., and the user was answering "yes" to a question they could not read. Pressing either hotkey while an English reply is being spoken interrupts it; the dictation key does so because Guya's own voice was once recorded as part of a dictation.
 
@@ -971,6 +987,12 @@ The control panel is the window used day to day, 540 by 780 pixels, with a circu
 ![Help tab of the control panel](img/panel-help.png)
 
 *Figure 5.2. The bilingual Help tab.*
+
+![The Controls tab in dual mode](img/panel-control-dual.jpg)
+
+![The Settings tab in dual mode](img/panel-setting-dual.jpg)
+
+*Figure 5.3. The control panel in dual mode: the Controls tab with the live backend switch and the language locked while OFFLINE, and the Settings tab with the mode, model, online key and the two hotkeys.*
 
 ### 5.12 Installer, launcher and logging
 
