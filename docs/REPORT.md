@@ -1033,7 +1033,7 @@ The evaluation scripts double as tests of a different kind: the held-out intent 
 
 ### 5.14 Development history
 
-The project was developed between June and September 2026 in four phases: the dictation widget and wizard (June), the assistant (July to August), the evaluation sprint (5 September) and the manual test sessions and report (9 to 13 September); Table 5.9 gives the milestones. The repository has 56 commits at the time of writing, concentrated on nine working days, because most of the work was done in long sessions and committed when a milestone was reached.
+The project was developed between June and September 2026 in four phases: the dictation widget and wizard (June), the assistant (July to August), the evaluation sprint (5 September) and the manual test sessions and report (9 to 13 September); Table 5.9 gives the milestones. The repository has 56 commits at the time of writing; most of the work was done in long sessions and committed when a milestone was reached.
 
 | Period | Milestone | Commits |
 |---|---|---|
@@ -1285,7 +1285,7 @@ Latency is almost entirely the speech model. The median utterance was 1.9 s; med
 
 ### 7.7 Review of the September changes
 
-The parser and widget changes of 5 September were reviewed line by line the same day, with every suspected defect reproduced before it was counted. The review confirmed more than twenty defects in that day's work; Table 7.7 groups them by kind.
+The parser and widget changes of 5 September were reviewed line by line the same day, with every suspected defect reproduced before it was counted. The review found defects in six groups; Table 7.7 lists them by kind.
 
 | Group | Examples |
 |---|---|
@@ -1373,7 +1373,7 @@ The third bet, that the tool could be installed and used by a family without hel
 
 The most instructive result of the project is Table 7.2. Every setting in the speech pipeline had a reason, and each had been added after a real problem in daily use. Together they made the small model markedly worse, and one of them, the repetition penalty, was silently truncating sentences. None of this was visible in use, because the shipped model happens to be insensitive to it and because a truncated dictation looks like a mumbled ending. It only became visible when the exact production code was run on a fixed test set with each setting switched off in turn. The settings were not wrong in intent. But none of their effects had been measured, and the ablation harness that makes such a measurement cheap has proved more valuable than any single setting.
 
-The same applies to the parser work. After the changes had reached 100% on the held-out set, the review of Section 7.7 found more than twenty defects in the same day's work, including phrasings that had worked before the changes and no longer did. Every one of them was reproduced and pinned by a test before the numbers were regenerated. The held-out set and the review found different things, which is the reason both are kept.
+The same applies to the parser work. After the changes had reached 100% on the held-out set, the review of Section 7.7 found further defects in the same day's work, including phrasings that had worked before the changes and no longer did. Every one of them was reproduced and pinned by a test before the numbers were regenerated. The held-out set and the review found different things, which is the reason both are kept.
 
 ### 8.3 The Persian voice
 
