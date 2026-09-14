@@ -1,0 +1,22 @@
+{
+  "session": "target user, September 2026",
+  "machine": "ASUS ROG G513RM laptop: AMD Ryzen 7 6800H, 16 GB RAM, NVIDIA GeForce RTX 3060; Windows",
+  "model": "large-v3-turbo (recommended by the wizard, as on the development Mac)",
+  "protocol": "docs/USER_STUDY.md (twelve tasks, SUS in Persian, three open questions)",
+  "observer": "the author; outcomes recorded by hand, no timings, no audio recorded",
+  "tasks": {
+    "1": "done", "2": "done", "3": "done", "4": "done", "5": "done", "6": "done",
+    "7": "done in two steps; the confirmation exchange felt a little complicated",
+    "8": "done", "9": "done",
+    "10": "done after one command was repeated once",
+    "11": "done", "12": "done"
+  },
+  "sus_answers": [4, 1, 5, 2, 4, 1, 4, 1, 3, 2],
+  "sus_score": 82.5,
+  "open_questions": {
+    "helped_most": "اینکه خیلی سریع‌تر می‌تونم متن‌های یک‌مقدار بلندی که دارم رو بنویسم و کارهام سریع‌تر جلو می‌ره، و استفاده ازش هم آسون بود و بدون کمک به بقیه می‌تونستم متن‌هام رو بنویسم، و اینکه توی هر برنامه‌ای هم کار می‌کرد خیلی خوب بود. اگر لازم نبود خودم روی جایی که می‌خوام متن بنویسم کلیک نکنم و خودش می‌فهمید بهتر هم می‌شد.",
+    "most_annoying": "اینکه توی ساخت فایل و کارهایی که دستیار برام می‌کرد وقتی اشتباه داشتم به فارسی برام نمی‌خوند که مشکل چیه و متنی که نوشته بود هم زود می‌رفت و برای منی که نمی‌تونم خیلی سریع بخونم سخت بود ببینم مشکل چیه، و توی دیکته هم بعضی موارد وقتی خیلی صحبت می‌کردم طول می‌کشید تا تایپ کنه برام و توی حالت آفلاین به لپ‌تاپ فشار می‌اومد یکم.",
+    "one_change": "دوست داشتم بتونم ازش روی گوشی هم استفاده کنم."
+  },
+  "note": "spelling of the answers normalised; wording unchanged"
+}

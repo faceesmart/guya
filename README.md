@@ -30,8 +30,9 @@ double-click every day. Weak computers can use a free online model instead.
 | Speech accuracy and speed measurements (Persian + English, six model sizes) | done, see [`eval/results/`](eval/results/) |
 | Held-out command-parser evaluation | done, 100% intent accuracy on 221 unseen phrasings (69% before this work) |
 | macOS | tested daily |
-| Windows | code present, **not yet validated on a Windows machine** |
-| User study with the target user, demo video | remaining |
+| Windows | tested on the family's laptop (ASUS ROG G513RM, Ryzen 7 6800H, RTX 3060): installer, wizard, dictation and assistant work as on macOS |
+| User study with the target user | done: 12 of 12 tasks completed, SUS 82.5 (`docs/REPORT.md` §7.9, `eval/results/user_study/`) |
+| Demo video | remaining |
 
 ## Install (easiest — no typing)
 

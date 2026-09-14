@@ -136,13 +136,11 @@ in the repository:
 4. 136 automated tests.
 5. The final report, `docs/REPORT.md`.
 
-Remaining:
-
-1. Validate installation and the primary tasks on the target Windows computer.
-2. The session with the target user (recording his voice for the accuracy
-   set, the task list in `docs/Guya_V1_Test_and_Evaluation.docx`, and short
-   usability feedback).
-3. The demonstration video.
+Done since (September 2026): installation and the primary tasks validated on
+the target Windows laptop, and the session with the target user (twelve of
+twelve tasks completed, System Usability Scale 82.5; `docs/REPORT.md`,
+Section 7.9). Remaining: recordings of the target user's voice for the
+accuracy set, and the demonstration video.
 
 The intended result is a stable, explainable and evaluated undergraduate
 prototype that addresses a concrete accessibility need.

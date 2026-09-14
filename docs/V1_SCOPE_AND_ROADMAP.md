@@ -120,6 +120,8 @@ every possible environment.
   and the fixes are covered by tests.
 - Evidence: speech accuracy/speed, decoding-setting ablation, held-out parser
   accuracy and real-use log analysis are done (`eval/results/`).
-- Whole capstone: roughly **85%**. What remains cannot be produced without
-  other people or other machines: the Windows validation run, the session with
-  the target user, and the demonstration video.
+- Windows validation run and the session with the target user: **done**
+  (September 2026; twelve of twelve tasks, SUS 82.5; `docs/REPORT.md`,
+  Section 7.9).
+- Whole capstone: roughly **95%**. What remains: recordings of the target
+  user's voice for the accuracy set, and the demonstration video.
