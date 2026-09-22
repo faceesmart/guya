@@ -80,7 +80,8 @@ FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com">'
          '&family=IBM+Plex+Mono:wght@400;500&display=swap">')
 
 
-def build(md_path, out_path, rtl=False, title=None):
+def convert(md_path, rtl=False):
+    """Markdown -> (body html, chapter items, h1 title). Shared by the web page and the PDF."""
     docs_dir = os.path.dirname(os.path.abspath(md_path))
     src = open(md_path, encoding="utf-8").read()
 
@@ -116,9 +117,15 @@ def build(md_path, out_path, rtl=False, title=None):
     body = re.sub(r'<h2 id="[^"]*">(?:Contents|فهرست)</h2>.*?(?=<hr\s*/?>)', '', body, flags=re.S)
     body = re.sub(r"<hr\s*/?>\s*(?=<h2)", "", body)      # chapter headings draw their own rule
     items = [(m.group(1), re.sub(r"<[^>]+>", "", m.group(2))) for m in re.finditer(r'<h2 id="([^"]+)">(.*?)</h2>', body)]
-    rail = "<ul>" + "".join(f'<li><a href="#{i}">{t}</a></li>' for i, t in items) + "</ul>"
     h1 = re.search(r"<h1[^>]*>(.*?)</h1>", body, re.S)
-    title = title or (re.sub(r"<[^>]+>", "", h1.group(1)) if h1 else os.path.basename(md_path))
+    h1_title = re.sub(r"<[^>]+>", "", h1.group(1)) if h1 else os.path.basename(md_path)
+    return body, items, h1_title
+
+
+def build(md_path, out_path, rtl=False, title=None):
+    body, items, h1_title = convert(md_path, rtl)
+    rail = "<ul>" + "".join(f'<li><a href="#{i}">{t}</a></li>' for i, t in items) + "</ul>"
+    title = title or h1_title
     page = (f"<title>{title}</title>\n{FONTS}\n<style>{CSS}</style>\n"
             f'<body class="{"rtl" if rtl else ""}" dir="{"rtl" if rtl else "ltr"}" lang="{"fa" if rtl else "en"}">\n'
             f'<div class="shell"><nav class="rail" aria-label="Contents"><p class="k">{"فهرست" if rtl else "Contents"}</p>{rail}</nav>\n'

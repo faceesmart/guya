@@ -15,7 +15,7 @@ double-click every day. Weak computers can use a free online model instead.
 
 > Final-year Computer Engineering project, University of Tehran (Farabi Campus).
 > Built on [faster-whisper](https://github.com/SYSTRAN/faster-whisper) (OpenAI Whisper).
-> Full report: [`docs/REPORT.md`](docs/REPORT.md) (English) · [`docs/REPORT-FA.md`](docs/REPORT-FA.md) (فارسی). Proposal: [`docs/PROPOSAL.md`](docs/PROPOSAL.md).
+> Full report: [`docs/REPORT.md`](docs/REPORT.md) (English) · [`docs/REPORT-FA.md`](docs/REPORT-FA.md) (فارسی); as files: `docs/Guya-Report-EN.pdf`, `docs/Guya-Report-FA.pdf`, `docs/Guya-Report-EN.docx`, `docs/Guya-Report-FA.docx`. Proposal: [`docs/PROPOSAL.md`](docs/PROPOSAL.md).
 
 ![Control panel](docs/img/panel-controls.png)
 
@@ -110,6 +110,7 @@ Guya.app → control panel → dictation widget (hotkeys, microphone, Whisper, a
 - **Scope and definition of done:** [`docs/V1_SCOPE_AND_ROADMAP.md`](docs/V1_SCOPE_AND_ROADMAP.md).
 - **Spoken test checklist:** [`docs/ASSISTANT_EVALUATION.md`](docs/ASSISTANT_EVALUATION.md).
 - **Evaluation scripts and how to reproduce every number:** [`eval/README.md`](eval/README.md).
+- **Building the report files:** `docs/tools/build_report_html.py` (web page), `build_report_pdf.py` (PDF through Chrome; `pip install markdown playwright pypdf reportlab`, `cd docs/tools && npm install`) and `build_report_docx.js` (Word). The Word files carry a table-of-contents field: answer *Yes* when Word asks to update fields on opening.
 
 ## Project layout
 

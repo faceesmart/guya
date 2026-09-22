@@ -1,0 +1,11 @@
+{
+  "name": "guya-report-tools",
+  "private": true,
+  "description": "Builds the PDF and Word versions of docs/REPORT.md and docs/REPORT-FA.md",
+  "dependencies": {
+    "docx": "^9.7.1",
+    "image-size": "^2.0.2",
+    "marked": "^17.0.0",
+    "mermaid": "^11.12.0"
+  }
+}

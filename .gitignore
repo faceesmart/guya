@@ -38,3 +38,7 @@ eval/data/fleurs/*
 !eval/data/fleurs/manifest.jsonl
 !eval/data/say_manifest.jsonl
 !eval/data/intents.jsonl
+
+# report build tooling
+docs/tools/node_modules/
+docs/*.print.html
