@@ -22,11 +22,11 @@
 8. Discussion
 9. Conclusion and future work
 References
-Appendix A. Reproducing the results · B. The command set · C. Configuration · D. Evaluation instruments · E. Project history · F. Glossary
+Appendix A. Reproducing the results · B. The command set · C. Configuration · D. Evaluation instruments · E. Glossary
 
 **Figures.** 4.1 Layered architecture · 4.2 The three processes · 4.3 Dictation sequence · 4.4 The transcription pipeline · 4.5 The assistant path · 4.6 Pending-question states · 4.7 Pill states and tones · 4.8 The pill on screen · 4.9 The reply bubble · 4.10 The results popup · 5.1 Settings tab · 5.2 Help tab · 5.3 The panel in dual mode · 6.1 Wizard welcome · 6.2 Wizard language choice · 6.3 Control panel
 
-**Tables.** 1.1 Objectives · 1.2 Deliverables · 2.1 Whisper model sizes · 2.2 Existing tools · 3.1 Use cases · 3.2 Functional requirements · 3.3 Non-functional requirements · 3.4 Safety requirements · 4.1 Module responsibilities · 4.2 Response statuses · 4.3 Safety enforcement · 4.4 Pill states · 4.5 Platform interface · 4.6 Log record · 5.1 Dependencies · 5.2 Module sizes · 5.3 Threads and timers · 5.4 Decoding settings · 5.5 Filename match scale · 5.6 Parser rules · 5.7 Benchmark constants · 5.8 Test suite · 5.9 Development timeline · 5.10 Curriculum concepts · 6.1 Spoken commands · 7.1 Accuracy per model · 7.2 Ablation on small · 7.3 Ablation on large-v3-turbo · 7.4 Cost ratios · 7.5 Held-out intent accuracy · 7.6 Usage outcomes · 7.7 Review defects · 7.8 Manual sessions · 7.9 Session outcomes · 7.10 Objectives status · B.1 Command set · C.1 Configuration · F.1 Glossary
+**Tables.** 1.1 Objectives · 1.2 Deliverables · 2.1 Whisper model sizes · 2.2 Existing tools · 3.1 Use cases · 3.2 Functional requirements · 3.3 Non-functional requirements · 3.4 Safety requirements · 4.1 Module responsibilities · 4.2 Response statuses · 4.3 Safety enforcement · 4.4 Pill states · 4.5 Platform interface · 4.6 Log record · 5.1 Dependencies · 5.2 Module sizes · 5.3 Threads and timers · 5.4 Decoding settings · 5.5 Filename match scale · 5.6 Parser rules · 5.7 Benchmark constants · 5.8 Test suite · 5.9 Development timeline · 5.10 Curriculum concepts · 6.1 Spoken commands · 7.1 Accuracy per model · 7.2 Ablation on small · 7.3 Ablation on large-v3-turbo · 7.4 Cost ratios · 7.5 Held-out intent accuracy · 7.6 Usage outcomes · 7.7 Review defects · 7.8 Manual sessions · 7.9 Session outcomes · 7.10 Objectives status · B.1 Command set · C.1 Configuration · E.1 Glossary
 
 ---
 
@@ -57,7 +57,7 @@ The user is described more formally in Section 3.1. The important point is that 
 
 ### 1.3 Objectives
 
-The approved proposal (Appendix E summarises its history) states five objectives. They are repeated here because the evaluation in Chapter 7 is organised around them.
+The approved proposal (Section 5.14 summarises its history) states five objectives. They are repeated here because the evaluation in Chapter 7 is organised around them.
 
 | ID | Objective |
 |---|---|
@@ -110,7 +110,7 @@ The software itself contains several pieces that had to be built rather than ass
 
 ### 1.7 Structure of the report
 
-Chapter 2 gives the background on speech recognition with Whisper, on Persian as a low-resource language, on command understanding, and on the existing tools. Chapter 3 states the requirements and the scope. Chapter 4 describes the architecture and the design decisions. Chapter 5 describes the implementation module by module, the testing strategy and the development history. Chapter 6 is the user guide. Chapter 7 presents the evaluation. Chapter 8 discusses the results and their limits, and Chapter 9 concludes with future work. The appendices give the reproduction commands, the command set, the configuration keys, the evaluation instruments, the project history and a glossary.
+Chapter 2 gives the background on speech recognition with Whisper, on Persian as a low-resource language, on command understanding, and on the existing tools. Chapter 3 states the requirements and the scope. Chapter 4 describes the architecture and the design decisions. Chapter 5 describes the implementation module by module, the testing strategy and the development history. Chapter 6 is the user guide. Chapter 7 presents the evaluation. Chapter 8 discusses the results and their limits, and Chapter 9 concludes with future work. The appendices give the reproduction commands, the command set, the configuration keys, the evaluation instruments and a glossary.
 
 ---
 ## 2. Background and related work
@@ -487,7 +487,7 @@ sequenceDiagram
 
 The hotkey listener runs in its own thread and records which application is in front at the moment of the press, before any window of Guya can take focus. Its callbacks do nothing but emit a Qt signal, so every state change happens on the interface thread; the recorder, the partial transcriber, the final transcription and the assistant command each run on their own thread and report back through signals (Table 5.3). Three guards keep the two keys from interfering: the listener remembers which key is held and ignores key-repeat events and the other key while one is down; a release is honoured only for the mode that is recording, so pressing the second key during a recording neither starts a second one nor ends the first; and no recording can start while a transcription or a command is still being processed. At most one recording and one model call therefore exist at any time. Audio is captured from the microphone at 16 kHz mono while the key is held. The keys are modifiers (Right Option for dictation, Right Command for the assistant) because a modifier pressed alone types nothing: no key has to be swallowed system-wide, no stray character reaches the document, and the listener runs without suppressing any event. Holding rather than toggling means the recording is bounded by the user's own hand, so the microphone is never left open by mistake (Section 2.7); Right Control is still accepted for the assistant so that a full-size keyboard from the first prototype keeps working. While recording with the offline backend, a background pass re-transcribes the last eight seconds every two seconds and shows the partial text on the pill, so the user can see that they are being heard; the text is display-only and is never merged into the result. With the online backend no partial text is shown. On release, the whole recording is transcribed once and the result is pasted into the frontmost application through the clipboard.
 
-Pasting was chosen over synthesised keystrokes for two reasons. A single paste transfers the whole Unicode string in one operation, whereas typing Persian character by character through a keyboard simulator was unreliable in the early prototypes. And the paste goes to whatever is frontmost at that moment: the widget never takes focus, so the user's text field is still in front. There is a second reason, recorded in the code: the first version re-activated the application captured at key press, and on macOS the frontmost application read on the listener thread was sometimes stale, returning the application that had launched Guya, so the text went to the wrong window (commit 599bf81, Appendix E). Reading the frontmost application again on the interface thread at paste time fixed it; the captured identifier is still used, but only to address the assistant's keystrokes (Section 4.9), where the self-target fallback of Section 5.9 covers the stale case. The one case where this fails is when the user has just clicked on Guya itself; the paste is then refused, the text stays on the clipboard, and the pill says so (Section 5.9).
+Pasting was chosen over synthesised keystrokes for two reasons. A single paste transfers the whole Unicode string in one operation, whereas typing Persian character by character through a keyboard simulator was unreliable in the early prototypes. And the paste goes to whatever is frontmost at that moment: the widget never takes focus, so the user's text field is still in front. There is a second reason, recorded in the code: the first version re-activated the application captured at key press, and on macOS the frontmost application read on the listener thread was sometimes stale, returning the application that had launched Guya, so the text went to the wrong window (commit 599bf81, June 2026). Reading the frontmost application again on the interface thread at paste time fixed it; the captured identifier is still used, but only to address the assistant's keystrokes (Section 4.9), where the self-target fallback of Section 5.9 covers the stale case. The one case where this fails is when the user has just clicked on Guya itself; the paste is then refused, the text stays on the clipboard, and the pill says so (Section 5.9).
 
 ### 4.4 The speech pipeline
 
@@ -1050,6 +1050,8 @@ The project was developed between June and September 2026 in four phases: the di
 
 Three of the iterations led to changes in the design. The first was the discovery, in July, that a Finder-launched application could not read a virtual environment on the Desktop, which turned the June bundle into the runtime copy plus bundle of Section 4.10. The second was the first usage log, 41 of the author's own commands recorded before the September changes, which showed that not every failure was misrecognition: in six of 41 commands the captured target was Guya's own window rather than the user's application, and the author, the only user in that log, moved on from unanswered questions instead of answering them. That led to the non-modal question design of Section 4.5 and the target fallback of Section 5.9. The third was the September evaluation, which tested several assumptions by measurement and reversed two of them: the repetition penalty raised the error rate, and the benchmark, run on synthetic noise, was timing decoder retries rather than the device. The measurements behind both reversals are in Chapter 7.
 
+The proposal itself changed once. The first draft, written in June 2026 and kept in `docs/archive/`, described a dictation-only project with a four-week timeline. The proposal approved in July 2026 (`docs/PROPOSAL.md`) added the assistant and the five objectives of Table 1.1, and listed as excluded everything in Section 3.8. Its expected outputs were a runnable application with installers for macOS and Windows, both modes on separate keys, the wizard, control panel, widget, spoken feedback, help and logs, automated tests, structured user-evaluation results, documented limitations, this report, and a repeatable demonstration.
+
 ### 5.15 Course concepts applied
 
 Guya is an application project, and most of its components apply material from the computer engineering curriculum. Table 5.10 lists the concepts used, with the section where each appears, so that the connection between the coursework and the code is explicit.
@@ -1552,72 +1554,7 @@ The SUS items, in Persian, are (1 = کاملاً مخالفم … 5 = کاملا
 
 Scoring follows Brooke: for odd items use (answer − 1), for even items (5 − answer); the sum is multiplied by 2.5. A score around 68 is average for software in general. After the session the log is copied to `eval/results/user_study/`, `eval/assistant_report.py` is run on it, and the participant's ten recorded sentences are scored with `eval/accuracy.py`.
 
-## Appendix E. Project history
-
-**The proposal.** The first draft, written in June 2026 and kept in `docs/archive/`, described a dictation-only project with a four-week timeline. The proposal approved in July 2026 (`docs/PROPOSAL.md`) added the assistant and the five objectives of Table 1.1, and listed as excluded everything in Section 3.8. Its expected outputs were a runnable application with installers for macOS and Windows, both modes on separate keys, the wizard, control panel, widget, spoken feedback, help and logs, automated tests, structured user-evaluation results, documented limitations, this report, and a repeatable demonstration.
-
-**The commits.** The repository holds the following commits (hash, date, message), in order.
-
-```
-26f327d  2026-06-05  Guya M1: config-driven widget + project scaffold
-ba24a5d  2026-06-05  Guya M2: setup wizard
-d7b859f  2026-06-05  Guya M2 fixes: CPU-appropriate model tier + readable wizard fonts
-c2abaab  2026-06-05  Guya M3: on-device benchmark-based model recommendation
-a2b18df  2026-06-05  Fix '&' rendering as Qt mnemonic in model card subtitle
-c91de91  2026-06-05  Guya M4: free online fallback (cloud STT via Groq)
-a46230d  2026-06-06  Guya polish: modern UI, download progress bar, double-click launcher
-2bab75e  2026-06-06  Fix download progress bar stuck at 0% (disable xet backend)
-8de1f84  2026-06-06  Guya: bilingual wizard, language-aware selection, editable specs, richer cards
-d3f8658  2026-06-06  Guya UI fixes: scrollable model page, richer cards, better cloud guide, download controls, modern review
-4a04412  2026-06-06  Guya wizard: faster benchmark, download cancel, clickable cloud guide, installed-model indicator
-a73c621  2026-06-06  Guya: hybrid offline+online mode with a widget ONLINE/OFFLINE switch
-c670aaa  2026-06-06  Fix wizard horizontal overflow + make hybrid checkbox usable
-8beecb6  2026-06-06  Fix: move 'Also enable Online' box + cloud panel out of the scroll area
-2c224e0  2026-06-06  Redesign wizard: separate Mode step (Offline/Online/Dual) from model setup
-599bf81  2026-06-06  Fix macOS paste going to the wrong app (stale frontmost capture)
-468a41f  2026-06-06  Clearer Mode page copy + friendlier Dual setup design
-1efab35  2026-06-20  Add B.Sc. final-project proposal (docs/PROPOSAL.md)
-3d55f33  2026-06-20  Proposal: fill student/supervisor details + add styled HTML and PDF
-6da260b  2026-06-20  Proposal: shorten timeline (mark done phases) + add Persian version
-7803e56  2026-06-20  Add one-double-click installers (macOS + Windows) + Python-setup guide
-5fafa48  2026-06-20  Harden Windows installer: handle winget PATH-refresh + paren-safe batch
-1d8e3da  2026-06-20  Wizard: Easy/Advanced choice, "How to use" final screen, clearer API guide
-9e8eb02  2026-06-20  Easy Mode: single review page with changeable settings + Install
-a63c9c8  2026-06-20  Wizard UX/visual overhaul: bigger resizable window, modal pickers, merged analysis, Apple/Airbnb-style polish
-157e521  2026-06-20  Apply Calm Teal theme to the wizard (accessible, soothing)
-c4e725b  2026-06-20  Vazirmatn font, analyze loading screen, device-config modal
-86d90a2  2026-06-20  Launcher: clean macOS .app bundle + Windows windowless launcher
-6429ee8  2026-06-20  Add Guya Control Panel (the real 'launcher'): on/off + settings + maintenance
-3fd7a9d  2026-06-20  Control Panel: real circular power button + uptime + in-place settings
-6ec2318  2026-06-20  Live two-way sync: panel mirrors the widget (active/backend/language) + logs modal
-75b2330  2026-06-20  Fix not-recording + redesign panel into tabs (Controls | Settings)
-55ab378  2026-06-20  Add accuracy evaluation harness (WER/CER/RTF) — the thesis results tool
-8149040  2026-06-20  eval: add --examples (worst ref-vs-hyp clips per model) for error analysis
-d93ebad  2026-08-17  feat: add accessible bilingual assistant V1
-881de3c  2026-09-05  eval: real Persian data, honest scorer, held-out intent set, log report
-2f72328  2026-09-05  widget, panel, wizard: visible errors, reply bubble, safer targets, calibrated benchmark
-f67a38c  2026-09-05  assistant: filler-tolerant parser, safer intents, non-modal questions
-2858a26  2026-09-05  docs: archive June proposals, fix workbook and checklist contradictions, screenshots
-5af94d5  2026-09-05  docs: report draft (ch. 1-5), demo script, user-study protocol, README rewrite, status updates
-e73ec00  2026-09-05  report: evaluation, discussion and conclusion chapters; FLEURS, RTF and ablation results
-2c6278d  2026-09-05  fix the regressions found by the adversarial review of today's changes
-9a8a345  2026-09-05  benchmark calibrated from measurements; repetition penalty off; report tables filled
-2ebc3f0  2026-09-05  results: corrected conditioning ablation, final report tables
-6d6b8a2  2026-09-09  widget: name microphone errors, exit when the panel dies, one widget at a time
-69c1acc  2026-09-11  from the first manual test: command-vocabulary prompt, yes/no buttons, language switch by voice
-5f67d9f  2026-09-11  tests: keep the main guard at the end of the regression file
-679daff  2026-09-11  from the second manual test: Persian web search, colloquial numbers, number queries
-5e8a0bc  2026-09-11  from the third manual test: search in the browser just opened; misheard choice words
-5b38dbc  2026-09-13  report: B.Sc. layout — related work with a tool comparison, user guide, references, appendices
-66112fc  2026-09-13  docs: script that renders the report markdown to a self-contained page (LTR and RTL)
-d445219  2026-09-13  report: Persian version of the full report, and small fixes to the English one
-8c58d62  2026-09-13  report: rewritten as a full engineering report (27,000 words) with requirements, architecture and implementation chapters
-e0b1030  2026-09-13  report: Persian version of the full engineering report
-330b6ac  2026-09-13  report: a walkthrough of everyday use (3.3) and the course concepts applied (5.15), in both languages
-26a7f6a  2026-09-14  report: review pass on the English report (accuracy against the code, wording, completeness)
-```
-
-## Appendix F. Glossary
+## Appendix E. Glossary
 
 | Term | Persian | Meaning in this report |
 |---|---|---|
@@ -1653,4 +1590,4 @@ e0b1030  2026-09-13  report: Persian version of the full engineering report
 | runtime copy | نسخهٔ اجرایی | the copy of the code under `~/.guya/runtime` |
 | SUS, System Usability Scale | مقیاس کاربردپذیری سیستم | the ten-item usability questionnaire |
 
-*Table F.1. Terms used in the report and their Persian equivalents.*
+*Table E.1. Terms used in the report and their Persian equivalents.*
