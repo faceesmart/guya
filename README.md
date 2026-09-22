@@ -32,7 +32,7 @@ double-click every day. Weak computers can use a free online model instead.
 | macOS | tested daily |
 | Windows | tested on the family's laptop (ASUS ROG G513RM, Ryzen 7 6800H, RTX 3060): installer, wizard, dictation and assistant work as on macOS |
 | User study with the target user | done: 12 of 12 tasks completed, SUS 82.5 (`docs/REPORT.md` §7.9, `eval/results/user_study/`) |
-| Demo video | remaining |
+| Demonstration | given live from the script in `docs/DEMO.md` (about six minutes) |
 
 ## Install (easiest — no typing)
 

@@ -123,5 +123,6 @@ every possible environment.
 - Windows validation run and the session with the target user: **done**
   (September 2026; twelve of twelve tasks, SUS 82.5; `docs/REPORT.md`,
   Section 7.9).
-- Whole capstone: roughly **95%**. What remains: recordings of the target
-  user's voice for the accuracy set, and the demonstration video.
+- Whole capstone: **complete** for submission; the demonstration is given
+  live from `docs/DEMO.md`. Still open as future work: recordings of the
+  target user's voice for the accuracy set.

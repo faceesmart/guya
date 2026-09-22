@@ -139,8 +139,9 @@ in the repository:
 Done since (September 2026): installation and the primary tasks validated on
 the target Windows laptop, and the session with the target user (twelve of
 twelve tasks completed, System Usability Scale 82.5; `docs/REPORT.md`,
-Section 7.9). Remaining: recordings of the target user's voice for the
-accuracy set, and the demonstration video.
+Section 7.9). The demonstration is given live from the script in
+`docs/DEMO.md`. Remaining: recordings of the target user's voice for the
+accuracy set.
 
 The intended result is a stable, explainable and evaluated undergraduate
 prototype that addresses a concrete accessibility need.
