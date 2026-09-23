@@ -78,6 +78,12 @@ body.rtl { font-family: FA_TEXT; font-size: 14pt; line-height: 1.7; }
 h1, h2, h3, .hd { font-family: EN_TEXT; font-weight: bold; }
 body.rtl h1, body.rtl h2, body.rtl h3, body.rtl .hd { font-family: FA_HEAD; }
 body.rtl h3 { font-family: FA_TEXT; font-weight: bold; }
+/* the closing title page is in the other language: give it that language's faces (the B fonts draw Latin digits as Persian ones) */
+body.rtl section.cover.end, body.rtl section.cover.end .hd, body.rtl section.cover.end h1 { font-family: EN_TEXT; }
+body:not(.rtl) section.cover.end, body:not(.rtl) section.cover.end .hd { font-family: FA_TEXT; }
+body:not(.rtl) section.cover.end h1, body:not(.rtl) section.cover.end .kind { font-family: FA_HEAD; }
+body:not(.rtl) h2#abstract-end { font-family: FA_HEAD; }
+body.rtl h2#abstract-end { font-family: EN_TEXT; }
 body.rtl .lat { font-family: EN_TEXT; font-size: 12.5pt; }
 body.rtl h2 .lat, body.rtl h3 .lat, body.rtl h1 .lat { font-family: EN_TEXT; font-size: 0.9em; }
 body.rtl th .lat, body.rtl td .lat, body.rtl p.cap .lat, body.rtl .toc-entry .lat { font-size: 0.92em; }
