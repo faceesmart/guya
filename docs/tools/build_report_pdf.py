@@ -1,11 +1,27 @@
 """
-Print docs/REPORT.md (or docs/REPORT-FA.md) to a PDF with Chrome, driven by Playwright:
-a cover page, a table of contents and lists of figures and tables with page numbers
-(filled in by a second print pass), every chapter on a new page, the mermaid diagrams
-rendered, PDF bookmarks, and page numbers stamped on every page but the cover
-(Persian digits for --rtl). The diagrams are also saved as PNG files for the Word build.
+Print docs/REPORT.md (or docs/REPORT-FA.md) to a PDF with Chrome, driven by Playwright, in the
+page layout of the Farabi Campus format for B.Sc. project reports:
 
-    pip install markdown playwright pypdf reportlab      # Google Chrome must be installed
+  * a title page, a بسم‌الله page, a page for the evaluation minutes and the abstract, each
+    followed by a blank page (the format asks for blank backs);
+  * the contents and the lists of figures and tables, with page numbers filled in by further
+    print passes (invisible letter markers are located by text extraction);
+  * every chapter, the references, the first appendix and the closing pages start on an odd
+    page, a blank page being inserted where needed; those pages carry no header and have the
+    page number at the bottom centre;
+  * every other page carries a header rule with the section title (odd pages) or the chapter
+    title (even pages) and the page number on the outer edge. The headers and numbers are
+    printed by Chrome as a second, overlay PDF and drawn onto the pages as form XObjects, so
+    Persian text is shaped properly and Chrome's compressed streams stay untouched;
+  * mirrored margins: 2.5 cm on the binding edge, 2 cm outside, 3.5 cm at the top (2.5 cm to
+    the rule), 2 cm at the bottom. The pages are printed with symmetric margins and their
+    content is shifted 2.5 mm towards the outer edge;
+  * the abstract in the other language and the title page in the other language at the end.
+
+The mermaid diagrams are rendered (wide ones on landscape pages) and also saved as PNG files
+for the Word build; the PDF gets bookmarks, and Persian page numbers for --rtl.
+
+    pip install markdown playwright pypdf                 # Google Chrome must be installed
     cd docs/tools && npm install                          # mermaid (for the diagrams)
     python docs/tools/build_report_pdf.py docs/REPORT.md docs/Guya-Report-EN.pdf --figdir out/mermaid-en
     python docs/tools/build_report_pdf.py docs/REPORT-FA.md docs/Guya-Report-FA.pdf --rtl --figdir out/mermaid-fa
@@ -18,12 +34,7 @@ import re
 import sys
 
 from pypdf import PdfReader, PdfWriter
-from pypdf.generic import ArrayObject, DictionaryObject, NameObject, StreamObject
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.units import mm
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.pdfgen import canvas
+from pypdf.generic import ArrayObject, DictionaryObject, FloatObject, NameObject, StreamObject
 from playwright.sync_api import sync_playwright
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -32,78 +43,111 @@ from build_report_html import convert  # noqa: E402
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", ".."))
 FONT_DIR = os.path.join(REPO, "guya", "assets", "fonts")
+ASSETS = os.path.join(HERE, "assets")
 MERMAID_JS = os.path.join(HERE, "node_modules", "mermaid", "dist", "mermaid.min.js")
 FA_DIGITS = str.maketrans("0123456789", "۰۱۲۳۴۵۶۷۸۹")
+MM = 72 / 25.4
+SHIFT = 2.5 * MM            # symmetric 22.5 mm side margins become 25 mm inside and 20 mm outside
 
 STRINGS = {
     "en": {"contents": "Contents", "figures": "List of Figures", "tables": "List of Tables",
-           "institution": "University of Tehran · Farabi Campus · Faculty of Engineering",
-           "kind": "B.Sc. Final-Year Project Report in Computer Engineering", "date": "September 2026"},
+           "inst": ["University of Tehran", "Farabi Campus", "Faculty of Engineering", "Department of Computer Engineering"],
+           "kind": "B.Sc. Final-Year Project Report in Computer Engineering", "date": "September 2026",
+           "jury": "Evaluation Committee Minutes",
+           "jury_note": "The signed minutes of the evaluation session are inserted here after the defence.",
+           "abstract": "Abstract"},
     "fa": {"contents": "فهرست مطالب", "figures": "فهرست شکل‌ها", "tables": "فهرست جدول‌ها",
-           "institution": "دانشگاه تهران · دانشکدگان فارابی · دانشکدهٔ مهندسی",
-           "kind": "گزارش پروژهٔ پایانی دورهٔ کارشناسی مهندسی کامپیوتر", "date": "شهریور ۱۴۰۵"},
+           "inst": ["دانشگاه تهران", "دانشکدگان فارابی", "دانشکدهٔ مهندسی", "گروه مهندسی کامپیوتر"],
+           "kind": "گزارش پروژهٔ پایانی دورهٔ کارشناسی مهندسی کامپیوتر", "date": "شهریور ۱۴۰۵",
+           "jury": "صورت‌جلسهٔ داوری",
+           "jury_note": "صورت‌جلسهٔ امضاشدهٔ داوری پس از جلسهٔ داوری در این صفحه قرار می‌گیرد.",
+           "abstract": "چکیده"},
 }
 
 CSS = """
-@page { size: A4; margin: 22mm 20mm 24mm 20mm; }
+@page { size: A4; margin: 35mm 22.5mm 20mm 22.5mm; }
+@page wide { size: A4 landscape; margin: 20mm 22mm 20mm 22mm; }
 * { box-sizing: border-box; }
-html { font-size: 11pt; }
-body { margin: 0; color: #111; background: #fff; font-family: "Source Serif 4", Georgia, "Times New Roman", serif; line-height: 1.5; }
-body.rtl { font-family: "Vazirmatn", Tahoma, sans-serif; font-size: 11.5pt; line-height: 1.85; }
+html { font-size: 13pt; }
+body { margin: 0; color: #111; background: #fff; font-family: "Source Serif 4", Georgia, "Times New Roman", serif; line-height: 1.55; }
+body.rtl { font-family: "Vazirmatn", Tahoma, sans-serif; font-size: 14pt; line-height: 1.8; }
 h1, h2, h3, .hd { font-family: "Vazirmatn", "Helvetica Neue", Arial, sans-serif; }
-h2 { break-before: page; break-after: avoid; font-size: 20pt; line-height: 1.3; margin: 0 0 14pt; padding-bottom: 6pt; border-bottom: 1.5pt solid #0f766e; }
+h2 { break-before: page; break-after: avoid; font-size: 20pt; line-height: 1.35; margin: 12mm 0 16pt; padding-bottom: 6pt; border-bottom: 1.5pt solid #0f766e; }
 h2.front-title { break-before: auto; }
-h3 { break-after: avoid; font-size: 13.5pt; margin: 18pt 0 6pt; }
-p { margin: 0 0 8pt; text-align: justify; orphans: 2; widows: 2; }
+h3 { break-after: avoid; font-size: 18pt; line-height: 1.35; margin: 20pt 0 8pt; }
+p { margin: 0 0 9pt; text-align: justify; orphans: 2; widows: 2; }
 strong { font-weight: 600; }
 a { color: inherit; text-decoration: none; }
 hr { display: none; }
-ul, ol { margin: 0 0 8pt; padding-left: 1.5em; } body.rtl ul, body.rtl ol { padding-left: 0; padding-right: 1.5em; }
+ul, ol { margin: 0 0 9pt; padding-left: 1.5em; } body.rtl ul, body.rtl ol { padding-left: 0; padding-right: 1.5em; }
 li { margin: 2pt 0; text-align: justify; }
 code { font-family: "IBM Plex Mono", Menlo, Consolas, monospace; font-size: 0.86em; background: #f1f3f3; padding: 0 2pt; direction: ltr; unicode-bidi: embed; }
-pre { font-family: "IBM Plex Mono", Menlo, Consolas, monospace; font-size: 8.5pt; line-height: 1.45; background: #f4f6f6; border: 0.5pt solid #d0d6d6; padding: 6pt 8pt; margin: 4pt 0 10pt; white-space: pre-wrap; word-break: break-all; direction: ltr; text-align: left; break-inside: avoid; }
+pre { font-family: "IBM Plex Mono", Menlo, Consolas, monospace; font-size: 9pt; line-height: 1.45; background: #f4f6f6; border: 0.5pt solid #d0d6d6; padding: 6pt 8pt; margin: 4pt 0 10pt; white-space: pre-wrap; word-break: break-all; direction: ltr; text-align: left; break-inside: avoid; }
 pre code { background: none; padding: 0; font-size: inherit; }
 pre.mermaid { background: #fff; border: 0; text-align: center; padding: 6pt 0; break-inside: avoid; }
-pre.mermaid svg { max-width: 100%; height: auto; max-height: 190mm; }
+pre.mermaid svg { max-width: 100%; height: auto; max-height: 185mm; }
 pre.mermaid .nodeLabel, pre.mermaid .label foreignObject div, pre.mermaid .edgeLabel { white-space: normal !important; overflow-wrap: normal !important; word-break: keep-all !important; max-width: 210px !important; }
-@page wide { size: A4 landscape; margin: 20mm 22mm 24mm 22mm; }
 .wide { page: wide; }
 pre.mermaid.wide { break-before: page; break-after: avoid; margin: 0; }
 pre.mermaid.wide svg { max-height: 150mm; }
 .tw { margin: 6pt 0 2pt; break-inside: avoid; }
-table { border-collapse: collapse; width: 100%; font-size: 9pt; line-height: 1.35; }
-body.rtl table { font-size: 9.5pt; line-height: 1.6; }
+table { border-collapse: collapse; width: 100%; font-size: 9.5pt; line-height: 1.4; }
+body.rtl table { font-size: 10.5pt; line-height: 1.65; }
 th, td { border: 0.5pt solid #b9c2c2; padding: 3pt 5pt; vertical-align: top; text-align: left; }
 body.rtl th, body.rtl td { text-align: right; }
-th { background: #e8f1f0; font-family: "Vazirmatn", "Helvetica Neue", Arial, sans-serif; font-weight: 600; font-size: 8.5pt; }
-thead { display: table-header-group; } tr { break-inside: avoid; }
-td[align=right], th[align=right] { text-align: right; font-variant-numeric: tabular-nums; }
-p.cap { font-family: "Vazirmatn", "Helvetica Neue", Arial, sans-serif; font-size: 9.5pt; color: #333; text-align: center; margin: 4pt 0 14pt; break-before: avoid; }
+th { background: #e8f1f0; font-family: "Vazirmatn", "Helvetica Neue", Arial, sans-serif; font-weight: 600; font-size: 9pt; }
+body.rtl th { font-size: 10pt; }
+td[align=right], th[align=right] { text-align: right; }
+p.cap { font-family: "Vazirmatn", "Helvetica Neue", Arial, sans-serif; font-size: 11pt; color: #333; text-align: center; margin: 4pt 0 14pt; break-before: avoid; }
 figure { margin: 8pt 0 4pt; text-align: center; break-inside: avoid; }
-figure img { max-width: 100%; max-height: 180mm; }
-figure.wide img { max-width: 100%; } figure.half img { max-width: 62%; } figure.tall img { max-height: 150mm; }
+figure img { max-width: 100%; max-height: 160mm; height: auto; }
 figcaption { display: none; }
-p.fa { direction: rtl; font-family: "Vazirmatn", Tahoma, sans-serif; text-align: justify; line-height: 1.85; background: #f4f6f6; padding: 8pt 10pt; border-radius: 3pt; }
-p.en { direction: ltr; font-family: "Source Serif 4", Georgia, serif; text-align: justify; line-height: 1.5; background: #f4f6f6; padding: 8pt 10pt; border-radius: 3pt; }
-ol.refs { direction: ltr; text-align: left; font-family: "Source Serif 4", Georgia, serif; font-size: 10pt; line-height: 1.45; padding-left: 1.5em; padding-right: 0; }
-ol.refs li { text-align: left; }
-h2, h3, p.cap { position: relative; }
+p.fa { direction: rtl; font-family: "Vazirmatn", Tahoma, sans-serif; font-size: 14pt; line-height: 1.8; text-align: justify; }
+p.en { direction: ltr; font-family: "Source Serif 4", Georgia, serif; font-size: 13pt; line-height: 1.55; text-align: justify; }
+body.rtl h2#abstract-end { direction: ltr; text-align: left; }
+body:not(.rtl) h2#abstract-end { direction: rtl; text-align: right; }
+ol.refs { direction: ltr; text-align: left; font-family: "Source Serif 4", Georgia, serif; font-size: 11pt; line-height: 1.45; padding-left: 1.5em; padding-right: 0; }
+h2, h3, p.cap, section.fp, section.cover { position: relative; }
 .pm { position: absolute; left: 0; top: 0; font-size: 1pt; color: #fff; direction: ltr; unicode-bidi: isolate; }
-.cover { height: 236mm; display: flex; flex-direction: column; justify-content: space-between; align-items: center; text-align: center; break-after: page; }
-.cover .inst { font-size: 11pt; color: #333; letter-spacing: .02em; }
-.cover .kind { font-size: 12.5pt; color: #0f766e; font-weight: 600; margin-top: 10mm; }
-.cover h1 { font-size: 23pt; line-height: 1.4; margin: 0 6mm; font-weight: 700; }
-.cover .meta { font-size: 11.5pt; line-height: 1.9; }
-.cover .meta b { font-weight: 600; color: #333; margin: 0 4pt; }
-.cover .date { font-size: 11pt; color: #333; }
-.front { break-after: page; }
-.toc-entry { display: flex; align-items: baseline; font-family: "Vazirmatn", "Helvetica Neue", Arial, sans-serif; font-size: 10.5pt; margin: 2pt 0; break-inside: avoid; }
-.toc-entry.l2 { margin-top: 8pt; font-weight: 600; }
-.toc-entry.l3 { padding-left: 16pt; font-size: 10pt; font-weight: 400; } body.rtl .toc-entry.l3 { padding-left: 0; padding-right: 16pt; }
+.blank { break-before: page; height: 1pt; }
+section.fp { break-before: page; }
+section.cover { display: flex; flex-direction: column; align-items: center; text-align: center; height: 238mm; }
+.cover .logo { width: 30mm; height: auto; margin-bottom: 3mm; }
+.cover .inst { font-size: 13pt; line-height: 1.65; font-weight: 500; }
+.cover .kind { font-size: 13.5pt; color: #0f766e; font-weight: 600; margin-top: 16mm; }
+.cover h1 { font-size: 22pt; line-height: 1.5; margin: 10mm 2mm 0; font-weight: 700; }
+.cover .meta { font-size: 13pt; line-height: 2; margin-top: auto; }
+.cover .meta b { font-weight: 600; margin: 0 4pt; }
+.cover .date { font-size: 13pt; margin-top: 8mm; }
+section.bismillah { height: 242mm; display: flex; align-items: center; justify-content: center; }
+.bismillah img { width: 62mm; height: auto; }
+.jury .t { font-size: 20pt; font-weight: 700; text-align: center; margin-top: 30mm; }
+.jury .note { text-align: center; color: #555; font-size: 12pt; margin-top: 8mm; }
+section.front { break-before: page; }
+section.abstract h2 { margin-top: 4mm; }
+section.abstract p { font-size: 13pt; line-height: 1.7; }
+body:not(.rtl) section.abstract p { font-size: 12.5pt; line-height: 1.5; }
+.toc-entry { display: flex; align-items: baseline; font-family: "Vazirmatn", "Helvetica Neue", Arial, sans-serif; font-size: 12pt; margin: 2pt 0; break-inside: avoid; }
+.toc-entry.l2 { font-weight: 600; margin-top: 7pt; }
+.toc-entry.l3 { padding-left: 16pt; font-size: 11pt; font-weight: 400; } body.rtl .toc-entry.l3 { padding-left: 0; padding-right: 16pt; }
 .toc-entry .t { flex: 0 1 auto; }
 .toc-entry .dots { flex: 1 1 auto; border-bottom: 1px dotted #999; margin: 0 4pt; min-width: 10pt; transform: translateY(-3pt); }
-.toc-entry .n { flex: 0 0 auto; min-width: 2.6em; text-align: right; font-variant-numeric: tabular-nums; font-weight: 400; } body.rtl .toc-entry .n { text-align: left; }
-.lof .toc-entry { font-size: 10pt; margin: 3pt 0; }
+.toc-entry .n { flex: 0 0 auto; font-variant-numeric: tabular-nums; }
+.lof .toc-entry { font-size: 11pt; margin: 3pt 0; }
+"""
+
+OVERLAY_CSS = """
+@page { size: A4; margin: 0; }
+@page land { size: A4 landscape; margin: 0; }
+html, body { margin: 0; padding: 0; }
+body { font-family: "Vazirmatn", "Helvetica Neue", Arial, sans-serif; color: #111; }
+.pg { position: relative; width: 210mm; height: 296mm; overflow: hidden; break-after: page; }
+.pg.land { page: land; width: 297mm; height: 209mm; }
+.pg:last-child { break-after: auto; }
+.hdr { position: absolute; top: 0; height: 25mm; border-bottom: 0.6pt solid #000; }
+.hdr span { position: absolute; bottom: 1.6mm; font-size: 10.5pt; white-space: nowrap; max-width: 130mm; overflow: hidden; text-overflow: ellipsis; }
+.hdr .l { left: 0; } .hdr .r { right: 0; }
+.bn { position: absolute; left: 0; right: 0; bottom: 12mm; text-align: center; font-size: 11pt; }
 """
 
 FONTS = ('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400'
@@ -133,24 +177,39 @@ def split_front(body):
     return title, subtitle, rows, body
 
 
-def mark(body):
-    """Put an invisible marker at the start of every h2, h3 and caption; return (body, headings, captions)."""
-    counter = [0]; headings = []; captions = []
+class Marks:
+    """Invisible letter markers (digits would merge with Persian digits in the extracted text)."""
 
-    def next_marker():
-        counter[0] += 1
-        n, letters = counter[0], ""
-        for _ in range(4):                     # letters only: digits would merge with Persian digits in the bidi text
+    def __init__(self):
+        self.n = 0
+
+    def next(self):
+        self.n += 1
+        n, letters = self.n, ""
+        for _ in range(4):
             n, r = divmod(n, 26); letters = chr(65 + r) + letters
         return "GYM" + letters
 
+
+def odd_start(level, text):
+    """Headings that must open an odd page: chapters, references, the first appendix, the abstracts."""
+    return level == 2 and (re.match(r"^[0-9۰-۹]", text) is not None
+                           or text in ("References", "مراجع", "Abstract", "چکیده")
+                           or text.startswith(("Appendix A", "پیوست الف")))
+
+
+def mark(body, marks):
+    """Put a marker at the start of every h2, h3 and caption; return (body, headings, captions)."""
+    headings, captions = [], []
+
     def head(m):
-        k = next_marker(); text = re.sub(r"<[^>]+>", "", m.group(3))
-        headings.append((int(m.group(1)), m.group(2), text, k))
-        return f'<h{m.group(1)} id="{m.group(2)}"><span class="pm">{k}</span>{m.group(3)}</h{m.group(1)}>'
+        k = marks.next(); level = int(m.group(1)); text = re.sub(r"<[^>]+>", "", m.group(3))
+        headings.append((level, m.group(2), text, k))
+        odd = f' data-odd="{k}"' if odd_start(level, text) else ""
+        return f'<h{level} id="{m.group(2)}"{odd}><span class="pm">{k}</span>{m.group(3)}</h{level}>'
 
     def cap(m):
-        k = next_marker(); text = re.sub(r"<[^>]+>", "", m.group(1))
+        k = marks.next(); text = re.sub(r"<[^>]+>", "", m.group(1))
         captions.append((text, k))
         return f'<p class="cap"><span class="pm">{k}</span>{m.group(1)}</p>'
 
@@ -180,39 +239,71 @@ def print_variant(m):
     return '<pre class="mermaid">' + inner + "</pre>"
 
 
-def build_html(md_path, rtl, figdir_note=None):
-    lang = "fa" if rtl else "en"
-    S = STRINGS[lang]
-    body, items, _ = convert(md_path, rtl)
-    title, subtitle, rows, body = split_front(body)
-    body, headings, captions = mark(body)
-    body = re.sub(r'<pre class="mermaid">(.*?)</pre>', print_variant, body, flags=re.S)
+def cover_page(cls, S, title, rows, direction, k):
+    meta = "".join(f"<div><b>{a}</b> {b}</div>" for a, b in rows
+                   if not a.startswith(("Code", "کد", "Institution", "دانشگاه")))
+    return (f'<section class="cover {cls}" dir="{direction}" data-odd="{k}"><span class="pm">{k}</span>'
+            f'<img class="logo" src="file://{ASSETS}/ut-logo.png" alt="">'
+            f'<div class="inst hd">{"<br>".join(S["inst"])}</div><div class="kind hd">{S["kind"]}</div>'
+            f'<h1>{title}</h1><div class="meta hd">{meta}</div><div class="date hd">{S["date"]}</div></section>')
 
-    meta = "".join(f"<div><b>{k}</b> {v}</div>" for k, v in rows if not k.startswith(("Code", "کد")))
-    cover = (f'<section class="cover"><div class="inst hd">{S["institution"]}</div>'
-             f'<div><div class="kind hd">{S["kind"]}</div></div><h1>{title}</h1>'
-             f'<div class="meta hd">{meta}</div><div class="date hd">{S["date"]}</div></section>')
+
+def build_html(md_path, rtl):
+    lang, other = ("fa", "en") if rtl else ("en", "fa")
+    S, O = STRINGS[lang], STRINGS[other]
+    body, _, _ = convert(md_path, rtl)
+    title, subtitle, rows, body = split_front(body)
+    other_md = os.path.join(os.path.dirname(os.path.abspath(md_path)), "REPORT.md" if rtl else "REPORT-FA.md")
+    obody, _, _ = convert(other_md, not rtl)
+    otitle, _, orows, _ = split_front(obody)
+
+    # the abstract moves in front of the contents; its other-language paragraph closes the report
+    m = re.search(r'<h2 id="([^"]+)">(چکیده|Abstract)</h2>(.*?)(?=<h2 )', body, re.S)
+    abstract = m.group(3); body = body[:m.start()] + body[m.end():]
+    f = re.search(r'<p class="(?:en|fa)"[^>]*>(.*?)</p>\s*', abstract, re.S)
+    foreign = re.sub(r"^(Abstract|چکیده):\s*", "", f.group(1)); abstract = abstract[:f.start()] + abstract[f.end():]
+    front_abstract = f'<section class="abstract"><h2 id="{m.group(1)}">{m.group(2)}</h2>{abstract}</section>'
+    end_abstract = f'<h2 id="abstract-end">{O["abstract"]}</h2><p class="{other}">{foreign}</p>'
+
+    marks = Marks()
+    marked, headings, captions = mark(front_abstract + "<!--SPLIT-->" + body + end_abstract, marks)
+    front_abstract, body = marked.split("<!--SPLIT-->")
+    body = re.sub(r'<pre class="mermaid">(.*?)</pre>', print_variant, body, flags=re.S)
+    keys = {name: marks.next() for name in ("title", "bismillah", "jury", "contents", "figures", "tables", "end_title")}
+
+    title_page = cover_page("", S, title, rows, "rtl" if rtl else "ltr", keys["title"])
+    end_title = cover_page("end fp", O, otitle, orows, "ltr" if rtl else "rtl", keys["end_title"])
+    bism = (f'<section class="fp bismillah" data-odd="{keys["bismillah"]}"><span class="pm">{keys["bismillah"]}</span>'
+            f'<img src="file://{ASSETS}/bismillah.png" alt=""></section>')
+    jury = (f'<section class="fp jury" data-odd="{keys["jury"]}"><span class="pm">{keys["jury"]}</span>'
+            f'<div class="t hd">{S["jury"]}</div><div class="note">{S["jury_note"]}</div></section>')
 
     def entry(level, target, text, k):
         return (f'<div class="toc-entry l{level}" data-pm="{k}"><a href="#{target}"><span class="t">{text}</span></a>'
                 f'<span class="dots"></span><span class="n">000</span></div>')
 
-    toc = f'<section class="front"><h2 class="front-title">{S["contents"]}</h2>' + "".join(
-        entry(lvl, tid, text, k) for lvl, tid, text, k in headings) + "</section>"
+    toc = (f'<section class="front" data-odd="{keys["contents"]}"><h2 class="front-title"><span class="pm">{keys["contents"]}</span>{S["contents"]}</h2>'
+           + "".join(entry(lvl, tid, text, k) for lvl, tid, text, k in headings) + "</section>")
     figs, tabs = [], []
     for text, k in captions:
         kind, short = caption_entry(text)
         (tabs if kind == "table" else figs).append(entry(3, "", short, k).replace('class="toc-entry l3"', 'class="toc-entry"'))
-    lists = (f'<section class="front lof"><h2 class="front-title">{S["figures"]}</h2>{"".join(figs)}'
-             f'<h2 class="front-title" style="margin-top:18pt">{S["tables"]}</h2>{"".join(tabs)}</section>')
+    lists = (f'<section class="front lof"><h2 class="front-title"><span class="pm">{keys["figures"]}</span>{S["figures"]}</h2>{"".join(figs)}'
+             f'<h2 class="front-title" style="margin-top:18pt"><span class="pm">{keys["tables"]}</span>{S["tables"]}</h2>{"".join(tabs)}</section>')
 
     mermaid = (f'<script src="file://{MERMAID_JS}"></script><script>window.__ready = false;'
                f'mermaid.initialize({{startOnLoad: false, theme: "neutral", fontFamily: "Vazirmatn, Helvetica Neue, Arial, sans-serif", fontSize: 13}});'
                f'Promise.all(["13px Vazirmatn", "bold 13px Vazirmatn", "500 13px Vazirmatn", "600 13px Vazirmatn"].map(f => document.fonts.load(f))).then(() => mermaid.run({{querySelector: "pre.mermaid"}})).then(() => {{ window.__ready = true; }});</script>')
     page = (f'<!doctype html><html lang="{lang}" dir="{"rtl" if rtl else "ltr"}"><head><meta charset="utf-8"><title>{title}</title>'
             f"{FONTS}<style>{font_faces()}{CSS}</style></head><body class=\"{'rtl' if rtl else ''}\">"
-            f"{cover}{toc}{lists}<main>{body}</main>{mermaid}</body></html>")
-    return page, title, headings, captions
+            f"{title_page}{bism}{jury}{front_abstract}{toc}{lists}<main>{body}</main>{end_title}{mermaid}</body></html>")
+
+    odd_body = [k for lvl, _, text, k in headings if odd_start(lvl, text)]      # abstract first, other abstract last
+    odd_keys = [keys["title"], keys["bismillah"], keys["jury"], odd_body[0], keys["contents"]] + odd_body[1:] + [keys["end_title"]]
+    order = ([(2, headings[0][2], headings[0][3]), (2, S["contents"], keys["contents"]),
+              (2, S["figures"], keys["figures"]), (3, S["tables"], keys["tables"])]
+             + [(lvl, text, k) for lvl, _, text, k in headings[1:]])          # reading order, for the running headers
+    return page, title, headings, captions, keys, odd_keys, order
 
 
 def marker_pages(pdf_bytes):
@@ -223,34 +314,113 @@ def marker_pages(pdf_bytes):
     return found
 
 
-def stamp(pdf_bytes, rtl, title, author, headings=(), mapping=None):
+def plan_blanks(mapping, odd_keys, current):
+    """Which odd-start elements need a blank page before them, given where they land now."""
+    blanks, offset, seen = [], 0, 0
+    for k in odd_keys:
+        if k in current:
+            seen += 1                             # a blank already in the document before (or at) this element
+        p = mapping.get(k)
+        if p is None:
+            continue
+        if (p - seen + offset) % 2 == 0:
+            blanks.append(k); offset += 1
+    return blanks
+
+
+def page_plan(sizes, mapping, order, keys, blank_pages):
+    """Per page: none | number | header, plus the chapter and section titles current on it."""
+    first_numbered = mapping[keys["contents"]]
+    end_title = mapping[keys["end_title"]]
+    starts = {mapping[k] for lvl, _, k in order if lvl == 2 and k in mapping}
+    plan = []
+    for i, (w, h) in enumerate(sizes, start=1):
+        land = w > h
+        if i < first_numbered or i >= end_title or i in blank_pages:
+            kind = "none"
+        elif i in starts or land:
+            kind = "number"
+        else:
+            kind = "header"
+        chap = sec = None
+        for lvl, text, k in order:
+            p = mapping.get(k)
+            if p is None or p > i:
+                continue
+            if lvl == 2:
+                chap, sec = text, None
+            else:
+                sec = text
+        plan.append({"kind": kind, "land": land, "chapter": chap or "", "section": sec or chap or ""})
+    return plan
+
+
+def overlay_html(plan, rtl):
+    pages = []
+    for i, pg in enumerate(plan, start=1):
+        num = str(i).translate(FA_DIGITS) if rtl else str(i)
+        inner = ""
+        if pg["kind"] == "number":
+            inner = f'<div class="bn">{num}</div>'
+        elif pg["kind"] == "header":
+            odd = i % 2 == 1
+            inner_right = (odd and rtl) or (not odd and not rtl)      # the binding edge of this page
+            left, right = ("20mm", "25mm") if inner_right else ("25mm", "20mm")
+            text = pg["section"] if odd else pg["chapter"]           # odd pages: section title; even: chapter title
+            l, r = (num, text) if inner_right else (text, num)         # the number sits on the outer edge
+            d = "rtl" if rtl else "ltr"
+            inner = (f'<div class="hdr" style="left:{left};right:{right}">'
+                     f'<span class="l" dir="{d}">{l}</span><span class="r" dir="{d}">{r}</span></div>')
+        pages.append(f'<div class="pg{" land" if pg["land"] else ""}">{inner}</div>')
+    return (f'<!doctype html><html><head><meta charset="utf-8"><style>{font_faces()}{OVERLAY_CSS}</style></head>'
+            f'<body>{"".join(pages)}</body></html>')
+
+
+def form_xobject(writer, src):
+    """Turn an overlay page into a form XObject registered in the writer."""
+    cont = src.raw_get("/Contents")
+    parts = list(cont) if isinstance(cont, ArrayObject) else [cont]
+    data = b"\n".join(p.get_object().get_data() for p in parts)
+    x = StreamObject(); x.set_data(data); x = x.flate_encode()
+    x[NameObject("/Type")] = NameObject("/XObject"); x[NameObject("/Subtype")] = NameObject("/Form")
+    x[NameObject("/BBox")] = ArrayObject([FloatObject(0), FloatObject(0), FloatObject(src.mediabox.width), FloatObject(src.mediabox.height)])
+    res = src["/Resources"].clone(writer)
+    x[NameObject("/Resources")] = res.indirect_reference if getattr(res, "indirect_reference", None) else res
+    return writer._add_object(x)
+
+
+def stamp(pdf_bytes, overlay_bytes, rtl, title, author, headings, mapping, plan):
     reader = PdfReader(io.BytesIO(pdf_bytes))
     writer = PdfWriter(clone_from=reader)
-    pdfmetrics.registerFont(TTFont("Vazirmatn", os.path.join(FONT_DIR, "Vazirmatn-Regular.ttf")))
+    overlay = PdfReader(io.BytesIO(overlay_bytes))
+    if len(overlay.pages) != len(writer.pages):
+        raise SystemExit(f"overlay has {len(overlay.pages)} pages, the report {len(writer.pages)}")
     for i, page in enumerate(writer.pages, start=1):
-        if i == 1:
-            continue
-        w, h = float(page.mediabox.width), float(page.mediabox.height)
-        buf = io.BytesIO(); c = canvas.Canvas(buf, pagesize=(w, h))
-        c.setFont("Vazirmatn", 9.5); c.setFillColorRGB(0.2, 0.2, 0.2)
-        label = str(i).translate(FA_DIGITS) if rtl else str(i)
-        c.drawCentredString(w / 2, 13 * mm, label); c.save()
-        overlay = PdfReader(io.BytesIO(buf.getvalue())).pages[0]
-        # append the number as its own content stream, so Chrome's compressed streams stay untouched
-        fonts = page["/Resources"].get("/Font")
-        if fonts is None:
-            fonts = DictionaryObject(); page["/Resources"][NameObject("/Font")] = fonts
-        for name, ref in overlay["/Resources"]["/Font"].items():
-            fonts[NameObject("/GYStamp")] = writer._add_object(ref.get_object().clone(writer))
-            ops = overlay.get_contents().get_data().replace(name.encode(), b"/GYStamp")
+        info = plan[i - 1]
+        dx = 0.0
+        if not info["land"]:
+            recto = i % 2 == 1
+            inner_right = (recto and rtl) or (not recto and not rtl)
+            dx = -SHIFT if inner_right else SHIFT                      # move the text block towards the outer edge
+        xobjects = page["/Resources"].get("/XObject")
+        if xobjects is None:
+            xobjects = DictionaryObject(); page["/Resources"][NameObject("/XObject")] = xobjects
+        name = f"/GYOv{i}"
+        xobjects[NameObject(name)] = form_xobject(writer, overlay.pages[i - 1])
         contents = page.raw_get("/Contents")
         originals = list(contents) if isinstance(contents, ArrayObject) else [contents]
-        head = StreamObject(); head.set_data(b"q\n")
-        tail = StreamObject(); tail.set_data(b"\nQ\nq\n" + ops + b"\nQ\n")
+        head = StreamObject(); head.set_data(f"q 1 0 0 1 {dx:.3f} 0 cm\n".encode())
+        tail = StreamObject(); tail.set_data(f"\nQ\nq {name} Do Q\n".encode())
         page[NameObject("/Contents")] = ArrayObject([writer._add_object(head)] + originals + [writer._add_object(tail)])
+        if dx and "/Annots" in page:
+            for a in page["/Annots"]:
+                a = a.get_object()
+                if "/Rect" in a:
+                    r = a["/Rect"]
+                    a[NameObject("/Rect")] = ArrayObject([FloatObject(float(r[0]) + dx), r[1], FloatObject(float(r[2]) + dx), r[3]])
     parent = None
     for level, _, text, k in headings:          # bookmarks: chapters, with their sections nested
-        if mapping is None or k not in mapping:
+        if k not in mapping:
             continue
         item = writer.add_outline_item(text, mapping[k] - 1, parent=parent if level == 3 else None)
         if level == 2:
@@ -262,7 +432,7 @@ def stamp(pdf_bytes, rtl, title, author, headings=(), mapping=None):
 
 
 def build(md_path, out_path, rtl=False, figdir=None, author="MohammadReza Ganji"):
-    html, title, headings, captions = build_html(md_path, rtl)
+    html, title, headings, captions, keys, odd_keys, order = build_html(md_path, rtl)
     html_path = os.path.abspath(out_path) + ".print.html"
     with open(html_path, "w", encoding="utf-8") as f:
         f.write(html)
@@ -289,23 +459,39 @@ def build(md_path, out_path, rtl=False, figdir=None, author="MohammadReza Ganji"
                         display_header_footer=False)
         pdf = page.pdf(**pdf_opts)
         mapping = marker_pages(pdf)
-        for _ in range(4):
+        blanks = plan_blanks(mapping, odd_keys, set())
+        for _ in range(6):
             shown = {k: (str(v).translate(FA_DIGITS) if rtl else str(v)) for k, v in mapping.items()}
             page.evaluate("(m) => { for (const [k, v] of Object.entries(m)) { const el = document.querySelector(`[data-pm='${k}'] .n`); if (el) el.textContent = v; } }", shown)
+            page.evaluate("""(blanks) => { document.querySelectorAll('.blank').forEach(b => b.remove());
+                for (const k of blanks) { const el = document.querySelector(`[data-odd='${k}']`);
+                    if (el) { const d = document.createElement('div'); d.className = 'blank'; el.parentNode.insertBefore(d, el); } } }""", blanks)
             pdf = page.pdf(**pdf_opts)
             new = marker_pages(pdf)
-            if new == mapping:
+            new_blanks = plan_blanks(new, odd_keys, set(blanks))
+            if new == mapping and new_blanks == blanks:
                 break
-            mapping = new
+            mapping, blanks = new, new_blanks
+        sizes = [(float(pg.mediabox.width), float(pg.mediabox.height)) for pg in PdfReader(io.BytesIO(pdf)).pages]
+        blank_pages = {mapping[k] - 1 for k in blanks if k in mapping}
+        plan = page_plan(sizes, mapping, order, keys, blank_pages)
+        ov_path = os.path.abspath(out_path) + ".overlay.html"
+        with open(ov_path, "w", encoding="utf-8") as f:
+            f.write(overlay_html(plan, rtl))
+        ov_page = browser.new_page()
+        ov_page.goto("file://" + ov_path, wait_until="load")
+        ov_page.wait_for_function("document.fonts.status === 'loaded'", timeout=60_000)
+        overlay = ov_page.pdf(format="A4", prefer_css_page_size=True, print_background=False, display_header_footer=False)
         browser.close()
     missing = [k for _, _, _, k in headings if k not in mapping] + [k for _, k in captions if k not in mapping]
     raw_size = len(pdf)
-    final = stamp(pdf, rtl, title, author, headings, mapping)
+    final = stamp(pdf, overlay, rtl, title, author, headings, mapping, plan)
     with open(out_path, "wb") as f:
         f.write(final)
-    os.remove(html_path)
+    os.remove(html_path); os.remove(ov_path)
     n_pages = len(PdfReader(io.BytesIO(final)).pages)
-    print(f"  chrome output {raw_size/1e6:.1f} MB, final {len(final)/1e6:.1f} MB")
+    print(f"  chrome output {raw_size/1e6:.1f} MB, final {len(final)/1e6:.1f} MB; {len(blank_pages)} blank pages inserted before "
+          + ", ".join(str(mapping[k]) for k in blanks if k in mapping))
     return n_pages, len(headings), len(captions), missing
 
 

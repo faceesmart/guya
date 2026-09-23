@@ -22,11 +22,11 @@
 8. Discussion
 9. Conclusion and future work
 References
-Appendix A. Reproducing the results · B. The command set · C. Configuration · D. Evaluation instruments · E. Glossary
+Appendix A. Reproducing the results · B. The command set · C. Configuration · D. Evaluation instruments · E. Glossary · F. Program code
 
 **Figures.** 4.1 Layered architecture · 4.2 The three processes · 4.3 Dictation sequence · 4.4 The transcription pipeline · 4.5 The assistant path · 4.6 Pending-question states · 4.7 Pill states and tones · 4.8 The pill on screen · 4.9 The reply bubble · 4.10 The results popup · 5.1 Settings tab · 5.2 Help tab · 5.3 The panel in dual mode · 6.1 Wizard welcome · 6.2 Wizard language choice · 6.3 Control panel
 
-**Tables.** 1.1 Objectives · 1.2 Deliverables · 2.1 Whisper model sizes · 2.2 Existing tools · 3.1 Use cases · 3.2 Functional requirements · 3.3 Non-functional requirements · 3.4 Safety requirements · 4.1 Module responsibilities · 4.2 Response statuses · 4.3 Safety enforcement · 4.4 Pill states · 4.5 Platform interface · 4.6 Log record · 5.1 Dependencies · 5.2 Module sizes · 5.3 Threads and timers · 5.4 Decoding settings · 5.5 Filename match scale · 5.6 Parser rules · 5.7 Benchmark constants · 5.8 Test suite · 5.9 Development timeline · 5.10 Curriculum concepts · 6.1 Spoken commands · 7.1 Accuracy per model · 7.2 Ablation on small · 7.3 Ablation on large-v3-turbo · 7.4 Cost ratios · 7.5 Held-out intent accuracy · 7.6 Usage outcomes · 7.7 Review defects · 7.8 Manual sessions · 7.9 Session outcomes · 7.10 Objectives status · B.1 Command set · C.1 Configuration · E.1 Glossary
+**Tables.** 1.1 Objectives · 1.2 Deliverables · 2.1 Whisper model sizes · 2.2 Existing tools · 3.1 Use cases · 3.2 Functional requirements · 3.3 Non-functional requirements · 3.4 Safety requirements · 4.1 Module responsibilities · 4.2 Response statuses · 4.3 Safety enforcement · 4.4 Pill states · 4.5 Platform interface · 4.6 Log record · 5.1 Dependencies · 5.2 Module sizes · 5.3 Threads and timers · 5.4 Decoding settings · 5.5 Filename match scale · 5.6 Parser rules · 5.7 Benchmark constants · 5.8 Test suite · 5.9 Development timeline · 5.10 Curriculum concepts · 6.1 Spoken commands · 7.1 Accuracy per model · 7.2 Ablation on small · 7.3 Ablation on large-v3-turbo · 7.4 Cost ratios · 7.5 Held-out intent accuracy · 7.6 Usage outcomes · 7.7 Review defects · 7.8 Manual sessions · 7.9 Session outcomes · 7.10 Objectives status · B.1 Command set · C.1 Configuration · E.1 Glossary · F.1 Application files
 
 ---
 
@@ -1591,3 +1591,76 @@ Scoring follows Brooke: for odd items use (answer − 1), for even items (5 − 
 | SUS, System Usability Scale | مقیاس کاربردپذیری سیستم | the ten-item usability questionnaire |
 
 *Table E.1. Terms used in the report and their Persian equivalents.*
+
+## Appendix F. Program code
+
+The complete program is public at https://github.com/faceesmart/guya, and the version this report describes carries the tag `v1.0`. This appendix lists every file of the application package, so that a reader can find the code behind each chapter, and then shows the one routine on which the safety requirements of Chapter 3 rest. The evaluation harness (`eval/`, eight modules) and the tests (`tests/`, ten files) are described in Table 5.2, Table 5.8 and Appendix A.
+
+| File | Lines | What it holds |
+|---|---:|---|
+| `guya/__main__.py` | 87 | entry point: runs the wizard when there is no configuration, otherwise the widget |
+| `guya/widget.py` | 2,808 | the pill process: recorder, hotkeys, floating pill, reply bubble, results popup, assistant glue |
+| `guya/stt.py` | 574 | the speech-to-text pipeline: model loading, silence trimming, decoding, post-processing; shared with the evaluation |
+| `guya/wizard.py` | 2,121 | the eleven-page bilingual setup wizard |
+| `guya/profiler.py` | 233 | the device profile (CPU, memory, GPU) and the specification-based recommendation |
+| `guya/benchmark.py` | 265 | the on-device speech benchmark and the recommendation made from it |
+| `guya/control_panel.py` | 1,017 | the everyday window: power button, settings, help, logs, maintenance |
+| `guya/config.py` | 178 | the configuration file and its defaults |
+| `guya/runtime.py` | 66 | file-based state exchange between the panel and the widget |
+| `guya/logsetup.py` | 66 | one logging setup for the three processes |
+| `guya/launcher_gen.py` | 184 | generates `Guya.app` and `Start Guya` |
+| `guya/platform_macos.py` | 427 | macOS adapter: hotkeys, frontmost application, paste, permissions |
+| `guya/cloud_engine.py` | 136 | the online speech backend |
+| `guya/__init__.py` | 4 | package name and version |
+| `guya/assistant/__init__.py` | 9 | package note |
+| `guya/assistant/parser.py` | 1,121 | intents and slots, Persian and English |
+| `guya/assistant/service.py` | 798 | intent routing, context, confirmation, dispatch |
+| `guya/assistant/normalizer.py` | 287 | text and spoken-filename normalisation |
+| `guya/assistant/context.py` | 87 | the short-lived context behind "rename it" |
+| `guya/assistant/models.py` | 46 | the data classes shared by parser, service and actions |
+| `guya/assistant/actions/__init__.py` | 16 | picks the adapter for the running platform |
+| `guya/assistant/actions/common.py` | 513 | the safety boundary and the filesystem actions |
+| `guya/assistant/actions/macos.py` | 547 | macOS: applications, browser, spoken feedback |
+| `guya/assistant/actions/windows.py` | 315 | Windows: applications, browser, spoken feedback |
+| `guya/assistant/commands_en.json`, `commands_fa.json` | – | the phrase packs, 93 English and 100 Persian examples |
+| `guya/assets/bench_speech.wav` | – | the seven-second benchmark clip |
+| `guya/assets/fonts/` | – | Vazirmatn, four weights |
+| `install.sh`, `install.bat`, `Install Guya.command`, `Install Guya.bat`, `run.sh`, `run.bat` | – | installers and launchers for macOS and Windows |
+
+*Table F.1. The files of the application package; the Python files add up to the 11,905 lines of Table 5.2.*
+
+Every file action passes through one check before it touches the disk: the path is resolved, so that `..` and symbolic links cannot point outside, and it must lie under one of the allowed roots; anything that cannot be resolved counts as outside. The rename action shows the pattern that all the actions follow: the check runs on the source and on the destination, an existing destination is never overwritten, and every refusal returns a bilingual message instead of raising an exception. The tests in `tests/test_assistant_actions.py` exercise each of these refusals.
+
+```python
+def _is_allowed(self, path: Path) -> bool:
+    try:
+        candidate = Path(path).expanduser().resolve()
+    except (OSError, RuntimeError):
+        # A symlink loop raises RuntimeError on Python 3.11; anything that
+        # cannot be resolved is treated as outside the boundary.
+        return False
+    for root in self.roots:
+        try:
+            candidate.relative_to(root)
+            return True
+        except ValueError:
+            continue
+    return False
+```
+
+```python
+# from rename(), after the source has passed the same check
+    destination = path.with_name(safe_name)
+    if not self._is_allowed(destination):
+        return self._failure(
+            "That new name is not allowed.",
+            "این نام جدید مجاز نیست.",
+        )
+    if destination.exists():
+        return self._failure(
+            f"{destination.name} already exists. Nothing was changed.",
+            f"{destination.name} از قبل وجود دارد و تغییری انجام نشد.",
+        )
+    try:
+        renamed = path.rename(destination)
+```

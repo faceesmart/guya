@@ -110,7 +110,7 @@ Guya.app → control panel → dictation widget (hotkeys, microphone, Whisper, a
 - **Scope and definition of done:** [`docs/V1_SCOPE_AND_ROADMAP.md`](docs/V1_SCOPE_AND_ROADMAP.md).
 - **Spoken test checklist:** [`docs/ASSISTANT_EVALUATION.md`](docs/ASSISTANT_EVALUATION.md).
 - **Evaluation scripts and how to reproduce every number:** [`eval/README.md`](eval/README.md).
-- **Building the report files:** `docs/tools/build_report_html.py` (web page), `build_report_pdf.py` (PDF through Chrome; `pip install markdown playwright pypdf reportlab`, `cd docs/tools && npm install`) and `build_report_docx.js` (Word). The Word files carry a table-of-contents field: answer *Yes* when Word asks to update fields on opening.
+- **Building the report files:** `docs/tools/build_report_html.py` (web page), `build_report_pdf.py` (PDF through Chrome in the Farabi Campus report layout: title and بسم‌الله pages, chapters opening on odd pages, running headers, mirrored margins; `pip install markdown playwright pypdf`, `cd docs/tools && npm install`) and `build_report_docx.js` (Word). The Word files carry a table-of-contents field: answer *Yes* when Word asks to update fields on opening.
 
 ## Project layout
 
