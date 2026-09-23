@@ -44,6 +44,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", ".."))
 FONT_DIR = os.path.join(REPO, "guya", "assets", "fonts")
 ASSETS = os.path.join(HERE, "assets")
+EXTRA_FONT_DIR = os.path.join(ASSETS, "fonts")     # B Nazanin, B Titr (proprietary, not committed): see README
+FA_TEXT = '"B Nazanin", "XB Zar", "Vazirmatn", Tahoma, sans-serif'
+FA_HEAD = '"B Titr", "B Nazanin", "XB Zar", "Vazirmatn", sans-serif'
+EN_TEXT = '"Times New Roman", Times, serif'
 MERMAID_JS = os.path.join(HERE, "node_modules", "mermaid", "dist", "mermaid.min.js")
 FA_DIGITS = str.maketrans("0123456789", "۰۱۲۳۴۵۶۷۸۹")
 MM = 72 / 25.4
@@ -64,14 +68,19 @@ STRINGS = {
            "abstract": "چکیده"},
 }
 
-CSS = """
+CSS_TEMPLATE = """
 @page { size: A4; margin: 35mm 22.5mm 20mm 22.5mm; }
 @page wide { size: A4 landscape; margin: 20mm 22mm 20mm 22mm; }
 * { box-sizing: border-box; }
 html { font-size: 13pt; }
-body { margin: 0; color: #111; background: #fff; font-family: "Source Serif 4", Georgia, "Times New Roman", serif; line-height: 1.55; }
-body.rtl { font-family: "Vazirmatn", Tahoma, sans-serif; font-size: 14pt; line-height: 1.8; }
-h1, h2, h3, .hd { font-family: "Vazirmatn", "Helvetica Neue", Arial, sans-serif; }
+body { margin: 0; color: #111; background: #fff; font-family: EN_TEXT; line-height: 1.5; }
+body.rtl { font-family: FA_TEXT; font-size: 14pt; line-height: 1.7; }
+h1, h2, h3, .hd { font-family: EN_TEXT; font-weight: bold; }
+body.rtl h1, body.rtl h2, body.rtl h3, body.rtl .hd { font-family: FA_HEAD; }
+body.rtl h3 { font-family: FA_TEXT; font-weight: bold; }
+body.rtl .lat { font-family: EN_TEXT; font-size: 12.5pt; }
+body.rtl h2 .lat, body.rtl h3 .lat, body.rtl h1 .lat { font-family: EN_TEXT; font-size: 0.9em; }
+body.rtl th .lat, body.rtl td .lat, body.rtl p.cap .lat, body.rtl .toc-entry .lat { font-size: 0.92em; }
 h2 { break-before: page; break-after: avoid; font-size: 20pt; line-height: 1.35; margin: 12mm 0 16pt; padding-bottom: 6pt; border-bottom: 1.5pt solid #0f766e; }
 h2.front-title { break-before: auto; }
 h3 { break-after: avoid; font-size: 18pt; line-height: 1.35; margin: 20pt 0 8pt; }
@@ -82,7 +91,7 @@ hr { display: none; }
 ul, ol { margin: 0 0 9pt; padding-left: 1.5em; } body.rtl ul, body.rtl ol { padding-left: 0; padding-right: 1.5em; }
 li { margin: 2pt 0; text-align: justify; }
 code { font-family: "IBM Plex Mono", Menlo, Consolas, monospace; font-size: 0.86em; background: #f1f3f3; padding: 0 2pt; direction: ltr; unicode-bidi: embed; }
-pre { font-family: "IBM Plex Mono", Menlo, Consolas, monospace; font-size: 9pt; line-height: 1.45; background: #f4f6f6; border: 0.5pt solid #d0d6d6; padding: 6pt 8pt; margin: 4pt 0 10pt; white-space: pre-wrap; word-break: break-all; direction: ltr; text-align: left; break-inside: avoid; }
+pre { font-family: "IBM Plex Mono", Menlo, Consolas, monospace; font-size: 9pt; line-height: 1.45; background: #f4f6f6; border: 0.5pt solid #d0d6d6; padding: 6pt 8pt; margin: 4pt 0 10pt; white-space: pre-wrap; word-break: break-all; direction: ltr; text-align: left; orphans: 4; widows: 4; }
 pre code { background: none; padding: 0; font-size: inherit; }
 pre.mermaid { background: #fff; border: 0; text-align: center; padding: 6pt 0; break-inside: avoid; }
 pre.mermaid svg { max-width: 100%; height: auto; max-height: 185mm; }
@@ -90,23 +99,26 @@ pre.mermaid .nodeLabel, pre.mermaid .label foreignObject div, pre.mermaid .edgeL
 .wide { page: wide; }
 pre.mermaid.wide { break-before: page; break-after: avoid; margin: 0; }
 pre.mermaid.wide svg { max-height: 150mm; }
-.tw { margin: 6pt 0 2pt; break-inside: avoid; }
-table { border-collapse: collapse; width: 100%; font-size: 9.5pt; line-height: 1.4; }
-body.rtl table { font-size: 10.5pt; line-height: 1.65; }
+.tw { margin: 6pt 0 2pt; }
+thead { display: table-header-group; }          /* long tables split across pages with the header row repeated */
+tr { break-inside: avoid; }
+table { border-collapse: collapse; width: 100%; font-size: 10.5pt; line-height: 1.35; }
+body.rtl table { font-size: 12.5pt; line-height: 1.5; }
 th, td { border: 0.5pt solid #b9c2c2; padding: 3pt 5pt; vertical-align: top; text-align: left; }
 body.rtl th, body.rtl td { text-align: right; }
-th { background: #e8f1f0; font-family: "Vazirmatn", "Helvetica Neue", Arial, sans-serif; font-weight: 600; font-size: 9pt; }
-body.rtl th { font-size: 10pt; }
+th { background: #e8f1f0; font-weight: bold; font-size: 10pt; }
+body.rtl th { font-size: 12.5pt; }
 td[align=right], th[align=right] { text-align: right; }
-p.cap { font-family: "Vazirmatn", "Helvetica Neue", Arial, sans-serif; font-size: 11pt; color: #333; text-align: center; margin: 4pt 0 14pt; break-before: avoid; }
+p.cap { font-size: 11pt; color: #222; text-align: center; margin: 4pt 0 14pt; break-before: avoid; }
+body.rtl p.cap { font-size: 12.5pt; }
 figure { margin: 8pt 0 4pt; text-align: center; break-inside: avoid; }
 figure img { max-width: 100%; max-height: 160mm; height: auto; }
 figcaption { display: none; }
-p.fa { direction: rtl; font-family: "Vazirmatn", Tahoma, sans-serif; font-size: 14pt; line-height: 1.8; text-align: justify; }
-p.en { direction: ltr; font-family: "Source Serif 4", Georgia, serif; font-size: 13pt; line-height: 1.55; text-align: justify; }
+p.fa { direction: rtl; font-family: FA_TEXT; font-size: 14pt; line-height: 1.7; text-align: justify; }
+p.en { direction: ltr; font-family: EN_TEXT; font-size: 13pt; line-height: 1.5; text-align: justify; }
 body.rtl h2#abstract-end { direction: ltr; text-align: left; }
 body:not(.rtl) h2#abstract-end { direction: rtl; text-align: right; }
-ol.refs { direction: ltr; text-align: left; font-family: "Source Serif 4", Georgia, serif; font-size: 11pt; line-height: 1.45; padding-left: 1.5em; padding-right: 0; }
+ol.refs { direction: ltr; text-align: left; font-family: EN_TEXT; font-size: 12pt; line-height: 1.4; padding-left: 1.5em; padding-right: 0; }
 h2, h3, p.cap, section.fp, section.cover { position: relative; }
 .pm { position: absolute; left: 0; top: 0; font-size: 1pt; color: #fff; direction: ltr; unicode-bidi: isolate; }
 .blank { break-before: page; height: 1pt; }
@@ -125,30 +137,39 @@ section.bismillah { height: 242mm; display: flex; align-items: center; justify-c
 .jury .note { text-align: center; color: #555; font-size: 12pt; margin-top: 8mm; }
 section.front { break-before: page; }
 section.abstract h2 { margin-top: 4mm; }
-section.abstract p { font-size: 13pt; line-height: 1.7; }
-body:not(.rtl) section.abstract p { font-size: 12.5pt; line-height: 1.5; }
-.toc-entry { display: flex; align-items: baseline; font-family: "Vazirmatn", "Helvetica Neue", Arial, sans-serif; font-size: 12pt; margin: 2pt 0; break-inside: avoid; }
+section.abstract p { font-size: 14pt; line-height: 1.6; }
+body:not(.rtl) section.abstract p { font-size: 12.5pt; line-height: 1.45; }
+.toc-entry { display: flex; align-items: baseline; font-size: 12pt; margin: 2pt 0; break-inside: avoid; }
+body.rtl .toc-entry { font-size: 14pt; }
 .toc-entry.l2 { font-weight: 600; margin-top: 7pt; }
-.toc-entry.l3 { padding-left: 16pt; font-size: 11pt; font-weight: 400; } body.rtl .toc-entry.l3 { padding-left: 0; padding-right: 16pt; }
+.toc-entry.l3 { padding-left: 16pt; font-size: 11pt; font-weight: normal; } body.rtl .toc-entry.l3 { font-size: 13pt; } body.rtl .toc-entry.l3 { padding-left: 0; padding-right: 16pt; }
 .toc-entry .t { flex: 0 1 auto; }
 .toc-entry .dots { flex: 1 1 auto; border-bottom: 1px dotted #999; margin: 0 4pt; min-width: 10pt; transform: translateY(-3pt); }
 .toc-entry .n { flex: 0 0 auto; font-variant-numeric: tabular-nums; }
-.lof .toc-entry { font-size: 11pt; margin: 3pt 0; }
+.lof .toc-entry { font-size: 11pt; margin: 3pt 0; } body.rtl .lof .toc-entry { font-size: 13pt; }
 """
 
-OVERLAY_CSS = """
+OVERLAY_CSS_TEMPLATE = """
 @page { size: A4; margin: 0; }
 @page land { size: A4 landscape; margin: 0; }
 html, body { margin: 0; padding: 0; }
-body { font-family: "Vazirmatn", "Helvetica Neue", Arial, sans-serif; color: #111; }
+body { font-family: EN_TEXT; color: #111; }
+body.rtl { font-family: FA_TEXT; }
 .pg { position: relative; width: 210mm; height: 296mm; overflow: hidden; break-after: page; }
 .pg.land { page: land; width: 297mm; height: 209mm; }
 .pg:last-child { break-after: auto; }
 .hdr { position: absolute; top: 0; height: 25mm; border-bottom: 0.6pt solid #000; }
-.hdr span { position: absolute; bottom: 1.6mm; font-size: 10.5pt; white-space: nowrap; max-width: 130mm; overflow: hidden; text-overflow: ellipsis; }
+.hdr span { position: absolute; bottom: 1.6mm; font-size: 11pt; white-space: nowrap; max-width: 130mm; overflow: hidden; text-overflow: ellipsis; }
 .hdr .l { left: 0; } .hdr .r { right: 0; }
-.bn { position: absolute; left: 0; right: 0; bottom: 12mm; text-align: center; font-size: 11pt; }
+.bn { position: absolute; left: 0; right: 0; bottom: 12mm; text-align: center; font-size: 12pt; }
 """
+
+def _css(t):
+    return t.replace("FA_TEXT", FA_TEXT).replace("FA_HEAD", FA_HEAD).replace("EN_TEXT", EN_TEXT)
+
+
+CSS = _css(CSS_TEMPLATE)
+OVERLAY_CSS = _css(OVERLAY_CSS_TEMPLATE)
 
 FONTS = ('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400'
          '&family=IBM+Plex+Mono:wght@400;500&display=swap">')
@@ -156,6 +177,17 @@ FONTS = ('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=
 
 def font_faces():
     faces = []
+    if os.path.isdir(EXTRA_FONT_DIR):
+        for fn in sorted(os.listdir(EXTRA_FONT_DIR)):
+            low = fn.lower()
+            if not low.endswith((".ttf", ".otf")):
+                continue
+            # Borna's file names: BNazanin.ttf, BNaznnBd.ttf (bold), BTitrBd.ttf
+            family = "B Titr" if "titr" in low else "B Nazanin" if low.startswith("bnaz") or "nazanin" in low else "XB Zar" if "zar" in low else None
+            if family is None or "outline" in low or low.startswith("bnazanno"):
+                continue
+            weight = "bold" if ("bold" in low or "bd." in low or family == "B Titr") else "normal"
+            faces.append(f'@font-face {{ font-family: "{family}"; font-weight: {weight}; src: url("file://{os.path.join(EXTRA_FONT_DIR, fn)}"); }}')
     for weight, name in ((400, "Regular"), (500, "Medium"), (600, "SemiBold"), (700, "Bold")):
         path = os.path.join(FONT_DIR, f"Vazirmatn-{name}.ttf")
         if os.path.exists(path):
@@ -239,6 +271,51 @@ def print_variant(m):
     return '<pre class="mermaid">' + inner + "</pre>"
 
 
+LATIN_RUN = re.compile(r"[A-Za-z][A-Za-z0-9._+/\\-]*(?:\s[A-Za-z0-9._+/\\-]+)*")
+PROTECTED = re.compile(r"<(pre|code|script|style)\b.*?</\1>|<span class=\"pm\">[^<]*</span>|&[A-Za-z#0-9]+;", re.S)
+
+
+def wrap_latin(html):
+    """Wrap Latin words in the Persian text in <span class=\"lat\"> so they take the Latin face."""
+    out, pos = [], 0
+    for m in PROTECTED.finditer(html):                 # code, markers and entities stay untouched
+        out.append(_wrap_text(html[pos:m.start()])); out.append(m.group(0)); pos = m.end()
+    out.append(_wrap_text(html[pos:]))
+    return "".join(out)
+
+
+# B Nazanin has no combining hamza, Arabic decimal/thousands separators or Arabic percent sign;
+# Chrome would take those from the fallback font (and, in a heading pushed to the next page, has
+# been seen to paint the fallback cluster on the wrong page). Use the glyphs the font does have:
+# the precomposed ۀ, the classic slash decimal, the comma thousands separator and ASCII %.
+FA_SUBS = (("\u0647\u0654", "\u06c0"), ("\u066b", "/"), ("\u066a", "%"), ("\u066c", "\u060c"), ("\u2026", "..."))
+
+
+def normalize_fa(html):
+    """Apply FA_SUBS to the text nodes of the page (code, markers and entities untouched)."""
+    out, pos = [], 0
+    for m in PROTECTED.finditer(html):
+        out.append(_sub_text(html[pos:m.start()])); out.append(m.group(0)); pos = m.end()
+    out.append(_sub_text(html[pos:]))
+    return "".join(out)
+
+
+def _sub_text(html):
+    parts = re.split(r"(<[^>]+>)", html)
+    for i in range(0, len(parts), 2):
+        for a, b in FA_SUBS:
+            parts[i] = parts[i].replace(a, b)
+    return "".join(parts)
+
+
+def _wrap_text(html):
+    parts = re.split(r"(<[^>]+>)", html)
+    for i in range(0, len(parts), 2):                  # even indexes are text nodes
+        if parts[i].strip():
+            parts[i] = LATIN_RUN.sub(lambda m: f'<span class="lat">{m.group(0)}</span>', parts[i])
+    return "".join(parts)
+
+
 def cover_page(cls, S, title, rows, direction, k):
     meta = "".join(f"<div><b>{a}</b> {b}</div>" for a, b in rows
                    if not a.startswith(("Code", "کد", "Institution", "دانشگاه")))
@@ -269,6 +346,8 @@ def build_html(md_path, rtl):
     marked, headings, captions = mark(front_abstract + "<!--SPLIT-->" + body + end_abstract, marks)
     front_abstract, body = marked.split("<!--SPLIT-->")
     body = re.sub(r'<pre class="mermaid">(.*?)</pre>', print_variant, body, flags=re.S)
+    if rtl:
+        body = wrap_latin(body); front_abstract = wrap_latin(front_abstract)
     keys = {name: marks.next() for name in ("title", "bismillah", "jury", "contents", "figures", "tables", "end_title")}
 
     title_page = cover_page("", S, title, rows, "rtl" if rtl else "ltr", keys["title"])
@@ -297,6 +376,8 @@ def build_html(md_path, rtl):
     page = (f'<!doctype html><html lang="{lang}" dir="{"rtl" if rtl else "ltr"}"><head><meta charset="utf-8"><title>{title}</title>'
             f"{FONTS}<style>{font_faces()}{CSS}</style></head><body class=\"{'rtl' if rtl else ''}\">"
             f"{title_page}{bism}{jury}{front_abstract}{toc}{lists}<main>{body}</main>{end_title}{mermaid}</body></html>")
+    if rtl:
+        page = normalize_fa(page)
 
     odd_body = [k for lvl, _, text, k in headings if odd_start(lvl, text)]      # abstract first, other abstract last
     odd_keys = [keys["title"], keys["bismillah"], keys["jury"], odd_body[0], keys["contents"]] + odd_body[1:] + [keys["end_title"]]
@@ -372,8 +453,9 @@ def overlay_html(plan, rtl):
             inner = (f'<div class="hdr" style="left:{left};right:{right}">'
                      f'<span class="l" dir="{d}">{l}</span><span class="r" dir="{d}">{r}</span></div>')
         pages.append(f'<div class="pg{" land" if pg["land"] else ""}">{inner}</div>')
-    return (f'<!doctype html><html><head><meta charset="utf-8"><style>{font_faces()}{OVERLAY_CSS}</style></head>'
-            f'<body>{"".join(pages)}</body></html>')
+    html = (f'<!doctype html><html><head><meta charset="utf-8"><style>{font_faces()}{OVERLAY_CSS}</style></head>'
+            f'<body class="{"rtl" if rtl else ""}">{"".join(pages)}</body></html>')
+    return normalize_fa(html) if rtl else html
 
 
 def form_xobject(writer, src):

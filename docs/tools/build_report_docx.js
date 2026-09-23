@@ -24,7 +24,6 @@ if (!MD_PATH || !OUT_PATH) { console.error("usage: build_report_docx.js REPORT.m
 
 const DOCS_DIR = path.dirname(path.resolve(MD_PATH));
 const REPO = path.resolve(__dirname, "..", "..");
-const FONT_PATH = path.join(REPO, "guya", "assets", "fonts", "Vazirmatn-Regular.ttf");
 const LANG = RTL ? "fa" : "en";
 const S = {
   en: { contents: "Contents", institution: "University of Tehran · Farabi Campus · Faculty of Engineering",
@@ -42,11 +41,17 @@ const MAX_IMG_H_PX = 700;
 const LAND = { w: 900, h: 500 };                 // image limits on a landscape page
 const WIDE_PX = 900;                             // a diagram wider than this (in CSS px) gets a landscape page
 
-const BODY_FONT = RTL ? "Vazirmatn" : "Cambria";
-const HEAD_FONT = RTL ? "Vazirmatn" : "Calibri";
+// The university's conventional academic type: B Nazanin for Persian text, B Titr for chapter
+// titles, Times New Roman for Latin text. Word picks the Latin face (ascii/hAnsi) for Latin
+// characters and the complex-script face (cs) for Persian ones, so one run can carry both.
+const BODY_FONT = RTL ? "B Nazanin" : "Times New Roman";
+const HEAD_FONT = RTL ? "B Titr" : "Times New Roman";
 const MONO_FONT = "Courier New";
-const FONT = (name) => ({ ascii: name, hAnsi: name, cs: RTL ? "Vazirmatn" : (name === MONO_FONT ? MONO_FONT : "Vazirmatn"), eastAsia: name });
-const BODY_SIZE = RTL ? 23 : 22;                 // half-points
+const LATIN_FONT = "Times New Roman";
+const FONT = (name) => (name === MONO_FONT
+  ? { ascii: MONO_FONT, hAnsi: MONO_FONT, cs: MONO_FONT, eastAsia: MONO_FONT }
+  : { ascii: RTL ? LATIN_FONT : name, hAnsi: RTL ? LATIN_FONT : name, cs: RTL ? name : "B Nazanin", eastAsia: RTL ? LATIN_FONT : name });
+const BODY_SIZE = RTL ? 28 : 26;                 // half-points: 14 pt Persian, 13 pt English
 const hasPersian = (t) => /[؀-ۿ]/.test(t);
 
 const unescape = (t) => t.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'");
@@ -171,7 +176,7 @@ function codeBlock(text) {
     style: "CodeBlock", bidirectional: false, alignment: D.AlignmentType.LEFT,
     keepNext: i < lines.length - 1, keepLines: true,
     spacing: { before: i === 0 ? 120 : 0, after: i === lines.length - 1 ? 160 : 0, line: 240 },
-    children: [new D.TextRun({ text: line || " ", font: FONT(MONO_FONT), size: 17, sizeComplexScript: 17 })],
+    children: [new D.TextRun({ text: line || " ", font: FONT(MONO_FONT), size: 18, sizeComplexScript: 18 })],
   }));
 }
 
@@ -311,11 +316,11 @@ const docOptions = {
     default: { document: { run: { font: FONT(BODY_FONT), size: BODY_SIZE, sizeComplexScript: BODY_SIZE } } },
     paragraphStyles: [
       { id: "Heading1", name: "Heading 1", basedOn: "Normal", next: "Normal", quickFormat: true,
-        run: { font: FONT(HEAD_FONT), size: 34, bold: true, color: "0F5F58" }, paragraph: { spacing: { before: 0, after: 240 }, outlineLevel: 0 } },
+        run: { font: FONT(HEAD_FONT), size: 40, bold: true, color: "0F5F58" }, paragraph: { spacing: { before: 0, after: 240 }, outlineLevel: 0 } },
       { id: "Heading2", name: "Heading 2", basedOn: "Normal", next: "Normal", quickFormat: true,
-        run: { font: FONT(HEAD_FONT), size: 26, bold: true, color: "111111" }, paragraph: { spacing: { before: 300, after: 120 }, outlineLevel: 1 } },
+        run: { font: FONT(RTL ? BODY_FONT : HEAD_FONT), size: 36, bold: true, color: "111111" }, paragraph: { spacing: { before: 300, after: 120 }, outlineLevel: 1 } },
       { id: "CodeBlock", name: "Code Block", basedOn: "Normal", next: "Normal",
-        run: { font: FONT(MONO_FONT), size: 17 }, paragraph: { spacing: { before: 0, after: 0, line: 240 },
+        run: { font: FONT(MONO_FONT), size: 18 }, paragraph: { spacing: { before: 0, after: 0, line: 240 },
           shading: { type: D.ShadingType.CLEAR, fill: "F4F6F6", color: "auto" }, indent: { left: 120, right: 120 } } },
     ],
   },
@@ -342,9 +347,7 @@ for (const block of body) {
   } else cur.push(block);
 }
 if (cur.length) docOptions.sections.push(portrait(cur, firstSection));
-if (fs.existsSync(FONT_PATH)) {
-  docOptions.fonts = [{ name: "Vazirmatn", data: fs.readFileSync(FONT_PATH), characterSet: D.CharacterSet.ANSI }];
-}
+// No font is embedded: B Nazanin and B Titr are proprietary and present on the readers' machines.
 
 const doc = new D.Document(docOptions);
 D.Packer.toBuffer(doc).then(async (buf) => {

@@ -42,3 +42,6 @@ eval/data/fleurs/*
 # report build tooling
 docs/tools/node_modules/
 docs/*.print.html
+
+# proprietary academic fonts used only for the PDF build (B Nazanin, B Titr)
+docs/tools/assets/fonts/
