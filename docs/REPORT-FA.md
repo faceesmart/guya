@@ -24,7 +24,7 @@
 مراجع
 پیوست الف. بازتولید نتایج · ب. مجموعهٔ فرمان‌ها · پ. پیکربندی · ت. ابزارهای ارزیابی · ث. واژه‌نامه · ج. کد برنامه
 
-**شکل‌ها.** ۴.۱ معماری لایه‌ای · ۴.۲ سه فرایند · ۴.۳ توالی دیکته · ۴.۴ خط لولهٔ تبدیل گفتار · ۴.۵ مسیر دستیار · ۴.۶ وضعیت‌های پرسش در انتظار · ۴.۷ وضعیت‌ها و رنگ‌های پیل · ۴.۸ پیل روی صفحه · ۴.۹ حباب پاسخ · ۴.۱۰ پنجرهٔ انتخاب نتیجه · ۵.۱ زبانهٔ تنظیمات · ۵.۲ زبانهٔ راهنما · ۵.۳ پنل در حالت دوگانه · ۶.۱ صفحهٔ خوش‌آمد ویزارد · ۶.۲ انتخاب زبان در ویزارد · ۶.۳ پنل کنترل
+**شکل‌ها.** ۴.۱ معماری لایه‌ای · ۴.۲ سه فرایند · ۴.۳ توالی دیکته · ۴.۴ خط لولهٔ تبدیل گفتار · ۴.۵ مسیر دستیار · ۴.۶ وضعیت‌های پرسش در انتظار · ۴.۷ وضعیت‌ها و رنگ‌های پیل · ۴.۸ پیل روی صفحه · ۴.۹ حباب پاسخ · ۴.۱۰ پنجرهٔ انتخاب نتیجه · ۵.۱ زبانه‌های تنظیمات و راهنما · ۵.۲ پنل در حالت دوگانه · ۶.۱ صفحهٔ خوش‌آمد ویزارد · ۶.۲ انتخاب زبان در ویزارد · ۶.۳ پنل کنترل
 
 **جدول‌ها.** ۱.۱ اهداف · ۱.۲ دستاوردها · ۲.۱ اندازه‌های مدل Whisper · ۲.۲ ابزارهای موجود · ۳.۱ موارد کاربرد · ۳.۲ نیازمندی‌های کارکردی · ۳.۳ نیازمندی‌های غیرکارکردی · ۳.۴ نیازمندی‌های ایمنی · ۴.۱ مسئولیت ماژول‌ها · ۴.۲ وضعیت‌های پاسخ · ۴.۳ اعمال ایمنی · ۴.۴ وضعیت‌های پیل · ۴.۵ واسط سکو · ۴.۶ رکورد لاگ · ۵.۱ وابستگی‌ها · ۵.۲ اندازهٔ ماژول‌ها · ۵.۳ نخ‌ها و تایمرها · ۵.۴ تنظیمات رمزگشایی · ۵.۵ مقیاس تطبیق نام فایل · ۵.۶ قواعد تحلیل‌گر · ۵.۷ ثابت‌های بنچمارک · ۵.۸ مجموعهٔ آزمون · ۵.۹ جدول زمانی توسعه · ۵.۱۰ مفاهیم درسی · ۶.۱ فرمان‌های گفتاری · ۷.۱ دقت هر مدل · ۷.۲ مطالعهٔ حذفی روی small · ۷.۳ مطالعهٔ حذفی روی large-v3-turbo · ۷.۴ نسبت‌های هزینه · ۷.۵ دقت قصد روی مجموعهٔ دیده‌نشده · ۷.۶ نتایج استفاده · ۷.۷ نقص‌های بازبینی · ۷.۸ جلسه‌های دستی · ۷.۹ نتایج جلسه با کاربر هدف · ۷.۱۰ وضعیت اهداف · ب.۱ مجموعهٔ فرمان‌ها · پ.۱ پیکربندی · ث.۱ واژه‌نامه · ج.۱ فایل‌های برنامه
 
@@ -36,7 +36,11 @@
 
 این گزارش نیازمندی‌ها، معماری و پیاده‌سازی سیستم را شرح می‌دهد و آن را با اندازه‌گیری‌های قابل تکرار ارزیابی می‌کند: نرخ خطای واژه (WER) برای شش اندازهٔ مدل Whisper روی یک مجموعهٔ آزمون ثابت فارسی و انگلیسی، یک مطالعهٔ حذفی (ablation) روی تنظیمات رمزگشایی خود گویا، کالیبراسیون بنچمارک دستگاه، یک آزمون تعمیم‌پذیری تحلیل‌گر فرمان‌ها روی جمله‌های دیده‌نشده، و گزارش استفادهٔ واقعی از دستیار، و در پی آن یک جلسه با کاربر هدف روی یک لپ‌تاپ Windows که در آن هر دوازده کار پروتکل مطالعه انجام شد و مقیاس کاربردپذیری سیستم نمرهٔ ۸۲٫۵ گرفت. یافته‌های اصلی از این قرارند: فارسی برای رسیدن به نرخ خطای واژهٔ زیر ۳۰٪ به `large-v3-turbo` یا بزرگ‌تر نیاز دارد، در حالی که انگلیسی با مدل `small` به ۶٪ می‌رسد؛ یک تنظیم دستی که از نمونه‌های اولیه به ارث رسیده بود، یعنی جریمهٔ تکرار، جمله‌ها را کوتاه می‌کرد و حذف شد؛ تحلیل‌گر قاعده‌محور فرمان‌ها، پس از رسیدگی به واژه‌های اضافی گفتار، به جمله‌های دیده‌نشده خوب تعمیم می‌یابد (از ۶۹٪ به ۱۰۰٪ روی مجموعهٔ دیده‌نشده)؛ و مدل گفتار حدود ۹۷٪ تأخیر سرتاسری یک فرمان دستیار را تشکیل می‌دهد، به‌طوری که سهم پردازش خود دستیار ناچیز است.
 
+**واژه‌های کلیدی:** تبدیل گفتار به متن، دستیار صوتی، دسترس‌پذیری، Whisper، زبان فارسی، پردازش محلی
+
 Abstract: Guya is a desktop application for people who can speak but find sustained typing and repeated mouse and keyboard work difficult. It has two push-to-talk modes on two separate keys: dictation, which types what the user says into whatever application is in front, and a small assistant, which carries out a fixed set of safe desktop actions such as creating, finding, opening and renaming files, opening applications, saving and closing, and simple browser navigation. Both modes work in Persian and English, run, in their default offline mode, entirely on the user's own computer with free software, and cost nothing to use. A setup wizard measures the computer's speed and recommends a speech model that will run at usable speed on that machine, with a free online model as the fallback for weak hardware. The application is installed with one double-click, is 11,905 lines of Python in 24 modules, enforces a safety boundary under which no action can delete or overwrite a file, and is covered by 136 automated tests. This report describes the requirements, the architecture and the implementation, and evaluates the system with reproducible measurements: word error rate of six Whisper model tiers on a fixed Persian and English test set, an ablation of Guya's own decoding settings, a calibration of the device benchmark, a held-out test of the command parser, and the assistant's real-use log, followed by a session with the target user on a Windows laptop in which all twelve tasks of the study protocol were completed and the System Usability Scale scored 82.5. The main findings are that Persian needs `large-v3-turbo` or larger to fall below 30% word error rate, while English reaches 6% with `small`; that one hand-tuned decoding setting inherited from earlier prototypes, the repetition penalty, was found to cut sentences short and was removed; that the rule-based parser generalises well to unseen phrasings once filler words are handled (69% → 100% on a held-out set); and that the speech model accounts for about 97% of the end-to-end latency of an assistant command, so the assistant's own processing is negligible.
+
+Keywords: speech-to-text, voice assistant, accessibility, Whisper, Persian, on-device processing
 
 ---
 
@@ -985,17 +989,15 @@ install.sh  install.bat  "Install Guya.command"  "Install Guya.bat"  run.sh  run
 
 ![زبانهٔ تنظیمات پنل کنترل](img/panel-settings.png)
 
-*شکل ۵.۱. زبانهٔ تنظیمات: حالت، مدل، کلید آنلاین و دو کلید میانبر، هر یک با دکمهٔ Change.*
-
 ![زبانهٔ راهنمای پنل کنترل](img/panel-help.png)
 
-*شکل ۵.۲. زبانهٔ راهنمای دوزبانه.*
+*شکل ۵.۱. پنل کنترل: (الف) زبانهٔ تنظیمات با حالت، مدل، کلید آنلاین و دو کلید میانبر، هر یک با دکمهٔ Change؛ (ب) زبانهٔ راهنمای دوزبانه.*
 
 ![زبانهٔ Controls در حالت دوگانه](img/panel-control-dual.jpg)
 
 ![زبانهٔ Settings در حالت دوگانه](img/panel-setting-dual.jpg)
 
-*شکل ۵.۳. پنل کنترل در حالت دوگانه: زبانهٔ Controls با کلید زندهٔ پشتیبان و زبانی که در حالت OFFLINE قفل شده، و زبانهٔ Settings با حالت، مدل، کلید آنلاین و دو کلید میانبر.*
+*شکل ۵.۲. پنل کنترل در حالت دوگانه: زبانهٔ Controls با کلید زندهٔ پشتیبان و زبانی که در حالت OFFLINE قفل شده، و زبانهٔ Settings با حالت، مدل، کلید آنلاین و دو کلید میانبر.*
 
 ### ۵.۱۲ نصب‌کننده، اجراکننده و لاگ
 

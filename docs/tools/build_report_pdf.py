@@ -2,13 +2,15 @@
 Print docs/REPORT.md (or docs/REPORT-FA.md) to a PDF with Chrome, driven by Playwright, in the
 page layout of the Farabi Campus format for B.Sc. project reports:
 
-  * a title page, a بسم‌الله page, a page for the evaluation minutes and the abstract, each
-    followed by a blank page (the format asks for blank backs);
+  * a title page, a بسم‌الله page, a page for the evaluation minutes and the abstract with its
+    keywords, each followed by a blank page in the --print layout (the format asks for blank
+    backs);
   * the contents and the lists of figures and tables, with page numbers filled in by further
     print passes (invisible letter markers are located by text extraction);
-  * every chapter, the references, the first appendix and the closing pages start on an odd
-    page, a blank page being inserted where needed; those pages carry no header and have the
-    page number at the bottom centre;
+  * with --print, every chapter, the references, the first appendix and the closing pages
+    start on an odd page, a blank page being inserted where needed (the bound copy); without
+    it, the copy sent for review, chapters start on a new page and no page is blank. Chapter
+    opening pages carry no header and have the page number at the bottom centre;
   * every other page carries a header rule with the section title (odd pages) or the chapter
     title (even pages) and the page number on the outer edge. The headers and numbers are
     printed by Chrome as a second, overlay PDF and drawn onto the pages as form XObjects, so
@@ -118,13 +120,17 @@ td[align=right], th[align=right] { text-align: right; }
 p.cap { font-size: 11pt; color: #222; text-align: center; margin: 4pt 0 14pt; break-before: avoid; }
 body.rtl p.cap { font-size: 12.5pt; }
 figure { margin: 8pt 0 4pt; text-align: center; break-inside: avoid; }
+.figrow { display: flex; gap: 6mm; justify-content: center; align-items: flex-start; break-inside: avoid; margin: 8pt 0 4pt; }
+.figrow figure { flex: 0 1 47%; margin: 0; }
+.figrow figure img { width: 100%; height: auto; max-height: 130mm; object-fit: contain; }
+p.kw { margin-top: 2pt; }
 figure img { max-width: 100%; max-height: 160mm; height: auto; }
 figcaption { display: none; }
 p.fa { direction: rtl; font-family: FA_TEXT; font-size: 14pt; line-height: 1.7; text-align: justify; }
 p.en { direction: ltr; font-family: EN_TEXT; font-size: 13pt; line-height: 1.5; text-align: justify; }
 body.rtl h2#abstract-end { direction: ltr; text-align: left; }
 body:not(.rtl) h2#abstract-end { direction: rtl; text-align: right; }
-ol.refs { direction: ltr; text-align: left; font-family: EN_TEXT; font-size: 12pt; line-height: 1.4; padding-left: 1.5em; padding-right: 0; }
+ol.refs, body.rtl ol.refs { direction: ltr; text-align: left; font-family: EN_TEXT; font-size: 12pt; line-height: 1.4; padding-left: 1.5em; padding-right: 0; list-style: decimal outside; }
 h2, h3, p.cap, section.fp, section.cover { position: relative; }
 .pm { position: absolute; left: 0; top: 0; font-size: 1pt; color: #fff; direction: ltr; unicode-bidi: isolate; }
 .blank { break-before: page; height: 1pt; }
@@ -343,10 +349,10 @@ def build_html(md_path, rtl):
     # the abstract moves in front of the contents; its other-language paragraph closes the report
     m = re.search(r'<h2 id="([^"]+)">(چکیده|Abstract)</h2>(.*?)(?=<h2 )', body, re.S)
     abstract = m.group(3); body = body[:m.start()] + body[m.end():]
-    f = re.search(r'<p class="(?:en|fa)"[^>]*>(.*?)</p>\s*', abstract, re.S)
-    foreign = re.sub(r"^(Abstract|چکیده):\s*", "", f.group(1)); abstract = abstract[:f.start()] + abstract[f.end():]
+    f = re.search(r'(?:<p class="(?:en|fa)[^"]*"[^>]*>.*?</p>\s*)+', abstract, re.S)
+    foreign = re.sub(r"^(<p[^>]*>)(Abstract|چکیده):\s*", r"\1", f.group(0)); abstract = abstract[:f.start()] + abstract[f.end():]
     front_abstract = f'<section class="abstract"><h2 id="{m.group(1)}">{m.group(2)}</h2>{abstract}</section>'
-    end_abstract = f'<h2 id="abstract-end">{O["abstract"]}</h2><p class="{other}">{foreign}</p>'
+    end_abstract = f'<h2 id="abstract-end">{O["abstract"]}</h2>{foreign}'
 
     marks = Marks()
     marked, headings, captions = mark(front_abstract + "<!--SPLIT-->" + body + end_abstract, marks)
@@ -519,7 +525,7 @@ def stamp(pdf_bytes, overlay_bytes, rtl, title, author, headings, mapping, plan)
     return out.getvalue()
 
 
-def build(md_path, out_path, rtl=False, figdir=None, author="MohammadReza Ganji"):
+def build(md_path, out_path, rtl=False, figdir=None, author="MohammadReza Ganji", print_layout=False):
     html, title, headings, captions, keys, odd_keys, order = build_html(md_path, rtl)
     html_path = os.path.abspath(out_path) + ".print.html"
     with open(html_path, "w", encoding="utf-8") as f:
@@ -547,6 +553,8 @@ def build(md_path, out_path, rtl=False, figdir=None, author="MohammadReza Ganji"
                         display_header_footer=False)
         pdf = page.pdf(**pdf_opts)
         mapping = marker_pages(pdf)
+        if not print_layout:               # screen copy: no blank pages, chapters just start on a new page
+            odd_keys = []
         blanks = plan_blanks(mapping, odd_keys, set())
         for _ in range(6):
             shown = {k: (str(v).translate(FA_DIGITS) if rtl else str(v)) for k, v in mapping.items()}
@@ -590,6 +598,6 @@ if __name__ == "__main__":
         i = argv.index("--figdir"); figdir = argv[i + 1]; del argv[i:i + 2]
     rtl = "--rtl" in argv
     args = [a for a in argv if not a.startswith("--")]
-    pages, nh, nc, missing = build(args[0], args[1], rtl=rtl, figdir=figdir)
+    pages, nh, nc, missing = build(args[0], args[1], rtl=rtl, figdir=figdir, print_layout="--print" in argv)
     print(f"wrote {args[1]}: {pages} pages, {nh} headings and {nc} captions in the front lists"
           + (f"; NOT LOCATED: {missing}" if missing else ""))

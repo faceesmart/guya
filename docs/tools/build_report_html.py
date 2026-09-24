@@ -67,6 +67,8 @@ body.rtl ol.refs{padding-left:1.3em;padding-right:0;text-align:left;font-family:
 p.cap{font-family:var(--f-head);font-size:13px;color:var(--dim);margin:6px 0 26px}
 figure+p.cap,pre.mermaid+p.cap{margin-top:-12px;text-align:center}
 figure{margin:0 0 22px;background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:10px}
+.figrow{display:flex;gap:16px;align-items:flex-start;margin:0 0 22px} .figrow figure{flex:1 1 0;min-width:0;margin:0}
+p.kw{margin-top:-6px}
 figure img{display:block;max-width:100%;height:auto;margin:0 auto;border-radius:4px}
 figcaption{font-family:var(--f-head);font-size:12.5px;color:var(--dim);text-align:center;margin-top:8px}
 @media (max-width:900px){.shell,body.rtl .shell{grid-template-columns:minmax(0,1fr);gap:0;padding:24px 16px 64px} nav.rail{display:none} body{font-size:16px}}
@@ -78,6 +80,23 @@ FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com">'
          '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700'
          '&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400'
          '&family=IBM+Plex+Mono:wght@400;500&display=swap">')
+
+
+def _is_tall(path):
+    """True for portrait images (taller than wide), read from the PNG/JPEG header without PIL."""
+    import struct
+    with open(path, "rb") as f:
+        head = f.read(32)
+        if head[:8] == b"\x89PNG\r\n\x1a\n":
+            w, h = struct.unpack(">II", head[16:24]); return h > w
+        f.seek(2)
+        while True:                               # JPEG: walk the segments to the first SOF marker
+            marker = f.read(2)
+            if len(marker) < 2 or marker[0] != 0xFF:
+                return False
+            if marker[1] in (0xC0, 0xC1, 0xC2):
+                f.read(3); h, w = struct.unpack(">HH", f.read(4)); return h > w
+            (ln,) = struct.unpack(">H", f.read(2)); f.seek(ln - 2, 1)
 
 
 def convert(md_path, rtl=False):
@@ -92,7 +111,8 @@ def convert(md_path, rtl=False):
             return m.group(0)
         data = base64.b64encode(open(full, "rb").read()).decode()
         mime = "image/jpeg" if full.lower().endswith((".jpg", ".jpeg")) else "image/png"
-        return f'<figure><img src="data:{mime};base64,{data}" alt="{alt}"><figcaption>{alt}</figcaption></figure>'
+        cls = ' class="tall"' if _is_tall(full) else ""
+        return f'<figure{cls}><img src="data:{mime};base64,{data}" alt="{alt}"><figcaption>{alt}</figcaption></figure>'
 
     src = re.sub(r"!\[([^\]]*)\]\(([^)]+)\)", embed, src)
     toc = {"toc_depth": "2-3"}
@@ -113,6 +133,12 @@ def convert(md_path, rtl=False):
     body = re.sub(r'(<h2 id="[^"]*">مراجع</h2>\s*)<ol>', r'\1<ol class="refs" dir="ltr" lang="en">', body)
     body = body.replace("<p>چکیده:", '<p class="fa" dir="rtl" lang="fa">چکیده:')
     body = body.replace("<p>Abstract:", '<p class="en" dir="ltr" lang="en">Abstract:')
+    body = body.replace("<p>واژه‌های کلیدی:", '<p class="fa kw" dir="rtl" lang="fa"><strong>واژه‌های کلیدی:</strong>')
+    body = body.replace("<p>Keywords:", '<p class="en kw" dir="ltr" lang="en"><strong>Keywords:</strong>')
+    body = body.replace("<p><strong>واژه‌های کلیدی:</strong>", '<p class="kw"><strong>واژه‌های کلیدی:</strong>')
+    body = body.replace("<p><strong>Keywords:</strong>", '<p class="kw"><strong>Keywords:</strong>')
+    # consecutive tall screenshots (window captures) sit side by side as parts of one figure
+    body = re.sub(r'(?:<figure class="tall">.*?</figure>\s*){2,}', lambda m: '<div class="figrow">' + m.group(0) + '</div>', body, flags=re.S)
     # the markdown Contents section is replaced by the rail
     body = re.sub(r'<h2 id="[^"]*">(?:Contents|فهرست)</h2>.*?(?=<hr\s*/?>)', '', body, flags=re.S)
     body = re.sub(r"<hr\s*/?>\s*(?=<h2)", "", body)      # chapter headings draw their own rule
