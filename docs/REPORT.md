@@ -146,13 +146,13 @@ Running the original PyTorch implementation of Whisper on a CPU is slow. Guya us
 
 With 8-bit weights, `large-v3-turbo` transcribes at about a third of real time (RTF 0.29 for Persian, 0.35 for English) on the development machine (Section 7.2), which is what makes a fully local Persian system practical. The same measurement shows that the speed varies by an order of magnitude across model sizes and, on other machines, will vary again. That variation is why Guya measures the machine rather than assuming a fixed model (Section 4.6).
 
-The alternative to local inference, for a machine that cannot run the Persian model at usable speed, is a hosted Whisper. Guya's online mode sends the recording as a 16-bit WAV to Groq's transcription endpoint [18], which runs `whisper-large-v3`, the same model family as the offline path, on a free tier that needs only an account and an API key. The price is privacy: in that mode the audio leaves the machine, and the wizard says so on the page where the mode is chosen. Dual mode splits the difference, one language offline and the other online, so a weak machine can keep English local with `small` and send only Persian out. The online and dual modes were not scored in Chapter 7, because scoring them means uploading the test audio to a third party (Section 7.9).
+The alternative to local inference, for a machine that cannot run the Persian model at usable speed, is a hosted Whisper. Guya's online mode sends the recording as a 16-bit WAV to Groq's transcription endpoint [4], which runs `whisper-large-v3`, the same model family as the offline path, on a free tier that needs only an account and an API key. The price is privacy: in that mode the audio leaves the machine, and the wizard says so on the page where the mode is chosen. Dual mode splits the difference, one language offline and the other online, so a weak machine can keep English local with `small` and send only Persian out. The online and dual modes were not scored in Chapter 7, because scoring them means uploading the test audio to a third party (Section 7.9).
 
 ### 2.3 Measuring a recogniser
 
 Three metrics are used throughout this report.
 
-The **word error rate** (WER) of a transcript against a reference is the minimum number of word substitutions, deletions and insertions needed to turn one into the other, divided by the number of words in the reference:
+The **word error rate** (WER) of a transcript against a reference is the minimum number of word substitutions, deletions and insertions needed to turn one into the other [5], divided by the number of words in the reference:
 
 WER = (S + D + I) / N
 
@@ -186,11 +186,11 @@ The cost of the choice is coverage: a rule-based parser understands only the phr
 
 ### 2.7 Accessibility considerations
 
-Several design choices follow from the intended user rather than from the technology. Push-to-talk was chosen over a wake word: it needs no always-on microphone, it gives the user explicit control over when the computer listens, and the key pressed says which mode is meant. Feedback is always visible on screen, and in English it is also spoken. Speech output uses the operating system's own synthesiser (`say` on macOS, the PowerShell speech engine on Windows) rather than a bundled voice, which keeps the install small; but macOS ships no Persian voice at all and its one Arabic voice reads Persian badly, so Persian replies are shown in a reply bubble instead of spoken (Sections 4.9 and 8.3). A free offline Persian voice, Piper's `fa_IR-amir-medium` through sherpa-onnx [17], was tested at a real-time factor of 0.06 and is left as future work (Section 9.2). The floating status widget pairs every colour with a text label, so colour is never the only carrier of state (WCAG 2.2 success criterion 1.4.1, Use of Color), and its clickable targets exceed the 24 × 24 pixel minimum of criterion 2.5.8, Target Size: the pill is 42 pixels high, the reply bubble at least 48, and the Yes/No buttons are at least 96 pixels wide and taller than 24 (14-pixel text with 8 pixels of padding above and below) [9]. Ambiguous results are shown as large buttons that can also be chosen by voice. Renaming, the one action that alters an existing file, asks first; creating never overwrites an existing name, and saving only triggers the application's own Save. These are standard accessibility principles. Where the platform constrained them, for example in the decision to show Persian feedback as text rather than read it with an Arabic voice, Section 4.9 explains the compromise.
+Several design choices follow from the intended user rather than from the technology. Push-to-talk was chosen over a wake word: it needs no always-on microphone, it gives the user explicit control over when the computer listens, and the key pressed says which mode is meant. Feedback is always visible on screen, and in English it is also spoken. Speech output uses the operating system's own synthesiser (`say` on macOS, the PowerShell speech engine on Windows) rather than a bundled voice, which keeps the install small; but macOS ships no Persian voice at all and its one Arabic voice reads Persian badly, so Persian replies are shown in a reply bubble instead of spoken (Sections 4.9 and 8.3). A free offline Persian voice, Piper's `fa_IR-amir-medium` through sherpa-onnx [7], was tested at a real-time factor of 0.06 and is left as future work (Section 9.2). The floating status widget pairs every colour with a text label, so colour is never the only carrier of state (WCAG 2.2 success criterion 1.4.1, Use of Color), and its clickable targets exceed the 24 × 24 pixel minimum of criterion 2.5.8, Target Size: the pill is 42 pixels high, the reply bubble at least 48, and the Yes/No buttons are at least 96 pixels wide and taller than 24 (14-pixel text with 8 pixels of padding above and below) [8]. Ambiguous results are shown as large buttons that can also be chosen by voice. Renaming, the one action that alters an existing file, asks first; creating never overwrites an existing name, and saving only triggers the application's own Save. These are standard accessibility principles. Where the platform constrained them, for example in the decision to show Persian feedback as text rather than read it with an Arabic voice, Section 4.9 explains the compromise.
 
 ### 2.8 Existing tools
 
-None of the mainstream dictation and voice-control products covers the case this project is built for: a Persian speaker on an ordinary computer with no budget. Table 2.2 summarises the state in September 2026, taken from the vendors' own documentation [10–15].
+None of the mainstream dictation and voice-control products covers the case this project is built for: a Persian speaker on an ordinary computer with no budget. Table 2.2 summarises the state in September 2026, taken from the vendors' own documentation [9–14].
 
 | Tool | Persian dictation | Voice commands for the desktop | Runs offline | Cost | Platform |
 |---|---|---|---|---|---|
@@ -216,9 +216,9 @@ Guya therefore covers a combination that none of these tools offers: Persian and
 
 ### 2.9 Research on Persian speech recognition
 
-Persian was, for a long time, a language with little public speech data. Two developments changed that: public read-speech corpora that include Persian, Mozilla Common Voice (Ardila et al., 2020) [5] and FLEURS (Conneau et al., 2022) [4], and Whisper (Radford et al., 2023) [1], which was trained on web audio in 97 languages and recognises Persian without any Persian-specific work. The `large-v3` release added one million hours of weakly labelled and four million hours of pseudo-labelled audio, and OpenAI reports 10 to 20% fewer errors than `large-v2` on Common Voice 15 and FLEURS for the languages it handles well.
+Persian was, for a long time, a language with little public speech data. Two developments changed that: public read-speech corpora that include Persian, Mozilla Common Voice (Ardila et al., 2020) [15] and FLEURS (Conneau et al., 2022) [16], and Whisper (Radford et al., 2023) [1], which was trained on web audio in 97 languages and recognises Persian without any Persian-specific work. The `large-v3` release added one million hours of weakly labelled and four million hours of pseudo-labelled audio, and OpenAI reports 10 to 20% fewer errors than `large-v2` on Common Voice 15 and FLEURS for the languages it handles well.
 
-Two facts from this work shaped the project's expectations. First, Whisper's Persian error rate is several times its English error rate at every model size; Section 7.2 measures this on the project's own test set. Second, fine-tuning Whisper on Persian data reduces the error substantially: a `large-v3` fine-tuned on Common Voice Persian reports about 13% WER on FLEURS [7], less than half the error of the stock model measured here. Fine-tuning needs a GPU and time that this project did not have; it is the most promising item of future work (Section 9.2).
+Two facts from this work shaped the project's expectations. First, Whisper's Persian error rate is several times its English error rate at every model size; Section 7.2 measures this on the project's own test set. Second, fine-tuning Whisper on Persian data reduces the error substantially: a `large-v3` fine-tuned on Common Voice Persian reports about 13% WER on FLEURS [17], less than half the error of the stock model measured here. Fine-tuning needs a GPU and time that this project did not have; it is the most promising item of future work (Section 9.2).
 
 ### 2.10 What Guya takes from this
 
@@ -579,15 +579,16 @@ The contract between the layers is four small data classes in `assistant/models.
 
 *Table 4.2. Response statuses.*
 
-**Spoken filenames** need their own normaliser. Whisper hears "test six docks" for `test6.docx` and «گزارش شش ورد» for `گزارش ۶.docx`. The normaliser folds digits and number words, drops leading words such as "the" and "my", and rewrites the suffixes speech recognition produces (docs, docks, "doc x", «دکس», «ورد») into the extension. Matching is scored rather than exact, with a fixed scale (Section 5.5). A single match above the confidence threshold is opened directly; when several candidates score closely, the choices are shown. The rule that a partial match needs at least three characters exists because of a real bug: "open the system folder" once opened a folder named `m`.
+**Spoken filenames** need their own normaliser. Whisper hears "test six docks" for `test6.docx` and «گزارش شش ورد» for «گزارش ۶.docx». The normaliser folds digits and number words, drops leading words such as "the" and "my", and rewrites the suffixes speech recognition produces (docs, docks, "doc x", «دکس», «ورد») into the extension. Matching is scored rather than exact, with a fixed scale (Section 5.5). A single match above the confidence threshold is opened directly; when several candidates score closely, the choices are shown. The rule that a partial match needs at least three characters exists because of a real bug: "open the system folder" once opened a folder named `m`.
 
 ### 4.6 Device-aware model choice
 
 Guessing the right model from the machine's specification is unreliable: a 16 GB Mac and a 16 GB PC without a graphics card behave very differently. The wizard therefore measures the machine instead of inferring its speed from the specification. The algorithm is:
 
 ```
-rtf_base   = time to transcribe the bundled 7 s clip with `tiny` / clip length
-             (one warm-up pass, then the best of two timed passes, temperature fallback off)
+rtf_base   = time to transcribe the bundled 7 s clip with tiny / clip length
+             (one warm-up pass, then the best of two timed passes,
+              temperature fallback off)
 for each model m:
     predicted_rtf[m] = rtf_base × RELATIVE_COST[m]
 candidates = offline models the profiler allows for this RAM,
@@ -715,7 +716,8 @@ Everything Guya writes at run time lives under `~/.guya`:
 ~/.guya/
 ├── config.json          settings (chmod 600)
 ├── logs/guya.log        one rotating log for all processes (2 MiB × 5)
-├── logs/launcher.log    stdout and stderr of the process tree started from Guya.app
+├── logs/launcher.log    stdout and stderr of the process tree started
+│                        from Guya.app
 ├── runtime/guya/        a copy of the package (macOS)
 ├── runtime/venv/        a copy of the Python environment (macOS)
 ├── runtime/origin       path of the checkout, for Update and Uninstall
@@ -753,7 +755,7 @@ Problems are reported after the fact, without the developer present, so the log 
 
 Table 5.1 lists every runtime dependency with the version used and what it is for. PyTorch is not needed, no paid service is involved, and no code written for the project is compiled; the only native code is inside the listed wheels. Python 3.10 to 3.12 is required because PyQt6 6.11 had no wheels for Python 3.13 or later when the project was built; the development environment runs 3.11.15.
 
-PyQt6 was chosen because the pill needs frameless, always-on-top windows that never take keyboard focus (`WindowDoesNotAcceptFocus`, `WA_ShowWithoutActivating`), custom painting for the animated capsule, signals that deliver a worker thread's result on the interface thread, accessible names and descriptions that VoiceOver reads, and right-to-left text with style sheets for the Persian bubble; all of these are in Qt, and PyQt6 is free under the GPL.
+PyQt6 [18] was chosen because the pill needs frameless, always-on-top windows that never take keyboard focus (`WindowDoesNotAcceptFocus`, `WA_ShowWithoutActivating`), custom painting for the animated capsule, signals that deliver a worker thread's result on the interface thread, accessible names and descriptions that VoiceOver reads, and right-to-left text with style sheets for the Persian bubble; all of these are in Qt, and PyQt6 is free under the GPL.
 
 | Component | Version | Used for |
 |---|---|---|
@@ -777,21 +779,26 @@ PyQt6 was chosen because the pill needs frameless, always-on-top windows that ne
 The repository is laid out as follows.
 
 ```
-guya/                         the application package (24 modules, 11,905 lines)
-  widget.py                   pill process
-  stt.py                      transcription pipeline
+guya/                  the application package (24 modules, 11,905 lines)
+  widget.py            pill process
+  stt.py               transcription pipeline
   wizard.py  profiler.py  benchmark.py
   control_panel.py  runtime.py  config.py  logsetup.py  launcher_gen.py
   platform_macos.py  cloud_engine.py  __main__.py
-  assistant/                  parser.py  service.py  normalizer.py  context.py  models.py
-    commands_en.json  commands_fa.json      phrase packs (93 + 100 examples)
-    actions/                  common.py  macos.py  windows.py
-  assets/                     bench_speech.wav (7 s probe clip), Vazirmatn fonts
-eval/                         evaluation harness (8 modules, 1,240 lines)
-tests/                        136 tests (10 files, 1,598 lines)
-docs/                         this report, user guide material, user-study protocol, demo script, and `tools/build_report_html.py`, the renderer of this report
-tools/                        record_sample.py, the microphone probe used to validate the online path before M4
-install.sh  install.bat  "Install Guya.command"  "Install Guya.bat"  run.sh  run.bat
+  assistant/           parser.py  service.py  normalizer.py  context.py
+                       models.py
+    commands_en.json  commands_fa.json   phrase packs (93 + 100 examples)
+    actions/           common.py  macos.py  windows.py
+  assets/              bench_speech.wav (7 s probe clip), Vazirmatn fonts
+eval/                  evaluation harness (8 modules, 1,240 lines)
+tests/                 136 tests (10 files, 1,598 lines)
+docs/                  this report, user guide material, user-study protocol,
+                       demo script, and tools/build_report_html.py,
+                       the renderer of this report
+tools/                 record_sample.py, the microphone probe used to
+                       validate the online path before M4
+install.sh  install.bat  "Install Guya.command"  "Install Guya.bat"
+run.sh  run.bat
 ```
 
 Table 5.2 gives the size of each module. The whole project is 14,920 lines of Python in 45 modules: the application package, the evaluation harness, the tests, the report renderer under `docs/tools/` and a small recording script under `tools/`. The two largest modules are the two user interfaces; the parser, service and actions, where correctness matters most, are about 3,300 lines and hold most of the 136 tests; the normaliser, the benchmark, the WER evaluator and the macOS hotkey layer have test files of their own (Table 5.8).
@@ -939,7 +946,7 @@ Every message exists as an English and a Persian string written side by side in 
 
 **Search** walks the roots with `os.walk` without following links, skipping hidden folders, application bundles and nine tool folders (`node_modules`, `venv`, `__pycache__`, `Library` and so on), to a depth of six and at most 20,000 candidates per root. Folder names that also occur in ordinary user projects, such as `build`, `out` or `dist`, are not skipped: an earlier list that skipped them hid the user's own folders. A skipped folder is still offered as a candidate; only its contents are not searched. Every name is scored with the filename scale, candidates below 0.58 are dropped, and the top twenty are ranked by score, exactness, name length and path. Queries that are too generic ("the file", «چیز») or shorter than two characters (unless they are a digit) are rejected before the walk. Each search writes one diagnostic record to the log with the query, the number of names inspected, the time taken and the top five candidates.
 
-**Create** sanitises the spoken name (invalid characters removed, length capped at 180), appends `.docx` or `.txt` when missing, refuses an existing name, and writes the file. A Word document is produced without any Word library: it is an Office Open XML package, a zip with three parts (`[Content_Types].xml`, `_rels/.rels`, `word/document.xml` containing one empty paragraph), written with the standard `zipfile` module. Word, Pages and LibreOffice open it. This avoids a dependency on a Word library such as python-docx.
+**Create** sanitises the spoken name (invalid characters removed, length capped at 180), appends `.docx` or `.txt` when missing, refuses an existing name, and writes the file. A Word document is produced without any Word library: it is an Office Open XML package [19], a zip with three parts (`[Content_Types].xml`, `_rels/.rels`, `word/document.xml` containing one empty paragraph), written with the standard `zipfile` module. Word, Pages and LibreOffice open it. This avoids a dependency on a Word library such as python-docx.
 
 **Rename** keeps the old extension when the new name has none, refuses an existing destination, and calls `Path.rename`. The confirmation step is handled by the service (Section 5.7) before the action is called.
 
@@ -1169,7 +1176,7 @@ Every number in this chapter was produced by a script in `eval/` from data that 
 
 ### 7.1 Data and method
 
-**Speech.** Google FLEURS [4] is read speech of Wikipedia sentences recorded by native speakers, with human transcripts; it was chosen because it is the only Persian speech corpus the author found that can be downloaded without an account, so anyone assessing this report can rerun the evaluation. `eval/import_fleurs.py` samples 60 Persian and 60 English clips from the development split with a fixed seed (7), one clip per sentence so that no sentence is counted twice: 14.8 minutes of Persian (1,355 words after normalisation) and 9.4 minutes of English (1,211 words). The Persian sentences are long (median 23 words, 14.7 s), formal, and full of numbers and proper names; this is harder than the short colloquial commands Guya is built for, and the absolute Persian error rates should be read with that in mind. Ten clean English sentences from the macOS speech synthesiser were also kept as a smoke test of the pipeline; they are too easy to rank models and are not used below.
+**Speech.** Google FLEURS [16] is read speech of Wikipedia sentences recorded by native speakers, with human transcripts; it was chosen because it is the only Persian speech corpus the author found that can be downloaded without an account, so anyone assessing this report can rerun the evaluation. `eval/import_fleurs.py` samples 60 Persian and 60 English clips from the development split with a fixed seed (7), one clip per sentence so that no sentence is counted twice: 14.8 minutes of Persian (1,355 words after normalisation) and 9.4 minutes of English (1,211 words). The Persian sentences are long (median 23 words, 14.7 s), formal, and full of numbers and proper names; this is harder than the short colloquial commands Guya is built for, and the absolute Persian error rates should be read with that in mind. Ten clean English sentences from the macOS speech synthesiser were also kept as a smoke test of the pipeline; they are too easy to rank models and are not used below.
 
 **Commands.** `eval/data/intents.jsonl` holds 267 Persian and English command phrasings (139 English, 128 Persian), written to be natural rather than to match the parser, each labelled with the intended intent and arguments. The last ten are taken verbatim from the manual test sessions of Section 7.8. The evaluator computes which rows coincide with one of the parser's own example phrases (46, after the yes/no vocabulary was widened) and reports them separately, so the headline number is on the 221 phrasings the parser had never seen (120 English, 101 Persian).
 
@@ -1314,7 +1321,7 @@ After the evaluation sprint, manual testing was done on the development machine:
 | 1 | «بازش کن» after a file was created did nothing; «بله» was refused | Whisper transcribed the two-word command as «بازشگو» and the answer as «بیلی»; the dictation vocabulary prompt does not help on short commands | a command-vocabulary prompt for assistant recordings and an answer-only prompt while a question is pending; fuzzy acceptance of one-word answers at similarity 0.75; Yes/No buttons in the bubble |
 | 1 | the user asked to switch languages by voice | (feature request) | `set_language` intent in both languages; the reply is given in the new language |
 | 2 | Persian web search worked worse than English | Persian puts the query after the verb («توی گوگل سرچ کن مدل مو») and the grammar expected it before; «سرچ» was heard as «سیرچ» and «سیچ» | five verb-first Persian search patterns; the misheard forms added to the search verbs; «X رو گوگل کن» |
-| 2 | «آزمون شیش» did not find `آزمون شیش.docx` and «ورد پنج» found nothing | the colloquial numbers were not in the spoken-number table; a query consisting of one digit was rejected as too short | colloquial Persian numbers added; single-digit queries allowed |
+| 2 | «آزمون شیش» did not find «آزمون شیش.docx» and «ورد پنج» found nothing | the colloquial numbers were not in the spoken-number table; a query consisting of one digit was rejected as too short | colloquial Persian numbers added; single-digit queries allowed |
 | 3 | "open Chrome and search for the weather" searched in Safari | the second step of the sequence carried no browser | a search step inherits the browser opened by the previous step |
 | 3 | «اول» did not choose the first result; «یک» did | Whisper wrote «عوال» and «آبال» | fuzzy choice words at similarity 0.5 with a 0.1 margin, used only while a list is pending |
 
@@ -1340,7 +1347,7 @@ Each change is pinned by a test, and the ten phrasings from these sessions were 
 
 All twelve tasks were completed without help; two needed a second attempt. Times were not recorded, and the ten sentences of `eval/record.py` were not recorded, so there is still no accuracy figure on his voice.
 
-His answers to the ten System Usability Scale statements were 4, 1, 5, 2, 4, 1, 4, 1, 3, 2, which score 82.5 out of 100; 68 is the average for software in general [8]. His answers to the three open questions, in his own words (spelling normalised):
+His answers to the ten System Usability Scale statements were 4, 1, 5, 2, 4, 1, 4, 1, 3, 2, which score 82.5 out of 100; 68 is the average for software in general [20]. His answers to the three open questions, in his own words (spelling normalised):
 
 - *What helped most:* «اینکه خیلی سریع‌تر می‌تونم متن‌های یک‌مقدار بلندی که دارم رو بنویسم و کارهام سریع‌تر جلو می‌ره، و استفاده ازش هم آسون بود و بدون کمک به بقیه می‌تونستم متن‌هام رو بنویسم، و اینکه توی هر برنامه‌ای هم کار می‌کرد خیلی خوب بود. اگر لازم نبود خودم روی جایی که می‌خوام متن بنویسم کلیک نکنم و خودش می‌فهمید بهتر هم می‌شد.» (That I can write my longer texts much faster and my work moves faster; that it was easy to use and I could write my texts without help from anyone; and that it worked in every application. It would be even better if I did not have to click where I want to write and it understood that on its own.)
 - *What was most annoying:* «اینکه توی ساخت فایل و کارهایی که دستیار برام می‌کرد وقتی اشتباه داشتم به فارسی برام نمی‌خوند که مشکل چیه و متنی که نوشته بود هم زود می‌رفت و برای منی که نمی‌تونم خیلی سریع بخونم سخت بود ببینم مشکل چیه، و توی دیکته هم بعضی موارد وقتی خیلی صحبت می‌کردم طول می‌کشید تا تایپ کنه برام و توی حالت آفلاین به لپ‌تاپ فشار می‌اومد یکم.» (When I made a mistake in creating a file or in the things the assistant did for me, it did not read out in Persian what the problem was, and the text it showed went away quickly; for me, who cannot read very fast, it was hard to see what the problem was. In dictation, when I spoke for a long time it sometimes took a while to type it, and in offline mode the laptop was under some load.)
@@ -1381,7 +1388,7 @@ The same applies to the parser work. After the changes had reached 100% on the h
 
 ### 8.3 The Persian voice
 
-Guya speaks its English replies and shows its Persian ones. This is a constraint of the platform rather than a design choice: macOS has no Persian voice, and Persian read by the single Arabic voice is not intelligible to a Persian speaker. The problem this caused was found during the audit rather than in daily use. The pill's label holds about thirty characters, so a Persian confirmation question was cut to its first three words, and the user was answering "yes" to a question they could not read. The reply bubble fixes the display. A free offline Persian voice (Piper's `fa_IR-amir-medium` model through sherpa-onnx [17], tested on this machine at 0.06 RTF) is the obvious next step; whether its quality is acceptable is for the target user to judge.
+Guya speaks its English replies and shows its Persian ones. This is a constraint of the platform rather than a design choice: macOS has no Persian voice, and Persian read by the single Arabic voice is not intelligible to a Persian speaker. The problem this caused was found during the audit rather than in daily use. The pill's label holds about thirty characters, so a Persian confirmation question was cut to its first three words, and the user was answering "yes" to a question they could not read. The reply bubble fixes the display. A free offline Persian voice (Piper's `fa_IR-amir-medium` model through sherpa-onnx [7], tested on this machine at 0.06 RTF) is the obvious next step; whether its quality is acceptable is for the target user to judge.
 
 ### 8.4 Limitations and threats to validity
 
@@ -1414,7 +1421,7 @@ The items below are ordered by their expected effect on the user.
 1. **A longer study with recordings.** The session of Section 7.9 was one afternoon with one user, with outcomes recorded by hand. The next one should record his ten sentences with `eval/record.py`, which gives the accuracy figure that matters most, measured on his own speech, and time the tasks against typing.
 2. **Replies that stay on screen longer.** His main complaint was that a Persian reply disappeared before he could read it. The display times are constants (Section 4.8); making them a setting, and keeping a refusal or an error on screen until the next key press, is a small change.
 3. **A Persian voice.** His other complaint was that an error was not read out to him in Persian. Piper through sherpa-onnx runs at 0.06 RTF on this machine; wiring it into the `speak` method of the macOS adapter is a small change, and the user should judge whether the voice quality is acceptable.
-4. **Fine-tuning on Persian.** A `large-v3` fine-tuned on Common Voice Persian reports about 13% WER on FLEURS [7], less than half the stock model's error. Fine-tuning needs a GPU for a few hours; a fine-tuned model converted to CTranslate2 would drop into Guya without any other change, and the harness of Chapter 7 would measure the gain.
+4. **Fine-tuning on Persian.** A `large-v3` fine-tuned on Common Voice Persian reports about 13% WER on FLEURS [17], less than half the stock model's error. Fine-tuning needs a GPU for a few hours; a fine-tuned model converted to CTranslate2 would drop into Guya without any other change, and the harness of Chapter 7 would measure the gain.
 5. **A per-user correction table.** The 64 corrections of Section 5.4 were collected by hand. Guya could learn them from the user's own edits: when a dictated word is replaced within a few seconds, the pair is a candidate correction.
 6. **The vocabulary prompt on colloquial speech.** Table 7.2 shows only that the prompt does not hurt on formal speech; whether it helps on the user's own colloquial Persian needs the recorded set of item 1.
 7. **More commands, within the same safety model.** Save As already has a refusal message because it came up in use; a Save As that names the folder, and moving a file with confirmation, are the natural next commands, and each fits the confirmation pattern of Section 4.5.
@@ -1427,23 +1434,23 @@ The items below are ordered by their expected effect on the user.
 1. A. Radford, J. W. Kim, T. Xu, G. Brockman, C. McLeavey and I. Sutskever, "Robust Speech Recognition via Large-Scale Weak Supervision," *Proceedings of the 40th International Conference on Machine Learning (ICML)*, 2023. Model card and `large-v3` release notes: https://github.com/openai/whisper and https://github.com/openai/whisper/discussions/1762; `large-v3-turbo` release notes: https://github.com/openai/whisper/discussions/2363.
 2. SYSTRAN, *faster-whisper: Whisper transcription with CTranslate2*, https://github.com/SYSTRAN/faster-whisper (version 1.2.1 used).
 3. OpenNMT, *CTranslate2: fast inference engine for Transformer models*, https://github.com/OpenNMT/CTranslate2 (version 4.8.1 used).
-4. A. Conneau, M. Ma, S. Khanuja, Y. Zhang, V. Axelrod, S. Dalmia, J. Riesa, C. Rivera and A. Bapna, "FLEURS: Few-shot Learning Evaluation of Universal Representations of Speech," *IEEE Spoken Language Technology Workshop (SLT)*, 2022. Data: https://huggingface.co/datasets/google/fleurs (CC-BY-4.0).
-5. R. Ardila, M. Branson, K. Davis, M. Henretty, M. Kohler, J. Meyer, R. Morais, L. Saunders, F. M. Tyers and G. Weber, "Common Voice: A Massively-Multilingual Speech Corpus," *Proceedings of LREC*, 2020.
+4. Groq, *Speech to text API reference*, https://console.groq.com/docs/speech-to-text, accessed September 2026 (the optional online model, `whisper-large-v3`).
+5. V. I. Levenshtein, "Binary codes capable of correcting deletions, insertions, and reversals," *Soviet Physics Doklady*, vol. 10, no. 8, pp. 707–710, 1966 (the edit distance behind WER and CER).
 6. Silero Team, *Silero VAD: pre-trained enterprise-grade voice activity detector*, https://github.com/snakers4/silero-vad (used through faster-whisper).
-7. M. Gholizadeh, *whisper-large-v3-persian-common-voice-17*, Hugging Face model card, 2024, https://huggingface.co/MohammadGholizadeh/whisper-large-v3-persian-common-voice-17 (a Persian fine-tune reporting about 13% WER on FLEURS).
-8. J. Brooke, "SUS: a 'quick and dirty' usability scale," in *Usability Evaluation in Industry*, Taylor & Francis, 1996.
-9. W3C, *Web Content Accessibility Guidelines (WCAG) 2.2*, W3C Recommendation, October 2023, https://www.w3.org/TR/WCAG22/.
-10. Apple, "Use Voice Control on your Mac," Apple Support, and "Dictation in Farsi/Persian," Apple Community discussion 253735978, accessed September 2026.
-11. Microsoft, "Voice access frequently asked questions," Microsoft Support, accessed September 2026, https://support.microsoft.com/en-US/accessibility/windows/voice-access/voice-access-frequently-asked-questions-faqs.
-12. Nuance, *Dragon Professional v16 data sheet*, 2023, https://dragon.nuance.com/shared/data-sheets/ds-dragon-professional-v16-en-us.pdf.
-13. Google, "Type & edit with your voice," Google Docs Editors Help, accessed September 2026, https://support.google.com/docs/answer/4492226.
-14. Talon Community, "Speech engines," Talon Community Wiki, accessed September 2026, https://talon.wiki/Resource%20Hub/Speech%20Recognition/speech%20engines/.
-15. Asr Gooyesh Pardaz, *Nevisa: Persian speech to text*, https://asr-gooyesh.com/en/, accessed September 2026.
-16. Riverbank Computing, *PyQt6*, https://www.riverbankcomputing.com/software/pyqt/ (version 6.11 used); PortAudio and PyAudio for capture; pynput and PyObjC for the macOS hotkey and window layer.
-17. M. Hansen, *Piper: a fast, local neural text-to-speech system*, https://github.com/rhasspy/piper, and k2-fsa, *sherpa-onnx*, https://github.com/k2-fsa/sherpa-onnx, accessed August 2026 (the Persian voice `fa_IR-amir-medium`).
-18. Groq, *Speech to text API reference*, https://console.groq.com/docs/speech-to-text, accessed September 2026 (the optional online model, `whisper-large-v3`).
+7. M. Hansen, *Piper: a fast, local neural text-to-speech system*, https://github.com/rhasspy/piper, and k2-fsa, *sherpa-onnx*, https://github.com/k2-fsa/sherpa-onnx, accessed August 2026 (the Persian voice `fa_IR-amir-medium`).
+8. W3C, *Web Content Accessibility Guidelines (WCAG) 2.2*, W3C Recommendation, October 2023, https://www.w3.org/TR/WCAG22/.
+9. Apple, "Use Voice Control on your Mac," Apple Support, and "Dictation in Farsi/Persian," Apple Community discussion 253735978, accessed September 2026.
+10. Microsoft, "Voice access frequently asked questions," Microsoft Support, accessed September 2026, https://support.microsoft.com/en-US/accessibility/windows/voice-access/voice-access-frequently-asked-questions-faqs.
+11. Nuance, *Dragon Professional v16 data sheet*, 2023, https://dragon.nuance.com/shared/data-sheets/ds-dragon-professional-v16-en-us.pdf.
+12. Google, "Type & edit with your voice," Google Docs Editors Help, accessed September 2026, https://support.google.com/docs/answer/4492226.
+13. Talon Community, "Speech engines," Talon Community Wiki, accessed September 2026, https://talon.wiki/Resource%20Hub/Speech%20Recognition/speech%20engines/.
+14. Asr Gooyesh Pardaz, *Nevisa: Persian speech to text*, https://asr-gooyesh.com/en/, accessed September 2026.
+15. R. Ardila, M. Branson, K. Davis, M. Henretty, M. Kohler, J. Meyer, R. Morais, L. Saunders, F. M. Tyers and G. Weber, "Common Voice: A Massively-Multilingual Speech Corpus," *Proceedings of LREC*, 2020.
+16. A. Conneau, M. Ma, S. Khanuja, Y. Zhang, V. Axelrod, S. Dalmia, J. Riesa, C. Rivera and A. Bapna, "FLEURS: Few-shot Learning Evaluation of Universal Representations of Speech," *IEEE Spoken Language Technology Workshop (SLT)*, 2022. Data: https://huggingface.co/datasets/google/fleurs (CC-BY-4.0).
+17. M. Gholizadeh, *whisper-large-v3-persian-common-voice-17*, Hugging Face model card, 2024, https://huggingface.co/MohammadGholizadeh/whisper-large-v3-persian-common-voice-17 (a Persian fine-tune reporting about 13% WER on FLEURS).
+18. Riverbank Computing, *PyQt6*, https://www.riverbankcomputing.com/software/pyqt/ (version 6.11 used); PortAudio and PyAudio for capture; pynput and PyObjC for the macOS hotkey and window layer.
 19. Ecma International, *ECMA-376: Office Open XML File Formats*, Part 1, 2006 and later editions (the package structure used to write `.docx` files).
-20. V. I. Levenshtein, "Binary codes capable of correcting deletions, insertions, and reversals," *Soviet Physics Doklady*, vol. 10, no. 8, pp. 707–710, 1966 (the edit distance behind WER and CER).
+20. J. Brooke, "SUS: a 'quick and dirty' usability scale," in *Usability Evaluation in Industry*, Taylor & Francis, 1996.
 
 ---
 
@@ -1452,21 +1459,28 @@ The items below are ordered by their expected effect on the user.
 All commands are run from the repository root. The FLEURS audio (about 430 MB) is downloaded once by the importer and is not committed; the manifests and every result file are.
 
 ```bash
-./install.sh && ./venv/bin/python -m unittest discover -s tests -t .      # 136 tests, about 0.25 s
-python eval/import_fleurs.py                                              # 60 + 60 clips, seed 7 (once)
+# 136 tests, about 0.25 s
+./install.sh && ./venv/bin/python -m unittest discover -s tests -t .
+# 60 + 60 clips, seed 7 (once)
+python eval/import_fleurs.py
 python eval/accuracy.py --manifest eval/data/fleurs/manifest.jsonl \
-    --models tiny,base,small,medium,large-v3-turbo,large-v3 --pipeline raw --out eval/results/fleurs_raw
+    --models tiny,base,small,medium,large-v3-turbo,large-v3 \
+    --pipeline raw --out eval/results/fleurs_raw
 python eval/accuracy.py --manifest eval/data/fleurs/manifest.jsonl \
     --models small,large-v3-turbo --pipeline guya --out eval/results/fleurs_guya
-# Tables 7.2 and 7.3 were measured while production still had repetition_penalty=1.2;
-# with the current code, "all settings" is `--ablate penalty_1_2` and "minus the
-# penalty" is the plain `--pipeline guya` row.
-for a in penalty_1_2 no_vad no_prompt no_postprocess no_speech_thr no_rms no_cond; do
-  python eval/accuracy.py --manifest eval/data/fleurs/manifest.jsonl --models small --pipeline guya --ablate $a \
-      --out eval/results/ablate_small_$a; done
-python eval/intent_accuracy.py --failures                                 # Table 7.5
-python eval/assistant_report.py --replay                                  # Table 7.6
-python eval/report_tables.py --write                                      # regenerates every table
+# Tables 7.2 and 7.3 were measured while production still had
+# repetition_penalty=1.2; with the current code, "all settings" is
+# `--ablate penalty_1_2` and "minus the penalty" is the plain
+# `--pipeline guya` row.
+for a in penalty_1_2 no_vad no_prompt no_postprocess no_speech_thr \
+         no_rms no_cond; do
+  python eval/accuracy.py --manifest eval/data/fleurs/manifest.jsonl \
+      --models small --pipeline guya --ablate $a \
+      --out eval/results/ablate_small_$a
+done
+python eval/intent_accuracy.py --failures        # Table 7.5
+python eval/assistant_report.py --replay         # Table 7.6
+python eval/report_tables.py --write             # regenerates every table
 ```
 
 The full accuracy run over six models takes about two hours on the reference machine. The real-time factors of Tables 7.1 and 7.4 come from a separate run over 12 + 12 clips on the idle machine, because timing is disturbed by anything else running.
@@ -1526,7 +1540,7 @@ Settings are read from `~/.guya/config.json`, which is merged over the defaults 
 
 **Spoken evaluation checklist.** `docs/ASSISTANT_EVALUATION.md` is the checklist used for the spoken tests of version 1. Each item is graded on four aspects (recognition, intent, action and feedback), each as pass, partial or fail. It has 75 items in six groups: 15 English commands, 13 Persian commands, 8 phrasing variations, 7 safety checks (delete, overwrite, outside folders, unsupported actions), 23 save, close and browser checks, and 9 spoken-filename checks. The result summary at its end records the totals, the median response time, the best and worst commands per language, and any crash.
 
-**User-study protocol.** `docs/USER_STUDY.md` is the protocol for the session with the target user (and, if possible, two or three other people); one session takes about forty minutes. It measures task success (done, done with help, not done), time on task, recognition quality (the tester writes what Guya heard), a typing comparison (two tasks are also done by typing, timed), usability with the ten-item System Usability Scale [8] in Persian, and three open questions. The twelve tasks are:
+**User-study protocol.** `docs/USER_STUDY.md` is the protocol for the session with the target user (and, if possible, two or three other people); one session takes about forty minutes. It measures task success (done, done with help, not done), time on task, recognition quality (the tester writes what Guya heard), a typing comparison (two tasks are also done by typing, timed), usability with the ten-item System Usability Scale [20] in Persian, and three open questions. The twelve tasks are:
 
 1. Dictate «امروز هوا خوب است و من می‌خواهم بیرون بروم.»
 2. Dictate two sentences of the participant's own choice.

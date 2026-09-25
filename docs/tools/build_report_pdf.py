@@ -101,6 +101,7 @@ li { margin: 2pt 0; text-align: justify; }
 code { font-family: "IBM Plex Mono", Menlo, Consolas, monospace; font-size: 0.86em; background: #f1f3f3; padding: 0 2pt; direction: ltr; unicode-bidi: embed; }
 pre { font-family: "IBM Plex Mono", Menlo, Consolas, monospace; font-size: 9pt; line-height: 1.45; background: #f4f6f6; border: 0.5pt solid #d0d6d6; padding: 6pt 8pt; margin: 4pt 0 10pt; white-space: pre-wrap; word-break: break-all; direction: ltr; text-align: left; orphans: 4; widows: 4; }
 pre code { background: none; padding: 0; font-size: inherit; }
+pre .fa-run { unicode-bidi: isolate; direction: rtl; font-family: FA_TEXT; font-size: 1.15em; line-height: 1; }
 pre.mermaid { background: #fff; border: 0; text-align: center; padding: 6pt 0; break-inside: avoid; }
 pre.mermaid svg { max-width: 100%; height: auto; max-height: 185mm; }
 pre.mermaid .nodeLabel, pre.mermaid .label foreignObject div, pre.mermaid .edgeLabel { white-space: normal !important; overflow-wrap: normal !important; word-break: keep-all !important; max-width: 210px !important; }
@@ -296,6 +297,20 @@ def wrap_latin(html):
     return "".join(out)
 
 
+FA_RUN = re.compile(r"[؀-ۿ](?:[؀-ۿ‌ ]*[؀-ۿ])?")
+
+
+def isolate_fa_in_code(html):
+    """Persian inside a code block (a string literal in quoted source) becomes its own right-to-left
+    run in the Persian face; otherwise Chrome draws it with the monospace font's stretched Arabic
+    and reorders the quotes and commas around it."""
+    def block(m):
+        if 'class="mermaid' in m.group(1):
+            return m.group(0)
+        return m.group(1) + FA_RUN.sub(lambda r: f'<span class="fa-run" dir="rtl">{r.group(0)}</span>', m.group(2)) + m.group(3)
+    return re.sub(r"(<pre\b[^>]*>)(.*?)(</pre>)", block, html, flags=re.S)
+
+
 # B Nazanin has no combining hamza, Arabic decimal/thousands separators or Arabic percent sign;
 # Chrome would take those from the fallback font (and, in a heading pushed to the next page, has
 # been seen to paint the fallback cluster on the wrong page). Use the glyphs the font does have:
@@ -358,6 +373,7 @@ def build_html(md_path, rtl):
     marked, headings, captions = mark(front_abstract + "<!--SPLIT-->" + body + end_abstract, marks)
     front_abstract, body = marked.split("<!--SPLIT-->")
     body = re.sub(r'<pre class="mermaid">(.*?)</pre>', print_variant, body, flags=re.S)
+    body = isolate_fa_in_code(body)
     if rtl:
         body = wrap_latin(body); front_abstract = wrap_latin(front_abstract)
     keys = {name: marks.next() for name in ("title", "bismillah", "jury", "contents", "figures", "tables", "end_title")}
